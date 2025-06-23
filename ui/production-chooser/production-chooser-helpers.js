@@ -498,6 +498,7 @@ const createRepairAllProductionChooserItemData = (cost, turns) => {
         console.error(`production-chooser-helper: Failed to retrieve PlayerLibrary for Player ${GameContext.localPlayerID}`);
         return null;
     }
+    const isInsufficientFunds = cost > (localPlayer.Treasury?.goldBalance || 0);
     return {
         type: 'IMPROVEMENT_REPAIR_ALL',
         category: ProductionPanelCategory.BUILDINGS,
@@ -508,7 +509,9 @@ const createRepairAllProductionChooserItemData = (cost, turns) => {
         turns,
         showTurns: turns > -1,
         showCost: cost > 0,
-        insufficientFunds: cost > (localPlayer.Treasury?.goldBalance || 0),
+        insufficientFunds: isInsufficientFunds,
+        error: isInsufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" : undefined,
+        disabled: isInsufficientFunds
     };
 };
 const getConstructibleClassPanelCategory = (constructibleClass) => {
