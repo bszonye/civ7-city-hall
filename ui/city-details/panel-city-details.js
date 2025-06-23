@@ -137,7 +137,7 @@ export class PanelCityDetails extends Panel {
         this.Root.addEventListener("focus", this.onFocus);
         this.nextCityButton.addEventListener('action-activate', this.onNextCityButtonListener);
         this.prevCityButton.addEventListener('action-activate', this.onPrevCityButtonListener);
-        this.growthSlot = MustGetElement(`#${cityDetailTabID.growth}`);
+        this.growthSlot = MustGetElement(`#${cityDetailTabID.growth}`, document);
         this.specialistContainer = MustGetElement(".specialist-container", this.Root);
         this.specialistText = MustGetElement(".specialist-text", this.Root);
         this.currentCitizenCount = MustGetElement(".current-citizens-count", this.Root);
@@ -147,15 +147,15 @@ export class PanelCityDetails extends Panel {
         this.happinessPerTurn = MustGetElement(".happiness-per-turn", this.Root);
         this.foodPerTurn = MustGetElement(".food-per-turn", this.Root);
         this.foodNeededToGrow = MustGetElement(".food-needed-to-grow", this.Root);
-        this.connectedToContainer = MustGetElement(".connected-to-container");
-        this.constructibleSlot = MustGetElement(`#${cityDetailTabID.buildings}`);
+        this.connectedToContainer = MustGetElement(".connected-to-container", document);
+        this.constructibleSlot = MustGetElement(`#${cityDetailTabID.buildings}`, document);
         this.buildingsCategory = MustGetElement(".buildings-category", this.Root);
         this.buildingsList = MustGetElement(".buildings-list", this.Root);
         this.improvementsCategory = MustGetElement(".improvements-category", this.Root);
         this.improvementsList = MustGetElement(".improvements-list", this.Root);
         this.wondersCategory = MustGetElement(".wonders-category", this.Root);
         this.wondersList = MustGetElement(".wonders-list", this.Root);
-        this.yieldsSlot = MustGetElement(`#${cityDetailTabID.yields}`);
+        this.yieldsSlot = MustGetElement(`#${cityDetailTabID.yields}`, document);
         this.yieldsContainer = MustGetElement(".yields-container", this.Root);
         this.beingRazedContainer = MustGetElement(".being-razed-container", this.Root);
         this.razedTurnsText = MustGetElement(".razed-turns-text", this.Root);

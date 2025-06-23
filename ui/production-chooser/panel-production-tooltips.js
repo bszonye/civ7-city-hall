@@ -81,7 +81,7 @@ class ProductionConstructibleTooltipType {
             this.productionCost.classList.add('hidden');
         }
         else {
-            const productionCost = city.Production?.getConstructibleProductionCost(definition.ConstructibleType, FeatureTypes.NO_FEATURE, ResourceTypes.NO_RESOURCE);
+            const productionCost = city.Production?.getConstructibleProductionCost(definition.ConstructibleType);
             if (productionCost === undefined) {
                 this.productionCost.classList.add('hidden');
             }
@@ -378,4 +378,5 @@ class ProductionProjectTooltipType {
     }
 }
 TooltipManager.registerType('production-project-tooltip', new ProductionProjectTooltipType());
+
 //# sourceMappingURL=file:///base-standard/ui/production-chooser/panel-production-tooltips.js.map

@@ -7,6 +7,12 @@ import { GetTownFocusItems } from '/base-standard/ui/production-chooser/producti
 import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
 import { FxsFrame } from '/core/ui/components/fxs-frame.js';
 import { Framework } from '/core/ui/framework.js';
+export const TownFocusRefreshEventName = 'panel-town-focus-refresh';
+export class TownFocusRefreshEvent extends CustomEvent {
+    constructor() {
+        super(TownFocusRefreshEventName, { bubbles: false, cancelable: true });
+    }
+}
 class PanelTownFocus extends FxsFrame {
     constructor() {
         super(...arguments);
@@ -24,6 +30,11 @@ class PanelTownFocus extends FxsFrame {
                 this.cityID = cityID;
             }
         };
+        this.onRefreshFocusList = () => {
+            const oldCityID = this._cityID;
+            this.cityID = null;
+            this.cityID = oldCityID;
+        };
         this.onFocus = () => {
             if (this.cityID) {
                 Game.CityOperations.sendRequest(this.cityID, CityOperationTypes.CONSIDER_TOWN_PROJECT, {});
@@ -40,6 +51,7 @@ class PanelTownFocus extends FxsFrame {
         }
         if (value === null) {
             this.focusItems = [];
+            this._cityID = null;
             return;
         }
         const city = Cities.get(value);
@@ -49,6 +61,7 @@ class PanelTownFocus extends FxsFrame {
             return;
         }
         this.focusItems = GetTownFocusItems(city.id);
+        this._cityID = value;
     }
     set focusItems(items) {
         this.focusItemListElement.innerHTML = '';
@@ -81,9 +94,11 @@ class PanelTownFocus extends FxsFrame {
         this.Root.addEventListener('focus', this.onFocus);
         engine.on('CitySelectionChanged', this.onCitySelectionChanged);
         engine.on('CityGrowthModeChanged', this.onCityGrowthModeChanged);
+        this.Root.addEventListener(TownFocusRefreshEventName, this.onRefreshFocusList);
         this.cityID = UI.Player.getHeadSelectedCity();
     }
     onDetach() {
+        this.Root.addEventListener(TownFocusRefreshEventName, this.onRefreshFocusList);
         engine.off('CityGrowthModeChanged', this.onCityGrowthModeChanged);
         engine.off('CitySelectionChanged', this.onCitySelectionChanged);
         this.Root.removeEventListener('focus', this.onFocus);

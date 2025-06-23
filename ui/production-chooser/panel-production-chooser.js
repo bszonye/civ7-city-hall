@@ -31,6 +31,7 @@ import { UniqueQuarter } from '/base-standard/ui/production-chooser/production-c
 import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
 import Databind from '/core/ui/utilities/utilities-core-databinding.js';
 import { Layout } from '/core/ui/utilities/utilities-layout.js';
+import { TownFocusRefreshEvent } from './panel-town-focus.js';
 const categoryLocalizationMap = {
     [ProductionPanelCategory.BUILDINGS]: 'LOC_UI_PRODUCTION_BUILDINGS',
     [ProductionPanelCategory.UNITS]: 'LOC_UI_PRODUCTION_UNITS',
@@ -344,8 +345,8 @@ export class ProductionChooserScreen extends Panel {
     }
     onAttach() {
         super.onAttach();
-        this.cityDetailsSlot = MustGetElement('.panel-city-details-slot');
-        this.panelProductionSlot = MustGetElement('.panel-production-slot');
+        this.cityDetailsSlot = MustGetElement('.panel-city-details-slot', document);
+        this.panelProductionSlot = MustGetElement('.panel-production-slot', document);
         // Load items and trigger events in the chooser after initial render
         delayByFrame(() => {
             this.isInitialLoadComplete = true;
@@ -436,6 +437,7 @@ export class ProductionChooserScreen extends Panel {
             this.cityID = data.cityID;
             this.playAnimateOutSound();
             this.setHidden(false);
+            this.onViewReceiveFocus();
         }
         this.updateNavTray();
     }
@@ -456,6 +458,7 @@ export class ProductionChooserScreen extends Panel {
     }
     onCityProductionQueueChanged({ cityID }) {
         if (ComponentID.isMatch(this.cityID, cityID)) {
+            BuildingPlacementManager.initializePlacementData(cityID);
             this.updateItems.call('onCityProductionQueueChanged');
         }
     }
@@ -491,6 +494,8 @@ export class ProductionChooserScreen extends Panel {
             this.updateTownFocusSection(city.id, city.isTown, city.Happiness?.hasUnrest, city.Growth?.growthType, city.Growth?.projectType);
             this.Root.dataset.showTownFocus = 'false';
             FocusManager.setFocus(this.townFocusSection);
+            this.updateItems.call('townFocus');
+            this.townFocusPanel.dispatchEvent(new TownFocusRefreshEvent());
         }
     }
     onCityGovernmentLevelChanged({ cityID, governmentlevel }) {
@@ -668,7 +673,7 @@ export class ProductionChooserScreen extends Panel {
                 Audio.playSound("data-audio-queue-item", "audio-production-chooser");
             }
             animationConfirmCallback?.();
-            if (this.wasQueueInitiallyEmpty && !this.isPurchase) {
+            if (this.wasQueueInitiallyEmpty && !this.isPurchase && !Configuration.getUser().isProductionPanelStayOpen) {
                 UI.Player.deselectAllCities();
                 InterfaceMode.switchToDefault();
                 this.requestPlaceBuildingClose();
@@ -891,7 +896,12 @@ export class ProductionChooserScreen extends Panel {
             }
             this.townFocusSection.dataset.disabled = hasUnrest ? 'true' : 'false';
             this.townFocusSection.dataset.showDefaultLabel = showDefaultLabel.toString();
-            this.townFocusSection.classList.remove('hidden');
+            if (window.innerHeight < 768) {
+                this.townFocusSection.classList.toggle('hidden', hasUnrest);
+            }
+            else {
+                this.townFocusSection.classList.remove('hidden');
+            }
         }
         else {
             this.townFocusSection.classList.add('hidden');
@@ -1077,7 +1087,7 @@ export class ProductionChooserScreen extends Panel {
         }
         this.frame.appendChild(this.productionAccordion);
         this.subPanelContainer.classList.add('-z-1', 'mt-32', 'mb-12', '-ml-10', 'relative', 'shrink');
-        this.buildQueue.classList.add('absolute', 'left-3');
+        this.buildQueue.classList.add('absolute', 'left-3', 'h-full');
         this.subPanelContainer.appendChild(this.buildQueue);
         this.townFocusPanelCloseButton.classList.add('absolute', 'top-0', 'right-0');
         this.townFocusPanel.appendChild(this.townFocusPanelCloseButton);

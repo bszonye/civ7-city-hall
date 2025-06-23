@@ -129,6 +129,9 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         this.plotOverlay.addPlots(BuildingPlacementManager.developedPlots, { fillColor: HighlightColors.okay });
         this.plotOverlay.addPlots(BuildingPlacementManager.expandablePlots, { fillColor: HighlightColors.good });
     }
+    undecorate(_overlay, _modelGroup) {
+        this.plotOverlay = null; // parent will remove all overlays from the OverlayGroup
+    }
     onPlotCursorUpdated(event) {
         this.onPlotUpdated(event.detail.plotCoords);
     }
@@ -169,7 +172,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         this.commitPlot(plot);
         const selectedCityID = UI.Player.getHeadSelectedCity(); // May be null if placing results in deselecting city
         if (selectedCityID && ComponentID.isValid(selectedCityID)) {
-            if (!(this.isPurchasing) && City.isQueueEmpty(selectedCityID)) {
+            if (!(this.isPurchasing) && City.isQueueEmpty(selectedCityID) && !Configuration.getUser().isProductionPanelStayOpen) {
                 UI.Player.deselectAllCities();
                 InterfaceMode.switchToDefault();
             }
@@ -326,7 +329,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         }
         else {
             Input.setActiveContext(InputContext.Shell);
-            const placeBuildingPanel = MustGetElement("panel-place-building");
+            const placeBuildingPanel = MustGetElement("panel-place-building", document);
             if (placeBuildingPanel) {
                 Focus.setContextAwareFocus(placeBuildingPanel, placeBuildingPanel);
             }

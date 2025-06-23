@@ -5,6 +5,7 @@
  */
 import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
 import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
+import { formatStringArrayAsNewLineText } from "/core/ui/utilities/utilities-core-textprovider.js";
 export const UpdateCityDetailsEventName = 'update-city-details';
 class UpdateCityDetailsEvent extends CustomEvent {
     constructor() {
@@ -183,28 +184,15 @@ class CityDetailsModel {
             // Treasure Fleet Victory Information unique to Exploration Age and Distant Land settlements
             this.treasureFleetText = "";
             if (Game.age == Game.getHash("AGE_EXPLORATION") && city.isDistantLands) {
-                const techPrereqMet = cityResources.isTreasureTechPrereqMet();
-                const constructiblePrereqMet = cityResources.isTreasureConstructiblePrereqMet();
-                const turnsTillNextTreasureFleet = cityResources.getTurnsUntilTreasureGenerated();
-                if (!techPrereqMet) {
-                    const techDefinition = GameInfo.ProgressionTreeNodes.lookup("NODE_TECH_EX_SHIPBUILDING");
-                    if (techDefinition) {
-                        this.treasureFleetText = Locale.compose("LOC_UI_CITY_DETAILS_TREASURE_FLEET_TECH_PREREQ_NEEDED", techDefinition?.Name);
-                    }
-                    else {
-                        console.error("model-city-details: Failed to find Shipbuilding tech required for Treasure Fleets!");
-                    }
-                }
-                else if (!constructiblePrereqMet) {
-                    const constructibleDefinition = GameInfo.Constructibles.lookup("BUILDING_FISHING_QUAY");
-                    if (constructibleDefinition) {
-                        this.treasureFleetText = Locale.compose("LOC_UI_CITY_DETAILS_TREASURE_FLEET_CONSTRUCT_PREREQ_NEEDED", constructibleDefinition?.Name);
-                    }
-                    else {
-                        console.error("model-city-details: Failed to find Fishing Quay constructible required for Treasure Fleets!");
+                const result = cityResources.canStartTreasureFleet();
+                if (!result.Success) {
+                    if (result.FailureReasons) {
+                        const failureString = formatStringArrayAsNewLineText(result.FailureReasons);
+                        this.treasureFleetText += failureString;
                     }
                 }
                 else {
+                    const turnsTillNextTreasureFleet = cityResources.getTurnsUntilTreasureGenerated();
                     this.treasureFleetText = Locale.compose("LOC_UI_CITY_DETAILS_NEXT_TREASURE_FLEET_TURNS", turnsTillNextTreasureFleet);
                 }
             }
@@ -479,4 +467,5 @@ engine.whenReady.then(() => {
     CityDetails.updateCallback = updateModel;
 });
 export { CityDetails as default };
+
 //# sourceMappingURL=file:///base-standard/ui/city-details/model-city-details.js.map
