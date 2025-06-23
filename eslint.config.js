@@ -23,6 +23,7 @@ export default [
                 CityOperationsParametersValues: "readonly",
                 CityQueryType: "readonly",
                 CombatTypes: "readonly",
+                Configuration: "readonly",
                 Constructibles: "readonly",
                 Controls: "readonly",
                 CustomEvent: "readonly",
