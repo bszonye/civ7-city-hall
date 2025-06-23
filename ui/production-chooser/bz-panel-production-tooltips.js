@@ -82,10 +82,7 @@ class ProductionConstructibleTooltipType {
             this.productionCost.classList.add('hidden');
         }
         else {
-            // FIX: wrong argument type (ResourceTypes.NO_RESOURCE)
-            // the second & third arguments both look wrong, but the second
-            // one doesn't seem to break anything
-            const productionCost = city.Production?.getConstructibleProductionCost(definition.ConstructibleType, FeatureTypes.NO_FEATURE, false);
+            const productionCost = city.Production?.getConstructibleProductionCost(definition.ConstructibleType);
             if (productionCost === undefined) {
                 this.productionCost.classList.add('hidden');
             }
@@ -386,4 +383,5 @@ class ProductionProjectTooltipType {
     }
 }
 TooltipManager.registerType('production-project-tooltip', new ProductionProjectTooltipType());
+
 //# sourceMappingURL=file:///base-standard/ui/production-chooser/panel-production-tooltips.js.map
