@@ -32,6 +32,7 @@ import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
 import Databind from '/core/ui/utilities/utilities-core-databinding.js';
 import { Layout } from '/core/ui/utilities/utilities-layout.js';
 import { TownFocusRefreshEvent } from './panel-town-focus.js';
+import ActionHandler from '/core/ui/input/action-handler.js';
 const categoryLocalizationMap = {
     [ProductionPanelCategory.BUILDINGS]: 'LOC_UI_PRODUCTION_BUILDINGS',
     [ProductionPanelCategory.UNITS]: 'LOC_UI_PRODUCTION_UNITS',
@@ -153,6 +154,7 @@ export class ProductionChooserScreen extends Panel {
         this.focusOutListener = this.onFocusOut.bind(this);
         this.engineInputListener = this.onEngineInput.bind(this);
         this.frameEngineInputListener = this.onFrameEngineInput.bind(this);
+        this.requestCloseListener = this.requestClose.bind(this);
         this.onUpgradeToCityButtonListener = this.onUpgradeToCityButton.bind(this);
         this.viewFocusListener = this.onViewReceiveFocus.bind(this);
         this.onNextCityButtonListener = this.onNextCityButton.bind(this);
@@ -233,8 +235,10 @@ export class ProductionChooserScreen extends Panel {
                             callback: (eAction) => {
                                 if (eAction == DialogBoxAction.Confirm) {
                                     SetTownFocus(this.cityID, growthType, projectType);
+                                    return;
                                 }
-                            }
+                                FocusManager.setFocus(this.townFocusPanel);
+                            },
                         });
                     }
                     else {
@@ -366,7 +370,7 @@ export class ProductionChooserScreen extends Panel {
             this.Root.addEventListener('focusout', this.focusOutListener);
             this.Root.addEventListener('engine-input', this.engineInputListener);
             this.Root.addEventListener('view-receive-focus', this.viewFocusListener);
-            this.frame.addEventListener('subsystem-frame-close', this.requestClose);
+            this.frame.addEventListener('subsystem-frame-close', this.requestCloseListener);
             this.frame.addEventListener('engine-input', this.frameEngineInputListener);
             this.townFocusPanel.addEventListener('chooser-item-selected', this.onTownFocusItemSelected);
             this.viewHiddenCheckbox.addEventListener('component-value-changed', this.onViewHiddenChanged);
@@ -398,7 +402,7 @@ export class ProductionChooserScreen extends Panel {
         window.removeEventListener(InterfaceModeChangedEventName, this.onInterfaceModeChanged);
         window.removeEventListener(CityDetailsClosedEventName, this.onCityDetailsClosedListener);
         window.removeEventListener(FocusCityViewEventName, this.onFocusCityViewEvent);
-        this.frame.removeEventListener('subsystem-frame-close', this.requestClose);
+        this.frame.removeEventListener('subsystem-frame-close', this.requestCloseListener);
         this.Root.removeEventListener('focusin', this.focusInListener);
         this.Root.removeEventListener('focusout', this.focusOutListener);
         this.Root.removeEventListener('view-receive-focus', this.viewFocusListener);
@@ -414,6 +418,9 @@ export class ProductionChooserScreen extends Panel {
         this.productionAccordion.removeEventListener('chooser-item-selected', this.onChooserItemSelected);
         this.cityNameElement.removeEventListener('editable-header-text-changed', this.onSettlementNameChangedListener);
         Object.values(this.productionCategorySlots).forEach(slot => slot.disconnect());
+        if (ActionHandler.deviceType == InputDeviceType.Mouse) {
+            ActionHandler.forceCursorCheck();
+        }
         super.onDetach();
     }
     // #endregion
@@ -679,6 +686,9 @@ export class ProductionChooserScreen extends Panel {
                 this.requestPlaceBuildingClose();
             }
         }
+        if (queueLengthBeforeAdd == 0) {
+            Audio.playSound("data-audio-city-production-activate", "city-actions");
+        }
     }
     requestClose() {
         // This is a fix for an edge case issue where
@@ -857,6 +867,10 @@ export class ProductionChooserScreen extends Panel {
         this.buildQueue?.classList.toggle("collapsed", hidden);
     }
     onViewReceiveFocus() {
+        // if focus panel is still open, we don't want to change focus
+        if (this.Root.dataset.showTownFocus === 'true') {
+            return;
+        }
         FocusManager.setFocus(this.productionAccordion);
         if (this.city?.isTown) {
             Game.CityOperations.sendRequest(this.cityID, CityOperationTypes.CONSIDER_TOWN_PROJECT, {});

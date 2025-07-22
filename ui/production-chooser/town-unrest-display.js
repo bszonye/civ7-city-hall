@@ -44,10 +44,10 @@ export class TownUnrestDisplay extends Component {
     render() {
         this.Root.classList.add('flex', 'flex-col', 'items-center', 'justify-center', 'px-2');
         this.Root.innerHTML = `
-			<div class="text-lg font-title uppercase text-negative-light" data-l10n-id="LOC_UI_PRODUCTION_UNREST"></div>
+			<div class="font-title font-bold text-lg mt-2 uppercase pulse-warn" data-l10n-id="LOC_UI_PRODUCTION_UNREST"></div>
 		`;
         const slider = document.createElement('div');
-        slider.classList.add('w-full', 'h-1\\.5', 'my-2', 'town-unrest-bg');
+        slider.classList.add('w-full', 'h-1\\.5', 'mb-2', 'mt-2', 'town-unrest-bg');
         this.sliderFillElement.classList.add('size-full', 'origin-left', 'town-unrest-fill', 'transition-transform');
         slider.appendChild(this.sliderFillElement);
         this.Root.append(slider, this.remainingTurnsElement);

@@ -216,7 +216,8 @@ export const GetConstructibleItemData = (constructible, city, operationResult, h
             }
             else {
                 // Most items are shown anyway even if not available, but some aren't
-                if (!hideIfUnavailable || insufficientFunds) {
+                // No need to show items with insufficient funds if the locations are not suitable (they will be hidden anyway once the funds are enough)
+                if (!hideIfUnavailable || (insufficientFunds && possibleLocations.length > 0)) {
                     let name = constructible.Name;
                     let error = '';
                     let nodeNeededError = "";
@@ -232,9 +233,9 @@ export const GetConstructibleItemData = (constructible, city, operationResult, h
                     }
                     else {
                         error = operationResult.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
-                            operationResult.NeededUnlock != -1 ? nodeNeededError :
-                                possibleLocations.length === 0 ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" :
-                                    operationResult.InsufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
+                            (operationResult.NeededUnlock && operationResult.NeededUnlock != -1) ? nodeNeededError :
+                                operationResult.InsufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
+                                    possibleLocations.length === 0 ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" :
                                         operationResult.InQueue ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : '';
                     }
                     const cost = operationResult.Cost ?? cityGold.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, constructible.ConstructibleType);

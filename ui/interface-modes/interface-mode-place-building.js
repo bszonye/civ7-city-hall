@@ -170,9 +170,19 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
     }
     acceptProposePlotCallback(plot) {
         this.commitPlot(plot);
+        const context = this.Context;
+        const constructible = GameInfo.Constructibles.lookup(context.OperationArguments.ConstructibleType);
+        const constructibleType = (constructible) ? '-' + constructible.ConstructibleType : '';
         const selectedCityID = UI.Player.getHeadSelectedCity(); // May be null if placing results in deselecting city
         if (selectedCityID && ComponentID.isValid(selectedCityID)) {
-            if (!(this.isPurchasing) && City.isQueueEmpty(selectedCityID) && !Configuration.getUser().isProductionPanelStayOpen) {
+            const isEmptyQueue = City.isQueueEmpty(selectedCityID);
+            if (isEmptyQueue) {
+                UI.sendAudioEvent('placement-activate' + constructibleType);
+            }
+            else {
+                UI.sendAudioEvent('placement-queue' + constructibleType);
+            }
+            if (!(this.isPurchasing) && isEmptyQueue && !Configuration.getUser().isProductionPanelStayOpen) {
                 UI.Player.deselectAllCities();
                 InterfaceMode.switchToDefault();
             }
@@ -187,19 +197,14 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
     }
     proposePlot(plot, accept, reject) {
         const plotIndex = GameplayMap.getIndexFromLocation(plot);
-        const context = this.Context;
-        const constructible = GameInfo.Constructibles.lookup(context.OperationArguments.ConstructibleType);
-        const constructibleType = (constructible) ? '-' + constructible.ConstructibleType : '';
         //Urban plots and undeveloped plots are ready to accept the building placement
         if (BuildingPlacementManager.urbanPlots.find(p => p == plotIndex) || BuildingPlacementManager.expandablePlots.find(p => p == plotIndex)) {
             accept();
-            UI.sendAudioEvent('placement-activate' + constructibleType);
         }
         //Building over a developed plot requires confirmation to replace the improvement on that plot
         else if (BuildingPlacementManager.developedPlots.find(p => p == plotIndex)) {
             const acceptCallback = () => {
                 accept();
-                UI.sendAudioEvent('placement-activate' + constructibleType);
             };
             const cancelCallback = () => {
                 this.setMapFocused(true);

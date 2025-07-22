@@ -53,11 +53,11 @@ const TITLE_FONTS = getOrderedFontFamily(["TitleFont", "TitleFont-SC", "TitleFon
 const BODY_FONTS = getOrderedFontFamily(["BodyFont", "BodyFont-SC", "BodyFont-TC", "BodyFont-JP", "BodyFont-KR"]);
 class GlobalScalingImpl {
     constructor() {
+        this.globalScale = Configuration.getUser().uiGlobalScale;
         this.globalScaleStyleNode = document.createElement("style");
         this.fontSizesStyleNode = document.createElement("style");
         this.mediaFontSizesStyleNode = document.createElement("style");
         this.fontScale = Configuration.getUser().uiFontScale;
-        this.globalScale = Configuration.getUser().uiGlobalScale;
         this.autoScale = Configuration.getUser().uiAutoScale;
         this.currentScalePx = BASE_FONT_SIZE;
         this.currentBasis = 0;
@@ -231,7 +231,7 @@ class GlobalScalingImpl {
     }
     updateScales(sendResizeEvent) {
         this.updateGlobalScale();
-        UI.setGlobalScale(this.autoScale ? this.currentBasis * 100 : this.globalScale);
+        UI.setGlobalScale(this.getCurrentScale());
         this.updateMediaQueryFontSizes();
         this.updateFontSizes();
         if (sendResizeEvent) {
@@ -239,6 +239,9 @@ class GlobalScalingImpl {
                 window.dispatchEvent(new CustomEvent('resize'));
             });
         }
+    }
+    getCurrentScale() {
+        return this.autoScale ? this.currentBasis * 100 : this.globalScale;
     }
     clearCssRuleList(ruleList) {
         while (ruleList.cssRules.length > 0) {

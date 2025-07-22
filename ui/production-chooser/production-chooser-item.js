@@ -46,9 +46,6 @@ export const UpdateProductionChooserItem = (element, data, isPurchase) => {
     if (isPurchase) {
         element.setAttribute("data-audio-activate-ref", "data-audio-city-purchase-activate");
     }
-    else {
-        element.setAttribute("data-audio-activate-ref", "data-audio-city-production-activate");
-    }
     element.setAttribute('data-tooltip-style', categoryTooltipStyleMap[data.category]);
 };
 export class ProductionChooserItem extends FxsChooserItem {
@@ -207,4 +204,5 @@ Controls.define('production-chooser-item', {
         { name: 'data-recommendations' },
     ]
 });
+
 //# sourceMappingURL=file:///base-standard/ui/production-chooser/production-chooser-item.js.map
