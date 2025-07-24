@@ -60,9 +60,6 @@ export const UpdateProductionChooserItem = (element, data, isPurchase) => {
     if (isPurchase) {
         element.setAttribute("data-audio-activate-ref", "data-audio-city-purchase-activate");
     }
-    else {
-        element.setAttribute("data-audio-activate-ref", "data-audio-city-production-activate");
-    }
     element.setAttribute('data-tooltip-style', categoryTooltipStyleMap[data.category]);
 };
 export class ProductionChooserItem extends FxsChooserItem {
