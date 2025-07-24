@@ -323,13 +323,13 @@ class bzPanelCityDetails {
         window.addEventListener(bzUpdateCityDetailsEventName, this.updateOverviewListener);
         window.addEventListener(UpdateCityDetailsEventName, this.updateConstructiblesListener);
         // overview
-        const oslot = MustGetElement(`#${cityDetailTabID.overview}`, document);
+        const oslot = MustGetElement(`#${cityDetailTabID.overview}`, this.panel.Root);
         this.overviewSlot = oslot;
         this.growthContainer = MustGetElement(".growth-container", oslot);
         this.connectionsContainer = MustGetElement(".connections-container", oslot);
         this.improvementsContainer = MustGetElement(".improvements-container", oslot);
         // constructibles
-        const cslot = MustGetElement(`#${cityDetailTabID.constructibles}`, document);
+        const cslot = MustGetElement(`#${cityDetailTabID.constructibles}`, this.panel.Root);
         this.constructibleSlot = cslot;
         this.buildingsCategory = MustGetElement(".bz-buildings-category", cslot);
         this.buildingsList = MustGetElement(".bz-buildings-list", cslot);
