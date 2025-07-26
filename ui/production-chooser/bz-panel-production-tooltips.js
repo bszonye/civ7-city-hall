@@ -37,7 +37,7 @@ class ProductionConstructibleTooltipType {
         this.gemsContainer.className = 'mt-10';
         this.maintenanceEntriesContainer.className = 'flex text-negative-light';
         this.maintenanceContainer.append(maintenanceLabel, this.maintenanceEntriesContainer);
-        this.container.append(this.header, this.constructibleName, this.productionCost, this.baseYield, this.constructibleBonusContainer, this.description, this.gemsContainer, this.maintenanceContainer);
+        this.container.append(this.header, this.constructibleName, this.baseYield, this.constructibleBonusContainer, this.description, this.gemsContainer, this.maintenanceContainer, this.productionCost);
     }
     getHTML() {
         return this.container;
@@ -89,7 +89,7 @@ class ProductionConstructibleTooltipType {
             else {
                 // FIX: unhide production cost when displaying it
                 this.productionCost.classList.remove('hidden');
-                this.productionCost.innerHTML = Locale.stylize('LOC_UI_PRODUCTION_COST', productionCost);
+                this.productionCost.innerHTML = Locale.stylize('LOC_CARD_COST', `${productionCost}[icon:YIELD_PRODUCTION]`);
             }
         }
         const { baseYield, adjacencies, effects } = getConstructibleEffectStrings(definition.ConstructibleType, city);
@@ -181,7 +181,7 @@ class ProductionUnitTooltipType {
         goldIcon.classList.add('size-5', 'mr-1');
         this.maintenanceCostText.className = 'text-negative-light';
         this.maintenanceContainer.append(maintenanceLabel, goldIcon, this.maintenanceCostText);
-        this.container.append(this.header, this.itemName, this.productionCost, this.description, this.gemsContainer, this.maintenanceContainer);
+        this.container.append(this.header, this.itemName, this.description, this.gemsContainer, this.maintenanceContainer, this.productionCost);
     }
     getHTML() {
         return this.container;
@@ -232,7 +232,7 @@ class ProductionUnitTooltipType {
             else {
                 // FIX: unhide production cost when displaying it
                 this.productionCost.classList.remove('hidden');
-                this.productionCost.innerHTML = Locale.stylize('LOC_UI_PRODUCTION_COST', productionCost);
+                this.productionCost.innerHTML = Locale.stylize('LOC_CARD_COST', `${productionCost}[icon:YIELD_PRODUCTION]`);
             }
         }
         if (this.definition?.Description) {
