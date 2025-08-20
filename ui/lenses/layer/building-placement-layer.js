@@ -3,7 +3,7 @@
  * @copyright 2023-2025, Firaxis Games
  * @description Lens layer to show yield deltas and adjacencies from placing a building
  */
-import BuildingPlacementManager, { BuildingPlacementHoveredPlotChangedEventName } from '/base-standard/ui/building-placement/building-placement-manager.js';
+import { BuildingPlacementManager, BuildingPlacementHoveredPlotChangedEventName } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
 import { S as SortYields } from '/base-standard/ui/utilities/utilities-city-yields.chunk.js';

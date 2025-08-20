@@ -4,7 +4,7 @@
  * @file production-chooser-helpers.ts
  */
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
-import BuildingPlacementManager from '/base-standard/ui/building-placement/building-placement-manager.js';
+import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.js';
 import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
 import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
