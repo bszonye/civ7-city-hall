@@ -320,15 +320,14 @@ class BuildingPlacementManagerClass {
             }
         });
         // Warehouse Bonuses
-        let warehouseBonuses = new Map();
+        const warehouseBonuses = /* @__PURE__ */ new Map();
         placementPlotData.changeDetails.forEach((changeDetails) => {
             switch (changeDetails.sourceType) {
                 case YieldSourceTypes.WAREHOUSE: {
                     const warehouseBonus = warehouseBonuses.get(changeDetails.yieldType);
                     if (warehouseBonus) {
                         warehouseBonuses.set(changeDetails.yieldType, warehouseBonus + changeDetails.change);
-                    }
-                    else {
+                    } else {
                         warehouseBonuses.set(changeDetails.yieldType, changeDetails.change);
                     }
                     break;
@@ -338,7 +337,9 @@ class BuildingPlacementManagerClass {
         warehouseBonuses.forEach((change, yieldType) => {
             const yieldDefinition = GameInfo.Yields.lookup(yieldType);
             if (!yieldDefinition) {
-                console.error(`building-placement-manager: Failed to find warehouse bonuses type for type ${yieldType}`);
+                console.error(
+                    `building-placement-manager: Failed to find warehouse bonuses type for type ${yieldType}`
+                );
                 return;
             }
             yieldChangeInfo.push({
@@ -354,7 +355,9 @@ class BuildingPlacementManagerClass {
     getAdjacencyYieldChanges(plotIndex) {
         const placementPlotData = this.getPlacementPlotData(plotIndex);
         if (!placementPlotData) {
-            console.error(`building-placement-manager: getAdjacencyYieldChanges(): Failed to find PlacementPlotData for plotIndex ${plotIndex}`);
+            console.error(
+                `building-placement-manager: getAdjacencyYieldChanges(): Failed to find PlacementPlotData for plotIndex ${plotIndex}`
+            );
             return;
         }
         const yieldChangeInfo = [];
@@ -378,8 +381,7 @@ class BuildingPlacementManagerClass {
                             iconURL: UI.getIconURL(yieldDefinition.YieldType, "YIELD")
                         });
                         break;
-                    }
-                    else {
+                    } else {
                         // This adjacency is coming from a different plot
                         yieldChangeInfo.push({
                             text: Locale.compose(
@@ -400,7 +402,10 @@ class BuildingPlacementManagerClass {
         return yieldChangeInfo;
     }
     getDirectionString(fromPlot, toPlot) {
-        const direction = GameplayMap.getDirectionToPlot(GameplayMap.getLocationFromIndex(toPlot), GameplayMap.getLocationFromIndex(fromPlot));
+        const direction = GameplayMap.getDirectionToPlot(
+            GameplayMap.getLocationFromIndex(toPlot),
+            GameplayMap.getLocationFromIndex(fromPlot)
+        );
         switch (direction) {
             case DirectionTypes.DIRECTION_EAST:
                 return "LOC_WORLD_DIRECTION_EAST";
@@ -701,14 +706,16 @@ class BuildingPlacementManagerClass {
         }
         let bestYieldChanges = [];
         let bestYieldChangesTotal = Number.MIN_SAFE_INTEGER;
-        for (const placement of constructiblePlacementData?.placements ?? []) {
-            let yieldChangesTotal = 0;
-            for (const change of placement.yieldChanges) {
-                yieldChangesTotal += change;
-            }
-            if (yieldChangesTotal > bestYieldChangesTotal) {
-                bestYieldChangesTotal = yieldChangesTotal;
-                bestYieldChanges = placement.yieldChanges;
+        if (constructiblePlacementData) {
+            for (const placement of constructiblePlacementData.placements) {
+                let yieldChangesTotal = 0;
+                for (const change of placement.yieldChanges) {
+                    yieldChangesTotal += change;
+                }
+                if (yieldChangesTotal > bestYieldChangesTotal) {
+                    bestYieldChangesTotal = yieldChangesTotal;
+                    bestYieldChanges = placement.yieldChanges;
+                }
             }
         }
         return bestYieldChanges;
@@ -717,4 +724,4 @@ class BuildingPlacementManagerClass {
 const BuildingPlacementManager = new BuildingPlacementManagerClass();
 
 export { BuildingPlacementConstructibleChangedEvent, BuildingPlacementConstructibleChangedEventName, BuildingPlacementHoveredPlotChangedEvent, BuildingPlacementHoveredPlotChangedEventName, BuildingPlacementManager, BuildingPlacementSelectedPlotChangedEvent, BuildingPlacementSelectedPlotChangedEventName };
-//# sourceMappingURL=file:///base-standard/ui/building-placement/building-placement-manager.js.map
+//# sourceMappingURL=building-placement-manager.js.map
