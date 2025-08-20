@@ -17,6 +17,9 @@
         <Criteria id="always">
             <AlwaysMet/>
         </Criteria>
+        <Criteria id="never">
+            <NeverMet/>
+        </Criteria>
     </ActionCriteria>
     <ActionGroups>
         <ActionGroup id="bz-city-hall-menu" scope="shell" criteria="always">
@@ -53,15 +56,8 @@
                     <Item>ui/lenses/layer/building-placement-layer.js</Item>
                     <Item>ui/options/bz-city-hall-options.js</Item>
                     <Item>ui/options/mod-options-decorator.js</Item>
-                    <Item>ui/production-chooser/production-chooser-helpers.chunk.js</Item>
-                    <Item>ui/production-chooser/production-chooser-item.js</Item>
-                    <Item>ui/production-chooser/production-chooser-unique-quarter.js</Item>
                 </ImportFiles>
                 <UIScripts>
-                    <Item>ui/city-details/bz-model-city-details.js</Item>
-                    <Item>ui/city-details/bz-panel-city-details.js</Item>
-                    <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
-                    <Item>ui/production-chooser/bz-panel-production-tooltips.js</Item>
                 </UIScripts>
                 <UpdateText>
                     <Item>text/en_us/InGameText.xml</Item>
@@ -74,6 +70,24 @@
                     <Item locale="zh_Hans_CN">text/zh_Hans_CN/InGameText.xml</Item>
                     <Item locale="zh_Hant_HK">text/zh_Hant_HK/InGameText.xml</Item>
                 </UpdateText>
+            </Actions>
+        </ActionGroup>
+        <ActionGroup id="bz-city-hall-todo" scope="game" criteria="never">
+            <Properties>
+                <LoadOrder>1000</LoadOrder>
+            </Properties>
+            <Actions>
+                <ImportFiles>
+                    <Item>ui/production-chooser/production-chooser-helpers.chunk.js</Item>
+                    <Item>ui/production-chooser/production-chooser-item.js</Item>
+                    <Item>ui/production-chooser/production-chooser-unique-quarter.js</Item>
+                </ImportFiles>
+                <UIScripts>
+                    <Item>ui/city-details/bz-model-city-details.js</Item>
+                    <Item>ui/city-details/bz-panel-city-details.js</Item>
+                    <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
+                    <Item>ui/production-chooser/bz-panel-production-tooltips.js</Item>
+                </UIScripts>
             </Actions>
         </ActionGroup>
     </ActionGroups>

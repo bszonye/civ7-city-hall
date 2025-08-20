@@ -13,6 +13,13 @@ import { City } from '/base-standard/ui/city-selection/city-selection.js';
 import { C as CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.chunk.js';
 import ChoosePlotInterfaceMode from '/base-standard/ui/interface-modes/interface-mode-choose-plot.js';
 import { ProductionChooserScreen } from '/base-standard/ui/production-chooser/panel-production-chooser.js';
+
+const TogglePlacementMinMaxEventName = "toggle-placement-min-max";
+class TogglePlacementMinMaxEvent extends CustomEvent {
+  constructor() {
+    super(TogglePlacementMinMaxEventName);
+  }
+}
 var HighlightColors;
 (function (HighlightColors) {
     HighlightColors[HighlightColors["okay"] = 0xc800f2fe] = "okay";
@@ -20,9 +27,6 @@ var HighlightColors;
     HighlightColors[HighlightColors["best"] = 0xc84db123] = "best";
     HighlightColors[HighlightColors["worst"] = 0xc80055cc] = "worst";
 })(HighlightColors || (HighlightColors = {}));
-/**
- * Handler for INTERFACEMODE_PLACE_BUILDING.
- */
 class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
     constructor() {
         super(...arguments);
@@ -377,6 +381,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         return true;
     }
 }
-InterfaceMode.addHandler('INTERFACEMODE_PLACE_BUILDING', new PlaceBuildingInterfaceMode());
+InterfaceMode.addHandler("INTERFACEMODE_PLACE_BUILDING", new PlaceBuildingInterfaceMode());
 
-//# sourceMappingURL=file:///base-standard/ui/interface-modes/interface-mode-place-building.js.map
+export { TogglePlacementMinMaxEvent, TogglePlacementMinMaxEventName };
+//# sourceMappingURL=interface-mode-place-building.js.map

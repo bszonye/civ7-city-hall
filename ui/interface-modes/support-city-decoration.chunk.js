@@ -1,8 +1,3 @@
-/**
- * @file City Decoration support
- * @copyright 2022, Firaxis Games
- * @description City Decoration support for interface modes (city-selected, city-production, city-growth, city-info)
- */
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { O as OVERLAY_PRIORITY } from '/base-standard/ui/utilities/utilities-overlay.chunk.js';
 import { WorkerYieldsLensLayer } from '/bz-city-hall/ui/lenses/layer/building-placement-layer.js';
@@ -95,4 +90,5 @@ export var CityDecorationSupport;
     CityDecorationSupport.manager = new Instance();
 })(CityDecorationSupport || (CityDecorationSupport = {}));
 
+export { CityDecorationSupport as C };
 //# sourceMappingURL=file:///base-standard/ui/interface-modes/support-city-decoration.js.map
