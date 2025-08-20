@@ -1,4 +1,4 @@
-import { CategoryData, CategoryType } from '/core/ui/options/options-helpers.js';
+import { d as CategoryData, C as CategoryType } from '/core/ui/options/editors/index.chunk.js';
 
 CategoryType["Mods"] = "mods";
 CategoryData[CategoryType.Mods] = {
