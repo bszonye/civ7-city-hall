@@ -3,7 +3,7 @@
  * @copyright 2023, Firaxis Games
  * @description Helper class to keep track of building being placed and other shared building placement data
  */
-import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
+import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 export const BuildingPlacementHoveredPlotChangedEventName = 'building-placement-hovered-plot-changed';
 export class BuildingPlacementHoveredPlotChangedEvent extends CustomEvent {
     constructor() {

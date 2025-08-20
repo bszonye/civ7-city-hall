@@ -4,9 +4,9 @@
  * @description Lens layer to show yield deltas and adjacencies from placing a building
  */
 import BuildingPlacementManager, { BuildingPlacementHoveredPlotChangedEventName } from '/base-standard/ui/building-placement/building-placement-manager.js';
-import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
-import LensManager from '/core/ui/lenses/lens-manager.js';
-import { SortYields } from '/base-standard/ui/utilities/utilities-city-yields.js';
+import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
+import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
+import { S as SortYields } from '/base-standard/ui/utilities/utilities-city-yields.chunk.js';
 const adjacencyIcons = new Map([
     [DirectionTypes.DIRECTION_EAST, "adjacencyarrow_east"],
     [DirectionTypes.DIRECTION_NORTHEAST, "adjacencyarrow_northeast"],

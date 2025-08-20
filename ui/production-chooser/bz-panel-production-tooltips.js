@@ -4,11 +4,11 @@ import "/base-standard/ui/production-chooser/panel-production-tooltips.js";
  * @copyright 2024, Firaxis Gmaes
  * @description The tooltip for showing why a plot is recommended for settlement.
  */
-import { GetTownFocusBlp } from '/base-standard/ui/production-chooser/production-chooser-helpers.js';
-import { AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.js';
+import { c as GetTownFocusBlp } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
+import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
 import TooltipManager from '/core/ui/tooltips/tooltip-manager.js';
-import { getConstructibleEffectStrings } from '/core/ui/utilities/utilities-core-textprovider.js';
-import { IsElement } from '/core/ui/utilities/utilities-dom.js';
+import { d as getConstructibleEffectStrings } from '/core/ui/utilities/utilities-core-textprovider.chunk.js';
+import { IsElement } from '/core/ui/utilities/utilities-dom.chunk.js';
 class ProductionConstructibleTooltipType {
     // #endregion
     constructor() {

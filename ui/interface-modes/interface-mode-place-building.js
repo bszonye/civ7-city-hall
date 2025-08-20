@@ -1,24 +1,18 @@
-/**
- * @file interface-mode-place-buildings.ts
- * @copyright 2021-2023, Firaxis Games
- * @description Interface mode when the player wants to place a building in a city
- */
-import { Audio } from '/core/ui/audio-base/audio-support.js';
-import BuildingPlacementManager from '/base-standard/ui/building-placement/building-placement-manager.js';
-import ChoosePlotInterfaceMode from '/base-standard/ui/interface-modes/interface-mode-choose-plot.js';
-import { City } from '/base-standard/ui/city-selection/city-selection.js';
-import { CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.js';
-import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
+import { A as Audio } from '/core/ui/input/focus-manager.js';
+import { DialogBoxManager } from '/core/ui/dialog-box/manager-dialog-box.chunk.js';
 import { CursorUpdatedEventName } from '/core/ui/input/cursor.js';
-import { PlotCursorUpdatedEventName } from '/core/ui/input/plot-cursor.js';
-import DialogManager from '/core/ui/dialog-box/manager-dialog-box.js';
+import { F as Focus } from '/core/ui/input/focus-support.chunk.js';
+import { PlotCursor, PlotCursorUpdatedEventName } from '/core/ui/input/plot-cursor.js';
 import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
-import PlotCursor from '/core/ui/input/plot-cursor.js';
-import LensManager from '/core/ui/lenses/lens-manager.js';
-import { MustGetElement } from '/core/ui/utilities/utilities-dom.js';
-import NavTray from '/core/ui/navigation-tray/model-navigation-tray.js';
+import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
+import { N as NavTray } from '/core/ui/navigation-tray/model-navigation-tray.chunk.js';
+import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
+import { MustGetElement } from '/core/ui/utilities/utilities-dom.chunk.js';
+import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
+import { City } from '/base-standard/ui/city-selection/city-selection.js';
+import { C as CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.chunk.js';
+import ChoosePlotInterfaceMode from '/base-standard/ui/interface-modes/interface-mode-choose-plot.js';
 import { ProductionChooserScreen } from '/base-standard/ui/production-chooser/panel-production-chooser.js';
-import { Focus } from '/core/ui/input/focus-support.js';
 var HighlightColors;
 (function (HighlightColors) {
     HighlightColors[HighlightColors["okay"] = 0xc800f2fe] = "okay";
@@ -252,7 +246,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
                     Locale.compose('LOC_BUILDING_PLACEMENT_REMOVE_IMPOVEMENT_BODY', oldImprovementName, BuildingPlacementManager.currentConstructible.Name)
                     : Locale.compose('LOC_BUILDING_PLACEMENT_REMOVE_GENERIC_IMPOVEMENT_BODY', BuildingPlacementManager.currentConstructible.Name);
                 NavTray.clear();
-                DialogManager.createDialog_MultiOption({
+                DialogBoxManager.createDialog_MultiOption({
                     body: body,
                     title: "LOC_BUILDING_PLACEMENT_REMOVE_IMPOVEMENT",
                     options: options,
@@ -266,7 +260,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
                         Locale.compose('LOC_BUILDING_PLACEMENT_CREATE_URBAN_TILE_REMOVE_IMPROVEMENT', oldImprovementName, BuildingPlacementManager.currentConstructible.Name)
                         : Locale.compose('LOC_BUILDING_PLACEMENT_CREATE_URBAN_TILE_BODY', BuildingPlacementManager.currentConstructible.Name);
                     NavTray.clear();
-                    DialogManager.createDialog_MultiOption({
+                    DialogBoxManager.createDialog_MultiOption({
                         body: body,
                         title: "LOC_BUILDING_PLACEMENT_CREATE_URBAN_TILE",
                         options: options,
@@ -276,7 +270,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
                 else {
                     const body = Locale.compose('LOC_BUILDING_PLACEMENT_REPLACE_BUILDING_BODY', BuildingPlacementManager.currentConstructible.Name);
                     NavTray.clear();
-                    DialogManager.createDialog_MultiOption({
+                    DialogBoxManager.createDialog_MultiOption({
                         body: body,
                         title: "LOC_BUILDING_PLACEMENT_REPLACE_BUILDING",
                         options: options,

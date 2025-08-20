@@ -49,11 +49,11 @@
                 <ImportFiles>
                     <Item>ui/building-placement/building-placement-manager.js</Item>
                     <Item>ui/interface-modes/interface-mode-place-building.js</Item>
-                    <Item>ui/interface-modes/support-city-decoration.js</Item>
+                    <Item>ui/interface-modes/support-city-decoration.chunk.js</Item>
                     <Item>ui/lenses/layer/building-placement-layer.js</Item>
                     <Item>ui/options/bz-city-hall-options.js</Item>
                     <Item>ui/options/mod-options-decorator.js</Item>
-                    <Item>ui/production-chooser/production-chooser-helpers.js</Item>
+                    <Item>ui/production-chooser/production-chooser-helpers.chunk.js</Item>
                     <Item>ui/production-chooser/production-chooser-item.js</Item>
                     <Item>ui/production-chooser/production-chooser-unique-quarter.js</Item>
                 </ImportFiles>
