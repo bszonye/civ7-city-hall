@@ -1,6 +1,9 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { O as OVERLAY_PRIORITY } from '/base-standard/ui/utilities/utilities-overlay.chunk.js';
+import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
 import { WorkerYieldsLensLayer } from '/bz-city-hall/ui/lenses/layer/building-placement-layer.js';
+// make sure the urban layer loads first
+import '/bz-city-hall/ui/lenses/layer/bz-urban-layer.js';
 
 var CityDecorationSupport;
 ((CityDecorationSupport2) => {
@@ -33,6 +36,7 @@ var CityDecorationSupport;
             this.cityOverlay = this.cityOverlayGroup.addPlotOverlay();
             this.citySpriteGrid = WorldUI.createSpriteGrid("CityOverlaySpriteGroup", true);
             this.citySpriteGrid.setVisible(false);
+            this.urbanLayer = LensManager.layers.get('bz-urban-layer');
             engine.on("BeforeUnload", this.beforeUnloadListener);
         }
         realizeBuildSlots(district, grid) {
@@ -41,6 +45,7 @@ var CityDecorationSupport;
             WorkerYieldsLensLayer.prototype.realizeBuildSlots.apply(this, [district, grid]);
         }
         decoratePlots(cityID) {
+            this.urbanLayer.applyLayer();
             this.cityOverlayGroup?.clearAll();
             this.citySpriteGrid?.clear();
             this.citySpriteGrid?.setVisible(true);
@@ -81,6 +86,7 @@ var CityDecorationSupport;
             this.clearDecorations();
         }
         clearDecorations() {
+            this.urbanLayer.removeLayer();
             if (this.filtered) WorldUI.popFilter();
             this.filtered = false;
             this.cityOverlayGroup?.clearAll();

@@ -58,6 +58,7 @@
                     <Item>ui/options/mod-options-decorator.js</Item>
                 </ImportFiles>
                 <UIScripts>
+                    <Item>ui/lenses/layer/bz-urban-layer.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-tooltips.js</Item>
                 </UIScripts>
                 <UpdateText>
