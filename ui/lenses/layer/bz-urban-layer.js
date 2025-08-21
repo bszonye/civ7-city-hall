@@ -25,9 +25,8 @@ class bzUrbanLayer {
         this.urbanOverlay.clear();
         this.centerOverlay.clear();
         // update city overlays
-        const cityID = UI.Player.getHeadSelectedCity() ??
-            PlotWorkersManager.cityID;
-        const city = Cities.get(cityID);
+        const cityID = UI.Player.getHeadSelectedCity() ?? PlotWorkersManager.cityID;
+        const city = cityID && Cities.get(cityID);
         if (!city) return;
         const centerPlot = GameplayMap.getIndexFromLocation(city.location);
         const urbanPlots = city.getPurchasedPlots().filter((plot) => {
