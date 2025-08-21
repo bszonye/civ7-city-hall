@@ -29,7 +29,6 @@ var CityDecorationSupport;
         OUTER_REGION_OVERLAY_FILTER = { brightness: 4/9 }; // darken outside plots
         filtered = false;
         initializeOverlay() {
-            console.warn(`TRIX INIT`);
             this.cityOverlayGroup = WorldUI.createOverlayGroup("CityOverlayGroup", OVERLAY_PRIORITY.PLOT_HIGHLIGHT);
             this.cityOverlay = this.cityOverlayGroup.addPlotOverlay();
             this.citySpriteGrid = WorldUI.createSpriteGrid("CityOverlaySpriteGroup", true);
@@ -42,7 +41,6 @@ var CityDecorationSupport;
             WorkerYieldsLensLayer.prototype.realizeBuildSlots.apply(this, [district, grid]);
         }
         decoratePlots(cityID) {
-            console.warn(`TRIX DECORATE`);
             this.cityOverlayGroup?.clearAll();
             this.citySpriteGrid?.clear();
             this.citySpriteGrid?.setVisible(true);
