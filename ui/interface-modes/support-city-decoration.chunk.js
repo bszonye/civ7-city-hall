@@ -1,6 +1,7 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { O as OVERLAY_PRIORITY } from '/base-standard/ui/utilities/utilities-overlay.chunk.js';
 import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
+import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
 import { WorkerYieldsLensLayer } from '/bz-city-hall/ui/lenses/layer/building-placement-layer.js';
 // make sure the urban layer loads first
 import '/bz-city-hall/ui/lenses/layer/bz-urban-layer.js';
@@ -25,11 +26,14 @@ var CityDecorationSupport;
         beforeUnloadListener = () => {
             this.onUnload();
         };
+        onPlotChange = () => this.updateGate.call('onPlotChange');
+        updateGate = new UpdateGate(this.decoratePlots.bind(this));
         BUILD_SLOT_SPRITE_PADDING = 12;
         YIELD_SPRITE_HEIGHT = 6;
         YIELD_SPRITE_ANGLE = Math.PI / 4;  // 45°
         YIELD_SPRITE_PADDING = 11;
         OUTER_REGION_OVERLAY_FILTER = { brightness: 4/9 }; // darken outside plots
+        cityID = null;
         filtered = false;
         initializeOverlay() {
             this.cityOverlayGroup = WorldUI.createOverlayGroup("CityOverlayGroup", OVERLAY_PRIORITY.PLOT_HIGHLIGHT);
@@ -37,6 +41,8 @@ var CityDecorationSupport;
             this.citySpriteGrid = WorldUI.createSpriteGrid("CityOverlaySpriteGroup", true);
             this.citySpriteGrid.setVisible(false);
             this.urbanLayer = LensManager.layers.get('bz-urban-layer');
+            engine.on('ConstructibleAddedToMap', this.onPlotChange);
+            engine.on('ConstructibleRemovedFromMap', this.onPlotChange);
             engine.on("BeforeUnload", this.beforeUnloadListener);
         }
         realizeBuildSlots(district, grid) {
@@ -44,8 +50,9 @@ var CityDecorationSupport;
             // borrow the realizeBuildSlots method
             WorkerYieldsLensLayer.prototype.realizeBuildSlots.apply(this, [district, grid]);
         }
-        decoratePlots(cityID) {
-            this.urbanLayer.applyLayer();
+        decoratePlots(cityID=this.cityID) {
+            this.cityID = cityID;  // remember cityID for update handler
+            this.urbanLayer.applyLayer();  // apply urban core outline
             this.cityOverlayGroup?.clearAll();
             this.citySpriteGrid?.clear();
             this.citySpriteGrid?.setVisible(true);
@@ -86,6 +93,7 @@ var CityDecorationSupport;
             this.clearDecorations();
         }
         clearDecorations() {
+            this.cityID = null;
             this.urbanLayer.removeLayer();
             if (this.filtered) WorldUI.popFilter();
             this.filtered = false;
