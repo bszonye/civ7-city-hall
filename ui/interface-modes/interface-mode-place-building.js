@@ -13,6 +13,47 @@ import { City } from '/base-standard/ui/city-selection/city-selection.js';
 import { C as CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.chunk.js';
 import ChoosePlotInterfaceMode from '/base-standard/ui/interface-modes/interface-mode-choose-plot.js';
 import { ProductionChooserScreen } from '/base-standard/ui/production-chooser/panel-production-chooser.js';
+import '/core/ui/framework.chunk.js';
+import '/core/ui/context-manager/display-handler.chunk.js';
+import '/core/ui/context-manager/display-queue-manager.js';
+import '/core/ui/views/view-manager.chunk.js';
+import '/core/ui/panel-support.chunk.js';
+import '/core/ui/components/fxs-slot.chunk.js';
+import '/core/ui/spatial/spatial-manager.js';
+import '/core/ui/context-manager/context-manager.js';
+import '/core/ui/input/action-handler.js';
+import '/core/ui/input/input-support.chunk.js';
+import '/core/ui/utilities/utilities-image.chunk.js';
+import '/core/ui/utilities/utilities-update-gate.chunk.js';
+import '/core/ui/graph-layout/utils.chunk.js';
+import '/base-standard/ui/utilities/utilities-overlay.chunk.js';
+import '/base-standard/ui/world-input/world-input.js';
+import '/core/ui/utilities/utilities-network.js';
+import '/core/ui/shell/mp-legal/mp-legal.js';
+import '/core/ui/events/shell-events.chunk.js';
+import '/core/ui/utilities/utilities-liveops.js';
+import '/core/ui/utilities/utilities-network-constants.chunk.js';
+import '/base-standard/ui/diplomacy/diplomacy-events.js';
+import '/base-standard/ui/interface-modes/support-unit-map-decoration.chunk.js';
+import '/core/ui/components/fxs-editable-header.chunk.js';
+import '/core/ui/components/fxs-activatable.chunk.js';
+import '/core/ui/utilities/utilities-core-databinding.chunk.js';
+import '/core/ui/utilities/utilities-layout.chunk.js';
+import '/base-standard/ui/build-queue/model-build-queue.js';
+import '/base-standard/ui/city-details/panel-city-details.js';
+import '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
+import '/core/ui/utilities/utilities-core-textprovider.chunk.js';
+import '/base-standard/ui/tutorial/tutorial-support.chunk.js';
+import '/core/ui/components/fxs-nav-help.chunk.js';
+import '/base-standard/ui/quest-tracker/quest-item.js';
+import '/base-standard/ui/quest-tracker/quest-tracker.js';
+import '/base-standard/ui/tutorial/tutorial-item.js';
+import '/base-standard/ui/tutorial/tutorial-manager.js';
+import '/core/ui/input/input-filter.chunk.js';
+import '/base-standard/ui/tutorial/tutorial-events.chunk.js';
+import '/base-standard/ui/views/view-city.js';
+import '/core/ui/components/fxs-chooser-item.chunk.js';
+import '/base-standard/ui/utilities/utilities-city-yields.chunk.js';
 
 const TogglePlacementMinMaxEventName = "toggle-placement-min-max";
 class TogglePlacementMinMaxEvent extends CustomEvent {
@@ -20,43 +61,56 @@ class TogglePlacementMinMaxEvent extends CustomEvent {
     super(TogglePlacementMinMaxEventName);
   }
 }
-var HighlightColors;
-(function (HighlightColors) {
-    HighlightColors[HighlightColors["okay"] = 0xc800f2fe] = "okay";
-    HighlightColors[HighlightColors["good"] = 0xc81de5b5] = "good";
-    HighlightColors[HighlightColors["best"] = 0xc84db123] = "best";
-    HighlightColors[HighlightColors["worst"] = 0xc80055cc] = "worst";
-})(HighlightColors || (HighlightColors = {}));
+var HighlightColors = /* @__PURE__ */ ((HighlightColors2) => {
+    HighlightColors2[HighlightColors2["okay"] = 0xc800f2fe] = "okay";
+    HighlightColors2[HighlightColors2["good"] = 0xc81de5b5] = "good";
+    HighlightColors2[HighlightColors2["best"] = 0xc84db123] = "best";
+    HighlightColors2[HighlightColors2["worst"] = 0xc80055cc] = "worst";
+    return HighlightColors2;
+})(HighlightColors || {});
 class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
-    constructor() {
-        super(...arguments);
-        this.isPurchasing = false;
-        this.plotOverlay = null;
-        this.lastHoveredPlot = -1;
-        this.mapFocused = true;
-        this.OUTER_REGION_OVERLAY_FILTER = { saturation: 0.1, brightness: 0.3 }; //Semi-opaque dark grey to darken plots outside of the city
-        this.cursorUpdateListener = this.onCursorUpdated.bind(this);
-        this.plotCursorUpdatedListener = this.onPlotCursorUpdated.bind(this);
-    }
+    isPurchasing = false;
+    plotOverlay = null;
+    lastHoveredPlot = -1;
+    mapFocused = true;
+    OUTER_REGION_OVERLAY_FILTER = { saturation: 0.1, brightness: 0.3 };
+    //Semi-opaque dark grey to darken plots outside of the city
+    cursorUpdateListener = this.onCursorUpdated.bind(this);
+    plotCursorUpdatedListener = this.onPlotCursorUpdated.bind(this);
     initialize() {
         const context = this.Context;
         this.isPurchasing = context.IsPurchasing;
         const city = Cities.get(context.CityID);
         if (!city) {
-            console.error("interface-mode-place-building: Unable to find city with CityID: " + ComponentID.toLogString(context.CityID));
+            console.error(
+                "interface-mode-place-building: Unable to find city with CityID: " + ComponentID.toLogString(context.CityID)
+            );
             return false;
         }
         PlotCursor.plotCursorCoords = city.location;
         let result;
         if (this.isPurchasing) {
-            result = Game.CityCommands.canStart(context.CityID, CityCommandTypes.PURCHASE, context.OperationArguments, false);
+            result = Game.CityCommands.canStart(
+                context.CityID,
+                CityCommandTypes.PURCHASE,
+                context.OperationArguments,
+                false
+            );
+        } else {
+            result = Game.CityOperations.canStart(
+                context.CityID,
+                CityOperationTypes.BUILD,
+                context.OperationArguments,
+                false
+            );
         }
-        else {
-            result = Game.CityOperations.canStart(context.CityID, CityOperationTypes.BUILD, context.OperationArguments, false);
-        }
-        const constructible = GameInfo.Constructibles.lookup(context.OperationArguments.ConstructibleType);
+        const constructible = GameInfo.Constructibles.lookup(
+            context.OperationArguments.ConstructibleType
+        );
         if (!constructible) {
-            console.error("interface-mode-place-building: No valid ConstructibleDefinition from ConstructibleType: " + context.OperationArguments.ConstructibleType);
+            console.error(
+                "interface-mode-place-building: No valid ConstructibleDefinition from ConstructibleType: " + context.OperationArguments.ConstructibleType
+            );
             InterfaceMode.switchTo("INTERFACEMODE_CITY_PRODUCTION", { CityID: context.CityID });
             return false;
         }
@@ -79,7 +133,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         waitForLayout(() => this.setMapFocused(true));
     }
     transitionFrom(oldMode, newMode) {
-        //Remove the city hex filter and return to previous zoom level
+        // Remove the city hex filter and return to previous zoom level
         WorldUI.popFilter();
         CityZoomer.resetZoom();
         if (this.plotOverlay) {
@@ -89,13 +143,13 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         window.removeEventListener(PlotCursorUpdatedEventName, this.plotCursorUpdatedListener);
         WorldUI.setUnitVisibility(true);
         UI.lockCursor(false);
-        LensManager.setActiveLens('fxs-default-lens');
+        LensManager.setActiveLens("fxs-default-lens");
         super.transitionFrom(oldMode, newMode);
     }
     /** @interface Handler  */
     canEnterMode(parameters) {
         const context = parameters;
-        return (context && context.IsPurchasing != undefined && ComponentID.isValid(context.CityID));
+        return context && context.IsPurchasing != void 0 && ComponentID.isValid(context.CityID);
     }
     reset() {
         BuildingPlacementManager.reset();
@@ -103,13 +157,18 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
     selectPlot(plot, _previousPlot) {
         if (BuildingPlacementManager.selectedPlotIndex == null || BuildingPlacementManager.selectedPlotIndex != GameplayMap.getIndexFromLocation(plot)) {
             BuildingPlacementManager.selectedPlotIndex = GameplayMap.getIndexFromLocation(plot);
-        }
-        else {
+        } else {
             if (this.isPlotProposed) {
                 throw new Error("A plot is already being proposed.");
             }
             this.isPlotProposed = true;
-            this.proposePlot(plot, () => { this.acceptProposePlotCallback(plot); }, () => this.isPlotProposed = false);
+            this.proposePlot(
+                plot,
+                () => {
+                    this.acceptProposePlotCallback(plot);
+                },
+                () => this.isPlotProposed = false
+            );
         }
         return false;
     }
@@ -117,7 +176,9 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         const context = this.Context;
         const selectedCity = Cities.get(context.CityID);
         if (!selectedCity) {
-            console.error("interface-mode-place-building: Unable to retrieve city with CityID: " + ComponentID.toLogString(context.CityID));
+            console.error(
+                "interface-mode-place-building: Unable to retrieve city with CityID: " + ComponentID.toLogString(context.CityID)
+            );
             return;
         }
         CityZoomer.zoomToCity(selectedCity);
@@ -148,7 +209,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         this.plotOverlay.addPlots(expandable, { fillColor: HighlightColors.good });
     }
     undecorate(_overlay, _modelGroup) {
-        this.plotOverlay = null; // parent will remove all overlays from the OverlayGroup
+        this.plotOverlay = null;
     }
     onPlotCursorUpdated(event) {
         this.onPlotUpdated(event.detail.plotCoords);
@@ -172,8 +233,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
                 // Valid plots are already ready to accept a building
                 if (BuildingPlacementManager.isValidPlacementPlot(plotIndex)) {
                     UI.setCursorByType(UIHTMLCursorTypes.Place);
-                }
-                else {
+                } else {
                     UI.setCursorByType(UIHTMLCursorTypes.CantPlace);
                 }
                 if (plotIndex != BuildingPlacementManager.hoveredPlotIndex) {
@@ -182,45 +242,43 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
                     BuildingPlacementManager.hoveredPlotIndex = plotIndex;
                     BuildingPlacementManager.selectedPlotIndex = plotIndex;
                 }
-                Audio.playSound('data-audio-city-production-placement-focus', 'city-actions');
+                Audio.playSound("data-audio-city-production-placement-focus", "city-actions");
             }
         }
     }
     acceptProposePlotCallback(plot) {
         this.commitPlot(plot);
         const context = this.Context;
-        const constructible = GameInfo.Constructibles.lookup(context.OperationArguments.ConstructibleType);
-        const constructibleType = (constructible) ? '-' + constructible.ConstructibleType : '';
-        const selectedCityID = UI.Player.getHeadSelectedCity(); // May be null if placing results in deselecting city
+        const constructible = GameInfo.Constructibles.lookup(
+            context.OperationArguments.ConstructibleType
+        );
+        const constructibleType = constructible ? "-" + constructible.ConstructibleType : "";
+        const selectedCityID = UI.Player.getHeadSelectedCity();
         if (selectedCityID && ComponentID.isValid(selectedCityID)) {
             const isEmptyQueue = City.isQueueEmpty(selectedCityID);
             if (isEmptyQueue) {
-                UI.sendAudioEvent('placement-activate' + constructibleType);
+                UI.sendAudioEvent("placement-activate" + constructibleType);
+            } else {
+                UI.sendAudioEvent("placement-queue" + constructibleType);
             }
-            else {
-                UI.sendAudioEvent('placement-queue' + constructibleType);
-            }
-            if (!(this.isPurchasing) && isEmptyQueue && !Configuration.getUser().isProductionPanelStayOpen) {
+            if (!this.isPurchasing && isEmptyQueue && !Configuration.getUser().isProductionPanelStayOpen) {
                 UI.Player.deselectAllCities();
                 InterfaceMode.switchToDefault();
-            }
-            else {
+            } else {
                 InterfaceMode.switchTo("INTERFACEMODE_CITY_PRODUCTION", { CityID: selectedCityID });
             }
-        }
-        else {
-            console.warn("Attempt to jump back to the city product (hopefully that was the previous UI mode) but no city is selected!");
+        } else {
+            console.warn(
+                "Attempt to jump back to the city product (hopefully that was the previous UI mode) but no city is selected!"
+            );
             InterfaceMode.switchToDefault();
         }
     }
     proposePlot(plot, accept, reject) {
         const plotIndex = GameplayMap.getIndexFromLocation(plot);
-        //Urban plots and undeveloped plots are ready to accept the building placement
-        if (BuildingPlacementManager.reservedPlots.find(p => p == plotIndex) || BuildingPlacementManager.urbanPlots.find(p => p == plotIndex) || BuildingPlacementManager.expandablePlots.find(p => p == plotIndex)) {
+        if (BuildingPlacementManager.reservedPlots.find((p) => p == plotIndex) || BuildingPlacementManager.urbanPlots.find((p) => p == plotIndex) || BuildingPlacementManager.expandablePlots.find((p) => p == plotIndex)) {
             accept();
-        }
-        //Building over a developed plot requires confirmation to replace the improvement on that plot
-        else if (BuildingPlacementManager.developedPlots.find(p => p == plotIndex)) {
+        } else if (BuildingPlacementManager.developedPlots.find((p) => p == plotIndex)) {
             const acceptCallback = () => {
                 accept();
             };
@@ -229,7 +287,9 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
                 reject();
             };
             if (!BuildingPlacementManager.currentConstructible) {
-                console.error("interface-mode-place-building: No valid currentConstructible variable in BuildingPlacementManager!");
+                console.error(
+                    "interface-mode-place-building: No valid currentConstructible variable in BuildingPlacementManager!"
+                );
                 reject();
                 return;
             }
@@ -237,53 +297,63 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
             const okOption = {
                 actions: ["accept"],
                 label: "LOC_GENERIC_OK",
-                callback: acceptCallback,
+                callback: acceptCallback
             };
             const cancelOption = {
                 actions: ["cancel", "keyboard-escape", "mousebutton-right"],
                 label: "LOC_GENERIC_CANCEL",
-                callback: cancelCallback,
+                callback: cancelCallback
             };
             const options = [okOption, cancelOption];
-            if (BuildingPlacementManager.currentConstructible.ConstructibleClass == 'WONDER') {
-                const body = oldImprovementName != "" ?
-                    Locale.compose('LOC_BUILDING_PLACEMENT_REMOVE_IMPOVEMENT_BODY', oldImprovementName, BuildingPlacementManager.currentConstructible.Name)
-                    : Locale.compose('LOC_BUILDING_PLACEMENT_REMOVE_GENERIC_IMPOVEMENT_BODY', BuildingPlacementManager.currentConstructible.Name);
+            if (BuildingPlacementManager.currentConstructible.ConstructibleClass == "WONDER") {
+                const body = oldImprovementName != "" ?  Locale.compose(
+                    "LOC_BUILDING_PLACEMENT_REMOVE_IMPOVEMENT_BODY",
+                    oldImprovementName,
+                    BuildingPlacementManager.currentConstructible.Name
+                ) : Locale.compose(
+                    "LOC_BUILDING_PLACEMENT_REMOVE_GENERIC_IMPOVEMENT_BODY",
+                    BuildingPlacementManager.currentConstructible.Name
+                );
                 NavTray.clear();
                 DialogBoxManager.createDialog_MultiOption({
-                    body: body,
+                    body,
                     title: "LOC_BUILDING_PLACEMENT_REMOVE_IMPOVEMENT",
-                    options: options,
-                    canClose: false,
+                    options,
+                    canClose: false
                 });
-            }
-            else {
+            } else {
                 const replacedConstructibleType = MapConstructibles.getReplaceableConstructible(plot.x, plot.y);
                 if (replacedConstructibleType == -1) {
-                    const body = oldImprovementName != "" ?
-                        Locale.compose('LOC_BUILDING_PLACEMENT_CREATE_URBAN_TILE_REMOVE_IMPROVEMENT', oldImprovementName, BuildingPlacementManager.currentConstructible.Name)
-                        : Locale.compose('LOC_BUILDING_PLACEMENT_CREATE_URBAN_TILE_BODY', BuildingPlacementManager.currentConstructible.Name);
+                    const body = oldImprovementName != "" ?  Locale.compose(
+                        "LOC_BUILDING_PLACEMENT_CREATE_URBAN_TILE_REMOVE_IMPROVEMENT",
+                        oldImprovementName,
+                        BuildingPlacementManager.currentConstructible.Name
+                    ) : Locale.compose(
+                        "LOC_BUILDING_PLACEMENT_CREATE_URBAN_TILE_BODY",
+                        BuildingPlacementManager.currentConstructible.Name
+                        );
                     NavTray.clear();
                     DialogBoxManager.createDialog_MultiOption({
-                        body: body,
+                        body,
                         title: "LOC_BUILDING_PLACEMENT_CREATE_URBAN_TILE",
-                        options: options,
-                        canClose: false,
+                        options,
+                        canClose: false
                     });
-                }
-                else {
-                    const body = Locale.compose('LOC_BUILDING_PLACEMENT_REPLACE_BUILDING_BODY', BuildingPlacementManager.currentConstructible.Name);
+                } else {
+                    const body = Locale.compose(
+                        "LOC_BUILDING_PLACEMENT_REPLACE_BUILDING_BODY",
+                        BuildingPlacementManager.currentConstructible.Name
+                    );
                     NavTray.clear();
                     DialogBoxManager.createDialog_MultiOption({
-                        body: body,
+                        body,
                         title: "LOC_BUILDING_PLACEMENT_REPLACE_BUILDING",
-                        options: options,
-                        canClose: false,
+                        options,
+                        canClose: false
                     });
                 }
             }
-        }
-        else {
+        } else {
             // Allow player to propose another plot
             this.isPlotProposed = false;
         }
@@ -295,12 +365,14 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
             const instance = Constructibles.getByComponentID(constructible);
             if (instance) {
                 const info = GameInfo.Constructibles.lookup(instance.type);
-                if ((info) && (info.ConstructibleClass == "IMPROVEMENT")) {
+                if (info && info.ConstructibleClass == "IMPROVEMENT") {
                     return Locale.compose(info.Name);
                 }
             }
         }
-        console.error(`interface-mode-place-building: Failed to find improvement where one should exist at ${plotCoord}`);
+        console.error(
+            `interface-mode-place-building: Failed to find improvement where one should exist at ${plotCoord}`
+        );
         return "";
     }
     commitPlot(plot) {
@@ -314,18 +386,15 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
             result = Game.CityCommands.canStart(cityID, CityCommandTypes.PURCHASE, operationArgs, false);
             if (result.Success) {
                 Game.CityCommands.sendRequest(cityID, CityCommandTypes.PURCHASE, operationArgs);
-            }
-            else {
+            } else {
                 // Allow the player to propose another plot
                 this.isPlotProposed = false;
             }
-        }
-        else {
+        } else {
             result = Game.CityOperations.canStart(cityID, CityOperationTypes.BUILD, operationArgs, false);
             if (result.Success) {
                 Game.CityOperations.sendRequest(cityID, CityOperationTypes.BUILD, operationArgs);
-            }
-            else {
+            } else {
                 // Allow the player to propose another plot
                 this.isPlotProposed = false;
             }
@@ -338,8 +407,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         NavTray.clear();
         if (this.mapFocused) {
             NavTray.addOrUpdateNextAction("LOC_UI_FOCUS_PLACEMENT_INFO");
-        }
-        else {
+        } else {
             NavTray.addOrUpdateShellAction2("LOC_UI_FOCUS_WORLD");
         }
         NavTray.addOrUpdateGenericCancel();
@@ -349,8 +417,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         this.updateNavTray();
         if (this.mapFocused) {
             Input.setActiveContext(InputContext.World);
-        }
-        else {
+        } else {
             Input.setActiveContext(InputContext.Shell);
             const placeBuildingPanel = MustGetElement("panel-place-building", document);
             if (placeBuildingPanel) {
@@ -362,8 +429,8 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         if (inputEvent.detail.status != InputActionStatuses.FINISH) {
             return true;
         }
-        if (inputEvent.isCancelInput() || inputEvent.detail.name == 'sys-menu') {
-            const selectedCityID = UI.Player.getHeadSelectedCity(); // May be null if placing results in deselecting city
+        if (inputEvent.isCancelInput() || inputEvent.detail.name == "sys-menu") {
+            const selectedCityID = UI.Player.getHeadSelectedCity();
             if (selectedCityID && ComponentID.isValid(selectedCityID)) {
                 InterfaceMode.switchTo("INTERFACEMODE_CITY_PRODUCTION", { CityID: selectedCityID });
                 inputEvent.stopPropagation();
@@ -374,6 +441,12 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         const eventToLookFor = this.mapFocused ? "next-action" : "shell-action-2";
         if (inputEvent.detail.name == eventToLookFor) {
             this.setMapFocused(!this.mapFocused);
+            inputEvent.stopPropagation();
+            inputEvent.preventDefault();
+            return false;
+        }
+        if (inputEvent.detail.name == "unit-skip-turn") {
+            window.dispatchEvent(new TogglePlacementMinMaxEvent());
             inputEvent.stopPropagation();
             inputEvent.preventDefault();
             return false;
