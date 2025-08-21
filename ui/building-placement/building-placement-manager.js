@@ -1,28 +1,24 @@
-/**
- * @file building-placement-manager.ts
- * @copyright 2023, Firaxis Games
- * @description Helper class to keep track of building being placed and other shared building placement data
- */
-import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
-export const BuildingPlacementHoveredPlotChangedEventName = 'building-placement-hovered-plot-changed';
-export class BuildingPlacementHoveredPlotChangedEvent extends CustomEvent {
+import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
+
+const BuildingPlacementHoveredPlotChangedEventName = "building-placement-hovered-plot-changed";
+class BuildingPlacementHoveredPlotChangedEvent extends CustomEvent {
     constructor() {
         super(BuildingPlacementHoveredPlotChangedEventName, { bubbles: false, cancelable: true });
     }
 }
-export const BuildingPlacementSelectedPlotChangedEventName = 'building-placement-selected-plot-changed';
-export class BuildingPlacementSelectedPlotChangedEvent extends CustomEvent {
+const BuildingPlacementSelectedPlotChangedEventName = "building-placement-selected-plot-changed";
+class BuildingPlacementSelectedPlotChangedEvent extends CustomEvent {
     constructor() {
         super(BuildingPlacementSelectedPlotChangedEventName, { bubbles: false, cancelable: true });
     }
 }
-export const BuildingPlacementConstructibleChangedEventName = 'building-placement-constructible-changed';
-export class BuildingPlacementConstructibleChangedEvent extends CustomEvent {
+const BuildingPlacementConstructibleChangedEventName = "building-placement-constructible-changed";
+class BuildingPlacementConstructibleChangedEvent extends CustomEvent {
     constructor() {
         super(BuildingPlacementConstructibleChangedEventName, { bubbles: false, cancelable: true });
     }
 }
-const directionNames = new Map([
+const directionNames = /* @__PURE__ */ new Map([
     [DirectionTypes.DIRECTION_EAST, "LOC_WORLD_DIRECTION_EAST"],
     [DirectionTypes.DIRECTION_NORTHEAST, "LOC_WORLD_DIRECTION_NORTHEAST"],
     [DirectionTypes.DIRECTION_NORTHWEST, "LOC_WORLD_DIRECTION_NORTHWEST"],
@@ -49,6 +45,8 @@ function getSlotlessTypes() {
     return slotlessTypes;
 }
 class BuildingPlacementManagerClass {
+    static instance = null;
+    _cityID = null;
     get cityID() {
         return this._cityID;
     }
@@ -62,21 +60,35 @@ class BuildingPlacementManagerClass {
         console.error(`building-placement-manager: Failed to get city for ID ${this.cityID}`);
         return null;
     }
+    _currentConstructible = null;
     get currentConstructible() {
         return this._currentConstructible;
     }
+    // Placement data for all possible constructibles
+    allPlacementData;
+    // Placement data for the currently selected constructible
+    selectedPlacementData;
+    // Plots that would block a unique quarter
+    _reservedPlots = [];
     get reservedPlots() {
         return this._reservedPlots;
     }
+    // Plots with buildings
+    _urbanPlots = [];
     get urbanPlots() {
         return this._urbanPlots;
     }
+    // Plots with improvements
+    _developedPlots = [];
     get developedPlots() {
         return this._developedPlots;
     }
+    // Plots with nothing
+    _expandablePlots = [];
     get expandablePlots() {
         return this._expandablePlots;
     }
+    _hoveredPlotIndex = null;
     get hoveredPlotIndex() {
         return this._hoveredPlotIndex;
     }
@@ -87,12 +99,12 @@ class BuildingPlacementManagerClass {
         }
         if (plotIndex != null && this.isPlotIndexSelectable(plotIndex)) {
             this._hoveredPlotIndex = plotIndex;
-        }
-        else {
+        } else {
             this._hoveredPlotIndex = null;
         }
         window.dispatchEvent(new BuildingPlacementHoveredPlotChangedEvent());
     }
+    _selectedPlotIndex = null;
     get selectedPlotIndex() {
         return this._selectedPlotIndex;
     }
@@ -103,12 +115,12 @@ class BuildingPlacementManagerClass {
         }
         if (plotIndex != null && this.isPlotIndexSelectable(plotIndex)) {
             this._selectedPlotIndex = plotIndex;
-        }
-        else {
+        } else {
             this._selectedPlotIndex = null;
         }
         window.dispatchEvent(new BuildingPlacementSelectedPlotChangedEvent());
     }
+    isRepairing = false;
     initializePlacementData(cityID) {
         this._cityID = cityID;
         this.isRepairing = false;
@@ -120,7 +132,9 @@ class BuildingPlacementManagerClass {
     }
     selectPlacementData(cityID, operationResult, constructible) {
         if (!ComponentID.isMatch(cityID, this.cityID)) {
-            console.error(`building-placement-manager: cityID ${cityID} passed into selectPlacementData does not match cityID used for initializePlacementData ${this.cityID}`);
+            console.error(
+                `building-placement-manager: cityID ${cityID} passed into selectPlacementData does not match cityID used for initializePlacementData ${this.cityID}`
+            );
             return;
         }
         if (!this.allPlacementData) {
@@ -211,39 +225,37 @@ class BuildingPlacementManagerClass {
         });
         if (!this.selectedPlacementData) {
             // This can be an expected case. Example: Repairing a constructible.
-            console.warn(`building-placement-manager: Failed to find type ${constructible.ConstructibleType} in allPlacementData`);
+            console.warn(
+                `building-placement-manager: Failed to find type ${constructible.ConstructibleType} in allPlacementData`
+            );
         }
         window.dispatchEvent(new BuildingPlacementConstructibleChangedEvent());
     }
     isPlotIndexSelectable(plotIndex) {
-        return this.reservedPlots.find((index) => { return index == plotIndex; }) != undefined ||
-            this.urbanPlots.find((index) => { return index == plotIndex; }) != undefined ||
-            this.developedPlots.find((index) => { return index == plotIndex; }) != undefined ||
-            this.expandablePlots.find((index) => { return index == plotIndex; }) != undefined;
+        return this.reservedPlots.find((index) => {
+            return index == plotIndex;
+        }) != void 0 || this.urbanPlots.find((index) => {
+            return index == plotIndex;
+        }) != void 0 || this.developedPlots.find((index) => {
+            return index == plotIndex;
+        }) != void 0 || this.expandablePlots.find((index) => {
+            return index == plotIndex;
+        }) != void 0;
     }
     constructor() {
-        this._cityID = null;
-        this._currentConstructible = null;
-        // Plots that would block a unique quarter
-        this._reservedPlots = [];
-        // Plots that are already developed and have buildings placed on them
-        this._urbanPlots = [];
-        // Plots that have already been developed/improved (i.e. improved through city growth)
-        this._developedPlots = [];
-        // Plots that have not yet been developed
-        this._expandablePlots = [];
-        this._hoveredPlotIndex = null;
-        this._selectedPlotIndex = null;
-        this.isRepairing = false;
         if (BuildingPlacementManagerClass.instance) {
-            console.error("Only one instance of the BuildingPlacementManagerClass can exist at a time, second attempt to create one.");
+            console.error(
+                "Only one instance of the BuildingPlacementManagerClass can exist at a time, second attempt to create one."
+            );
         }
         BuildingPlacementManagerClass.instance = this;
     }
     getTotalYieldChanges(plotIndex) {
         const placementPlotData = this.getPlacementPlotData(plotIndex);
         if (!placementPlotData) {
-            console.error(`building-placement-manager: getTotalYieldChanges(): Failed to find PlacementPlotData for plotIndex ${plotIndex}`);
+            console.error(
+                `building-placement-manager: getTotalYieldChanges(): Failed to find PlacementPlotData for plotIndex ${plotIndex}`
+            );
             return;
         }
         const yieldChangeInfo = [];
@@ -254,7 +266,7 @@ class BuildingPlacementManagerClass {
                     yieldType: yieldDefinition.YieldType,
                     yieldChange: placementPlotData.yieldChanges[index],
                     isMainYield: true,
-                    iconURL: UI.getIconURL(yieldDefinition.YieldType, 'YIELD')
+                    iconURL: UI.getIconURL(yieldDefinition.YieldType, "YIELD")
                 });
             }
         });
@@ -263,7 +275,9 @@ class BuildingPlacementManagerClass {
     getPlotYieldChanges(plotIndex) {
         const placementPlotData = this.getPlacementPlotData(plotIndex);
         if (!placementPlotData) {
-            console.error(`building-placement-manager: getPlotYieldChanges(): Failed to find PlacementPlotData for plotIndex ${plotIndex}`);
+            console.error(
+                `building-placement-manager: getPlotYieldChanges(): Failed to find PlacementPlotData for plotIndex ${plotIndex}`
+            );
             return;
         }
         const yieldChangeInfo = [];
@@ -280,7 +294,7 @@ class BuildingPlacementManagerClass {
                         yieldType: yieldDefinition.YieldType,
                         yieldChange: changeDetails.change,
                         isMainYield: true,
-                        iconURL: UI.getIconURL(yieldDefinition.YieldType, 'YIELD')
+                        iconURL: UI.getIconURL(yieldDefinition.YieldType, "YIELD")
                     });
                     break;
                 }
@@ -295,26 +309,25 @@ class BuildingPlacementManagerClass {
                         break;
                     }
                     yieldChangeInfo.push({
-                        text: Locale.compose('LOC_BUILDING_PLACEMENT_YIELD_NAME_FROM_WORKERS', yieldDefinition.Name),
+                        text: Locale.compose("LOC_BUILDING_PLACEMENT_YIELD_NAME_FROM_WORKERS", yieldDefinition.Name),
                         yieldType: yieldDefinition.YieldType,
                         yieldChange: changeDetails.change,
                         isMainYield: true,
-                        iconURL: UI.getIconURL(yieldDefinition.YieldType, 'YIELD')
+                        iconURL: UI.getIconURL(yieldDefinition.YieldType, "YIELD")
                     });
                     break;
                 }
             }
         });
         // Warehouse Bonuses
-        let warehouseBonuses = new Map();
+        const warehouseBonuses = /* @__PURE__ */ new Map();
         placementPlotData.changeDetails.forEach((changeDetails) => {
             switch (changeDetails.sourceType) {
                 case YieldSourceTypes.WAREHOUSE: {
                     const warehouseBonus = warehouseBonuses.get(changeDetails.yieldType);
                     if (warehouseBonus) {
                         warehouseBonuses.set(changeDetails.yieldType, warehouseBonus + changeDetails.change);
-                    }
-                    else {
+                    } else {
                         warehouseBonuses.set(changeDetails.yieldType, changeDetails.change);
                     }
                     break;
@@ -324,15 +337,17 @@ class BuildingPlacementManagerClass {
         warehouseBonuses.forEach((change, yieldType) => {
             const yieldDefinition = GameInfo.Yields.lookup(yieldType);
             if (!yieldDefinition) {
-                console.error(`building-placement-manager: Failed to find warehouse bonuses type for type ${yieldType}`);
+                console.error(
+                    `building-placement-manager: Failed to find warehouse bonuses type for type ${yieldType}`
+                );
                 return;
             }
             yieldChangeInfo.push({
-                text: Locale.compose('LOC_BUILDING_PLACEMENT_YIELD_NAME_TO_TILE_FROM_WAREHOUSE', yieldDefinition.Name),
+                text: Locale.compose("LOC_BUILDING_PLACEMENT_YIELD_NAME_TO_TILE_FROM_WAREHOUSE", yieldDefinition.Name),
                 yieldType: yieldDefinition.YieldType,
                 yieldChange: change,
                 isMainYield: true,
-                iconURL: UI.getIconURL(yieldDefinition.YieldType, 'YIELD')
+                iconURL: UI.getIconURL(yieldDefinition.YieldType, "YIELD")
             });
         });
         return yieldChangeInfo;
@@ -340,7 +355,9 @@ class BuildingPlacementManagerClass {
     getAdjacencyYieldChanges(plotIndex) {
         const placementPlotData = this.getPlacementPlotData(plotIndex);
         if (!placementPlotData) {
-            console.error(`building-placement-manager: getAdjacencyYieldChanges(): Failed to find PlacementPlotData for plotIndex ${plotIndex}`);
+            console.error(
+                `building-placement-manager: getAdjacencyYieldChanges(): Failed to find PlacementPlotData for plotIndex ${plotIndex}`
+            );
             return;
         }
         const yieldChangeInfo = [];
@@ -354,22 +371,28 @@ class BuildingPlacementManagerClass {
                     if (changeDetails.sourcePlotIndex == plotIndex) {
                         // This adjacency is going to a different plot
                         yieldChangeInfo.push({
-                            text: Locale.compose('LOC_BUILDING_PLACEMENT_YIELD_NAME_TO_OTHER_BUILDINGS', yieldDefinition.Name),
+                            text: Locale.compose(
+                                "LOC_BUILDING_PLACEMENT_YIELD_NAME_TO_OTHER_BUILDINGS",
+                                yieldDefinition.Name
+                            ),
                             yieldType: yieldDefinition.YieldType,
                             yieldChange: changeDetails.change,
                             isMainYield: true,
-                            iconURL: UI.getIconURL(yieldDefinition.YieldType, 'YIELD')
+                            iconURL: UI.getIconURL(yieldDefinition.YieldType, "YIELD")
                         });
                         break;
-                    }
-                    else {
+                    } else {
                         // This adjacency is coming from a different plot
                         yieldChangeInfo.push({
-                            text: Locale.compose('LOC_BUILDING_PLACEMENT_YIELD_NAME_FROM_DIRECTION', yieldDefinition.Name, this.getDirectionString(changeDetails.sourcePlotIndex, plotIndex)),
+                            text: Locale.compose(
+                                "LOC_BUILDING_PLACEMENT_YIELD_NAME_FROM_DIRECTION",
+                                yieldDefinition.Name,
+                                this.getDirectionString(changeDetails.sourcePlotIndex, plotIndex)
+                            ),
                             yieldType: yieldDefinition.YieldType,
                             yieldChange: changeDetails.change,
                             isMainYield: true,
-                            iconURL: UI.getIconURL(yieldDefinition.YieldType, 'YIELD')
+                            iconURL: UI.getIconURL(yieldDefinition.YieldType, "YIELD")
                         });
                         break;
                     }
@@ -379,27 +402,32 @@ class BuildingPlacementManagerClass {
         return yieldChangeInfo;
     }
     getDirectionString(fromPlot, toPlot) {
-        const direction = GameplayMap.getDirectionToPlot(GameplayMap.getLocationFromIndex(toPlot), GameplayMap.getLocationFromIndex(fromPlot));
+        const direction = GameplayMap.getDirectionToPlot(
+            GameplayMap.getLocationFromIndex(toPlot),
+            GameplayMap.getLocationFromIndex(fromPlot)
+        );
         switch (direction) {
             case DirectionTypes.DIRECTION_EAST:
-                return 'LOC_WORLD_DIRECTION_EAST';
+                return "LOC_WORLD_DIRECTION_EAST";
             case DirectionTypes.DIRECTION_NORTHEAST:
-                return 'LOC_WORLD_DIRECTION_NORTHEAST';
+                return "LOC_WORLD_DIRECTION_NORTHEAST";
             case DirectionTypes.DIRECTION_NORTHWEST:
-                return 'LOC_WORLD_DIRECTION_NORTHWEST';
+                return "LOC_WORLD_DIRECTION_NORTHWEST";
             case DirectionTypes.DIRECTION_SOUTHEAST:
-                return 'LOC_WORLD_DIRECTION_SOUTHEAST';
+                return "LOC_WORLD_DIRECTION_SOUTHEAST";
             case DirectionTypes.DIRECTION_SOUTHWEST:
-                return 'LOC_WORLD_DIRECTION_SOUTHWEST';
+                return "LOC_WORLD_DIRECTION_SOUTHWEST";
             case DirectionTypes.DIRECTION_WEST:
-                return 'LOC_WORLD_DIRECTION_WEST';
+                return "LOC_WORLD_DIRECTION_WEST";
         }
-        console.error(`building-placement-manager: getDirectionString failed to find a direction string from ${fromPlot} to ${toPlot}`);
-        return '';
+        console.error(
+            `building-placement-manager: getDirectionString failed to find a direction string from ${fromPlot} to ${toPlot}`
+        );
+        return "";
     }
     getPlacementPlotData(plotIndex) {
         if (!this.selectedPlacementData) {
-            console.error('building-placement-manager: getPlacementPlotData(): Invalid selectedPlacementData');
+            console.error("building-placement-manager: getPlacementPlotData(): Invalid selectedPlacementData");
             return;
         }
         return this.selectedPlacementData.placements.find((plotData) => {
@@ -408,14 +436,18 @@ class BuildingPlacementManagerClass {
     }
     getOverbuildConstructibleID(plotID) {
         if (!this.selectedPlacementData) {
-            console.error('building-placement-manager: Tried to call getOverbuildConstructibleID before selectedPlacementData was initialized!');
+            console.error(
+                "building-placement-manager: Tried to call getOverbuildConstructibleID before selectedPlacementData was initialized!"
+            );
             return;
         }
         const selectedPlacementData = this.selectedPlacementData.placements.find((plotData) => {
             return plotData.plotID == plotID;
         });
         if (!selectedPlacementData) {
-            console.error(`building-placement-manager: getOverbuildConstructibleID(): Unable to find plotID ${plotID} in selectedPlacementData`);
+            console.error(
+                `building-placement-manager: getOverbuildConstructibleID(): Unable to find plotID ${plotID} in selectedPlacementData`
+            );
             return;
         }
         return selectedPlacementData.overbuiltConstructibleID;
@@ -424,18 +456,16 @@ class BuildingPlacementManagerClass {
         let yieldIconPath = "";
         if (yieldType == "YIELD_DIPLOMACY") {
             yieldIconPath = "yield_influence";
-        }
-        else {
+        } else {
             yieldIconPath = yieldType.toLowerCase();
         }
         if (yieldNum > 0) {
             yieldIconPath += "_pos";
-            //We want to emphasize the main yield for the building we are placing
+            // emphasize the main yield for the building we are placing
             if (mainYield) {
                 yieldIconPath += "-lrg";
             }
-        }
-        else {
+        } else {
             yieldIconPath += "_neg";
         }
         return yieldIconPath;
@@ -444,50 +474,62 @@ class BuildingPlacementManagerClass {
         this._cityID = null;
         this._currentConstructible = null;
         this._reservedPlots = [];
+        this._expandablePlots = [];
         this._urbanPlots = [];
         this._developedPlots = [];
-        this._expandablePlots = [];
         this.hoveredPlotIndex = null;
         this.selectedPlotIndex = null;
         this.isRepairing = false;
     }
     isValidPlacementPlot(plotIndex) {
-        if (BuildingPlacementManager.reservedPlots.find(p => p == plotIndex) || BuildingPlacementManager.urbanPlots.find(p => p == plotIndex) || BuildingPlacementManager.developedPlots.find(p => p == plotIndex) || BuildingPlacementManager.expandablePlots.find(p => p == plotIndex)) {
+        if (BuildingPlacementManager.reservedPlots.find((p) => p == plotIndex) || BuildingPlacementManager.urbanPlots.find((p) => p == plotIndex) || BuildingPlacementManager.developedPlots.find((p) => p == plotIndex) || BuildingPlacementManager.expandablePlots.find((p) => p == plotIndex)) {
             return true;
         }
         return false;
     }
     getAdjacencyBonuses() {
-        let adjacencyData = [];
+        const adjacencyData = [];
         if (!this.currentConstructible) {
-            console.error('building-placement-manager: Invalid currentConstructible within getAdjacencyBonuses');
+            console.error("building-placement-manager: Invalid currentConstructible within getAdjacencyBonuses");
             return adjacencyData;
         }
         if (!this.selectedPlotIndex) {
-            console.error('building-placement-manager: Invalid selectedPlotIndex within getAdjacencyBonuses');
+            console.error("building-placement-manager: Invalid selectedPlotIndex within getAdjacencyBonuses");
             return adjacencyData;
         }
-        const yieldAdjacencies = this.city?.Yields?.calculateAllAdjacencyYieldsForConstructible(this.currentConstructible.ConstructibleType, this.selectedPlotIndex);
+        const yieldAdjacencies = this.city?.Yields?.calculateAllAdjacencyYieldsForConstructible(
+            this.currentConstructible.ConstructibleType,
+            this.selectedPlotIndex
+        );
         if (!yieldAdjacencies) {
-            console.error('building-placement-manager: Failed to get yieldAdjacencies within getAdjacencyBonuses');
+            console.error("building-placement-manager: Failed to get yieldAdjacencies within getAdjacencyBonuses");
             return adjacencyData;
         }
-        yieldAdjacencies.forEach(adjacency => {
+        yieldAdjacencies.forEach((adjacency) => {
             const yieldDef = GameInfo.Yields.lookup(adjacency.yieldType);
             if (!yieldDef) {
-                console.error("building-placement-manager: No valid yield definition for yield type: " + adjacency.yieldType.toString());
+                console.error(
+                    "building-placement-manager: No valid yield definition for yield type: " + adjacency.yieldType.toString()
+                );
                 return;
             }
             if (!this.selectedPlotIndex) {
-                console.error("building-placement-manager: Invalid selectedPlotIndex for yield type: " + adjacency.yieldType.toString());
+                console.error(
+                    "building-placement-manager: Invalid selectedPlotIndex for yield type: " + adjacency.yieldType.toString()
+                );
                 return;
             }
             const adjacencyLocation = GameplayMap.getLocationFromIndex(adjacency.sourcePlotIndex);
             const buildingLocation = GameplayMap.getLocationFromIndex(this.selectedPlotIndex);
-            const adjacencyDirection = GameplayMap.getDirectionToPlot(buildingLocation, adjacencyLocation);
+            const adjacencyDirection = GameplayMap.getDirectionToPlot(
+                buildingLocation,
+                adjacencyLocation
+            );
             const directionName = directionNames.get(adjacencyDirection);
-            if (directionName == undefined) {
-                console.error("building-placement-manager: No valid direction name for direction: " + adjacencyDirection.toString());
+            if (directionName == void 0) {
+                console.error(
+                    "building-placement-manager: No valid direction name for direction: " + adjacencyDirection.toString()
+                );
                 return;
             }
             adjacencyData.push({
@@ -501,7 +543,7 @@ class BuildingPlacementManagerClass {
         return adjacencyData;
     }
     getCumulativeAdjacencyBonuses() {
-        let cumulativeData = [];
+        const cumulativeData = [];
         const adjacencyData = this.getAdjacencyBonuses();
         adjacencyData.forEach((uniqueData) => {
             // Look for a matching data entry
@@ -526,9 +568,9 @@ class BuildingPlacementManagerClass {
         return cumulativeData;
     }
     getWarehouseBonuses() {
-        let warehouseData = [];
+        const warehouseData = [];
         if (!this.currentConstructible) {
-            console.error('building-placement-manager: Invalid currentConstructible within getWarehouseBonuses');
+            console.error("building-placement-manager: Invalid currentConstructible within getWarehouseBonuses");
             return warehouseData;
         }
         const allWarehouseBonuses = this.city?.Yields?.getAllWarehouseYieldsForConstructible(this.currentConstructible.ConstructibleType);
@@ -536,7 +578,9 @@ class BuildingPlacementManagerClass {
             allWarehouseBonuses.forEach((warehouseBonuse) => {
                 const yieldDef = GameInfo.Yields.lookup(warehouseBonuse.yieldType);
                 if (!yieldDef) {
-                    console.error("building-placement-manager: No valid yield definition for yield type: " + warehouseBonuse.yieldType.toString());
+                    console.error(
+                        "building-placement-manager: No valid yield definition for yield type: " + warehouseBonuse.yieldType.toString()
+                    );
                     return;
                 }
                 warehouseData.push({
@@ -549,7 +593,7 @@ class BuildingPlacementManagerClass {
         return warehouseData;
     }
     getCumulativeWarehouseBonuses() {
-        let cumulativeData = [];
+        const cumulativeData = [];
         const warehouseData = this.getWarehouseBonuses();
         warehouseData.forEach((uniqueData) => {
             // Look for a matching data entry
@@ -572,6 +616,16 @@ class BuildingPlacementManagerClass {
         return cumulativeData;
     }
     findExistingUniqueBuilding(uniqueQuarterDef) {
+        // get city info
+        if (!this.cityID || ComponentID.isInvalid(this.cityID)) {
+            console.error("building-placement-manager - Invalid cityID passed into findExistingUniqueBuilding");
+            return -1;
+        }
+        const city = Cities.get(this.cityID);
+        if (!city) {
+            console.error(`building-placement-manager - Invalid city found for id ${this.cityID}`);
+            return -1;
+        }
         // a building can appear in three places:
         // - Game.CityCommands.canStart (in-progress buildings)
         // - city.BuildQueue (production queue)
@@ -581,13 +635,6 @@ class BuildingPlacementManagerClass {
             uniqueQuarterDef?.BuildingType2,
         ].filter(e => e));  // eliminate empty/null/undefined buildings
         if (!uniqueBuildings.size) return -1;  // no unique quarter
-        // get city info
-        const cityID = this.cityID;
-        const city = cityID && ComponentID.isValid(cityID) && Cities.get(cityID);
-        if (!city) {
-            console.error(`bpm: invalid cityID=${this.cityID}`);
-            return -1;
-        }
         // check for a unique building in progress
         for (const ub of uniqueBuildings) {
             const typeInfo = GameInfo.Types.lookup(ub);
@@ -610,18 +657,22 @@ class BuildingPlacementManagerClass {
         // check the finished buildings
         const constructibles = city.Constructibles;
         if (!constructibles) {
-            console.error(`bpm: invalid constructibles for city id=${this.cityID}`);
+            console.error(`building-placement-manager - Invalid construcibles found for id ${this.cityID}`);
             return -1;
         }
         for (const id of constructibles.getIds()) {
-            const constructible = Constructibles.getByComponentID(id);  // instance
+            const constructible = Constructibles.getByComponentID(id);
             if (!constructible) {
-                console.error(`bpm: invalid construcible id=${id.toString()}`);
+                console.error(
+                    `building-placement-manager - Invalid construcible found for id ${id.toString()}`
+                );
                 return -1;
             }
-            const ctype = GameInfo.Constructibles.lookup(constructible.type);  // type
+            const ctype = GameInfo.Constructibles.lookup(constructible.type);
             if (!ctype) {
-                console.error(`bpm: invalid constructible type=${constructible.type}`);
+                console.error(
+                    `building-placement-manager - Invalid constructibleDef found for type ${constructible.type}`
+                );
                 return -1;
             }
             if (uniqueBuildings.has(ctype.ConstructibleType)) {
@@ -633,36 +684,44 @@ class BuildingPlacementManagerClass {
     }
     getBestYieldForConstructible(cityID, constructibleDef) {
         if (!ComponentID.isMatch(cityID, this.cityID)) {
-            console.error(`building-placement-manager: getBestYieldForConstructible() - cityID ${cityID} passed into selectPlacementData does not match cityID used for initializePlacementData ${this.cityID}`);
+            console.error(
+                `building-placement-manager: getBestYieldForConstructible() - cityID ${cityID} passed into selectPlacementData does not match cityID used for initializePlacementData ${this.cityID}`
+            );
             return [];
         }
         if (!this.allPlacementData) {
-            console.error(`building-placement-manager: getBestYieldForConstructible() - invalid allPlacementData for cityID ${cityID}`);
+            console.error(
+                `building-placement-manager: getBestYieldForConstructible() - invalid allPlacementData for cityID ${cityID}`
+            );
             return [];
         }
         const constructiblePlacementData = this.allPlacementData.buildings.find((data) => {
             return data.constructibleType == constructibleDef.$hash;
         });
         if (!constructiblePlacementData) {
-            console.error(`building-placement-manager: getBestYieldForConstructible() - failed to find placement data for type ${constructibleDef.ConstructibleType}`);
+            console.error(
+                `building-placement-manager: getBestYieldForConstructible() - failed to find placement data for type ${constructibleDef.ConstructibleType}`
+            );
             return [];
         }
         let bestYieldChanges = [];
         let bestYieldChangesTotal = Number.MIN_SAFE_INTEGER;
-        for (const placement of constructiblePlacementData?.placements ?? []) {
-            let yieldChangesTotal = 0;
-            for (const change of placement.yieldChanges) {
-                yieldChangesTotal += change;
-            }
-            if (yieldChangesTotal > bestYieldChangesTotal) {
-                bestYieldChangesTotal = yieldChangesTotal;
-                bestYieldChanges = placement.yieldChanges;
+        if (constructiblePlacementData) {
+            for (const placement of constructiblePlacementData.placements) {
+                let yieldChangesTotal = 0;
+                for (const change of placement.yieldChanges) {
+                    yieldChangesTotal += change;
+                }
+                if (yieldChangesTotal > bestYieldChangesTotal) {
+                    bestYieldChangesTotal = yieldChangesTotal;
+                    bestYieldChanges = placement.yieldChanges;
+                }
             }
         }
         return bestYieldChanges;
     }
 }
-BuildingPlacementManagerClass.instance = null;
 const BuildingPlacementManager = new BuildingPlacementManagerClass();
-export { BuildingPlacementManager as default };
-//# sourceMappingURL=file:///base-standard/ui/building-placement/building-placement-manager.js.map
+
+export { BuildingPlacementConstructibleChangedEvent, BuildingPlacementConstructibleChangedEventName, BuildingPlacementHoveredPlotChangedEvent, BuildingPlacementHoveredPlotChangedEventName, BuildingPlacementManager, BuildingPlacementSelectedPlotChangedEvent, BuildingPlacementSelectedPlotChangedEventName };
+//# sourceMappingURL=building-placement-manager.js.map

@@ -1,5 +1,5 @@
-import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
-import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
+import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
+import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
 export const bzUpdateCityDetailsEventName = 'bz-update-city-details';
 class bzUpdateCityDetailsEvent extends CustomEvent {
     constructor() {

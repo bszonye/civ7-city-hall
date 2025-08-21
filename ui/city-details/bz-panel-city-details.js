@@ -1,7 +1,7 @@
 import bzCityDetails, { bzUpdateCityDetailsEventName } from "/bz-city-hall/ui/city-details/bz-model-city-details.js";
-import CityDetails, { UpdateCityDetailsEventName } from "/base-standard/ui/city-details/model-city-details.js";
-import NavTray from "/core/ui/navigation-tray/model-navigation-tray.js";
-import { MustGetElement } from "/core/ui/utilities/utilities-dom.js";
+import { C as CityDetails, U as UpdateCityDetailsEventName } from "/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js";
+import { N as NavTray } from "/core/ui/navigation-tray/model-navigation-tray.chunk.js";
+import { MustGetElement } from "/core/ui/utilities/utilities-dom.chunk.js";
 import FocusManager from '/core/ui/input/focus-manager.js';
 
 // vertical separator
