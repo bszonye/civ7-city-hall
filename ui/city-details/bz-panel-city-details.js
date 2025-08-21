@@ -241,14 +241,14 @@ function preloadIcon(icon, context) {
 
 // PanelCityDetails decorator
 class bzPanelCityDetails {
-    static panel_prototype;
-    static panel_renderYieldsSlot;
+    static c_prototype;
+    static c_renderYieldsSlot;
     static lastTab = 0;
     static tableWidth = 0;
-    constructor(panel) {
-        this.panel = panel;
-        panel.bzPanel = this;
-        this.patchPrototypes(this.panel);
+    constructor(component) {
+        this.component = component;
+        component.bzComponent = this;
+        this.patchPrototypes(this.component);
         // listen for model updates
         this.updateOverviewListener = this.updateOverview.bind(this);
         this.updateConstructiblesListener = this.updateConstructibles.bind(this);
@@ -257,7 +257,7 @@ class bzPanelCityDetails {
             bzPanelCityDetails.lastTab = e.detail.index;
         };
         // redirect from panel
-        this.panel.onFocus = () => {
+        this.component.onFocus = () => {
             NavTray.clear();
             NavTray.addOrUpdateGenericBack();
             this.selectTab(bzPanelCityDetails.lastTab);
@@ -270,27 +270,27 @@ class bzPanelCityDetails {
             for (const y of icons) preloadIcon(y);
         });
     }
-    patchPrototypes(panel) {
-        const panel_prototype = Object.getPrototypeOf(panel);
-        if (bzPanelCityDetails.panel_prototype == panel_prototype) return;
+    patchPrototypes(component) {
+        const c_prototype = Object.getPrototypeOf(component);
+        if (bzPanelCityDetails.c_prototype == c_prototype) return;
         // patch PanelCityDetails methods
-        const proto = bzPanelCityDetails.panel_prototype = panel_prototype;
+        const proto = bzPanelCityDetails.c_prototype = c_prototype;
         // wrap render method to extend it
-        const panel_render = proto.render;
+        const c_render = proto.render;
         const after_render = this.afterRender;
         proto.render = function(...args) {
-            const panel_rv = panel_render.apply(this, args);
-            const after_rv = after_render.apply(this.bzPanel, args);
-            return after_rv ?? panel_rv;
+            const c_rv = c_render.apply(this, args);
+            const after_rv = after_render.apply(this.bzComponent, args);
+            return after_rv ?? c_rv;
         }
-        // replace panel.renderYieldsSlot to fix a bug
-        bzPanelCityDetails.panel_renderYieldsSlot = proto.renderYieldsSlot;
+        // replace component.renderYieldsSlot to fix a bug
+        bzPanelCityDetails.c_renderYieldsSlot = proto.renderYieldsSlot;
         proto.renderYieldsSlot = function() {
-            return this.bzPanel.renderYieldsSlot();
+            return this.bzComponent.renderYieldsSlot();
         }
     }
     patchTabSlots() {
-        const tabItems = this.panel.tabBar.getAttribute("tab-items");
+        const tabItems = this.component.tabBar.getAttribute("tab-items");
         const tabs = JSON.parse(tabItems);
         // replace city-detail-tabs-buildings
         tabs.forEach((tab, index) => {
@@ -300,15 +300,15 @@ class bzPanelCityDetails {
         });
         // add Overview tab
         tabs.unshift(BZ_TAB_OVERVIEW);
-        this.panel.tabBar.setAttribute("tab-items", JSON.stringify(tabs));
+        this.component.tabBar.setAttribute("tab-items", JSON.stringify(tabs));
     }
     selectTab(index) {
-        this.panel.tabBar.setAttribute("selected-tab-index", index.toString());
-        const tabItems = this.panel.tabBar.getAttribute("tab-items");
+        this.component.tabBar.setAttribute("selected-tab-index", index.toString());
+        const tabItems = this.component.tabBar.getAttribute("tab-items");
         const tab = JSON.parse(tabItems).at(index);
         if (!tab?.id) return;
-        this.panel.slotGroup.setAttribute("selected-slot", tab.id);
-        const slot = this.panel.Root.querySelector(`#${tab.id}`);
+        this.component.slotGroup.setAttribute("selected-slot", tab.id);
+        const slot = this.component.Root.querySelector(`#${tab.id}`);
         if (slot) FocusManager.setFocus(slot);
     }
     // empty decorators
@@ -318,18 +318,18 @@ class bzPanelCityDetails {
     // attach new & replaced tabs to the panel
     afterAttach() {
         metrics = getFontMetrics();
-        this.panel.tabBar.addEventListener("tab-selected", this.onTabSelected);
+        this.component.tabBar.addEventListener("tab-selected", this.onTabSelected);
         this.selectTab(bzPanelCityDetails.lastTab);
         window.addEventListener(bzUpdateCityDetailsEventName, this.updateOverviewListener);
         window.addEventListener(UpdateCityDetailsEventName, this.updateConstructiblesListener);
         // overview
-        const oslot = MustGetElement(`#${cityDetailTabID.overview}`, this.panel.Root);
+        const oslot = MustGetElement(`#${cityDetailTabID.overview}`, this.component.Root);
         this.overviewSlot = oslot;
         this.growthContainer = MustGetElement(".growth-container", oslot);
         this.connectionsContainer = MustGetElement(".connections-container", oslot);
         this.improvementsContainer = MustGetElement(".improvements-container", oslot);
         // constructibles
-        const cslot = MustGetElement(`#${cityDetailTabID.constructibles}`, this.panel.Root);
+        const cslot = MustGetElement(`#${cityDetailTabID.constructibles}`, this.component.Root);
         this.constructibleSlot = cslot;
         this.buildingsCategory = MustGetElement(".bz-buildings-category", cslot);
         this.buildingsList = MustGetElement(".bz-buildings-list", cslot);
@@ -340,7 +340,7 @@ class bzPanelCityDetails {
         this.update();
     }
     beforeDetach() {
-        this.panel.tabBar.removeEventListener("tab-selected", this.onTabSelected);
+        this.component.tabBar.removeEventListener("tab-selected", this.onTabSelected);
         window.removeEventListener(bzUpdateCityDetailsEventName, this.updateOverviewListener);
         window.removeEventListener(UpdateCityDetailsEventName, this.updateConstructiblesListener);
     }
@@ -365,7 +365,7 @@ class bzPanelCityDetails {
             <div class="improvements-container flex flex-col ml-6"></div>
         </fxs-scrollable>
         `;
-        this.panel.slotGroup.appendChild(slot);
+        this.component.slotGroup.appendChild(slot);
     }
     renderConstructiblesSlot() {
         const slot = document.createElement("fxs-vslot");
@@ -394,7 +394,7 @@ class bzPanelCityDetails {
             </div>
         </fxs-scrollable>
         `;
-        this.panel.slotGroup.appendChild(slot);
+        this.component.slotGroup.appendChild(slot);
     }
     // fixes a mismatched tag in the base-standard function
     renderYieldsSlot() {
@@ -409,7 +409,7 @@ class bzPanelCityDetails {
                 <div class="yields-container w-full"></div>
             </fxs-scrollable>
         `;
-        this.panel.slotGroup.appendChild(slot);
+        this.component.slotGroup.appendChild(slot);
     }
     // update data model from both sources
     update() {
@@ -744,11 +744,11 @@ class bzPanelCityDetails {
         yieldAdjustContainer.appendChild(maintenanceContainer);
         rightContainer.appendChild(yieldAdjustContainer);
         mainDiv.setAttribute("data-constructible-data", JSON.stringify(constructibleData));
-        mainDiv.addEventListener("mouseover", this.panel.mouseOverBuildingListener);
-        mainDiv.addEventListener("mouseout", this.panel.mouseOutBuildingListener);
-        mainDiv.addEventListener("focus", this.panel.focusBuildingListener);
-        mainDiv.addEventListener("focusout", this.panel.focusOutBuildingListener);
-        mainDiv.addEventListener("action-activate", this.panel.activateBuildingListener);
+        mainDiv.addEventListener("mouseover", this.component.mouseOverBuildingListener);
+        mainDiv.addEventListener("mouseout", this.component.mouseOutBuildingListener);
+        mainDiv.addEventListener("focus", this.component.focusBuildingListener);
+        mainDiv.addEventListener("focusout", this.component.focusOutBuildingListener);
+        mainDiv.addEventListener("action-activate", this.component.activateBuildingListener);
         topDiv.appendChild(rightContainer);
         mainDiv.appendChild(topDiv);
         return mainDiv;

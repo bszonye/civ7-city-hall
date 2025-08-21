@@ -10,8 +10,14 @@ const BZ_HEAD_STYLE = [
 }
 .bz-city-hall .production-chooser__city-details-button {
     position: fixed;
-    top: 4rem;
-    right: 2rem;
+    top: 3rem;
+    right: 1rem;
+    width: 2.6666666667rem;
+    height: 2.6666666667rem;
+}
+.bz-city-hall .img-city-details {
+    width: 2.6666666667rem;
+    height: 2.6666666667rem;
 }
 .bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
@@ -28,7 +34,7 @@ document.body.classList.add("bz-city-hall");
 export class bzProductionChooserScreen {
     static c_prototype;
     static isPurchase = false;
-    static isCDPanelOpen = false;
+    static isCDPanelOpen = true;
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
@@ -39,6 +45,14 @@ export class bzProductionChooserScreen {
         if (bzProductionChooserScreen.c_prototype == c_prototype) return;
         // patch PanelCityDetails methods
         const proto = bzProductionChooserScreen.c_prototype = c_prototype;
+        // wrap render method to extend it
+        const c_render = proto.render;
+        const after_render = this.afterRender;
+        proto.render = function(...args) {
+            const c_rv = c_render.apply(this, args);
+            const after_rv = after_render.apply(this.bzComponent, args);
+            return after_rv ?? c_rv;
+        }
         // override isPurchase property
         const c_isPurchase =
             Object.getOwnPropertyDescriptor(proto, "isPurchase");
@@ -127,6 +141,14 @@ export class bzProductionChooserScreen {
         // but that has its own means of restoring the Purchase tab.
         bzProductionChooserScreen.isPurchase = false;
         engine.off('ConstructibleChanged', this.component.onConstructibleAddedToMap, this.component);
+    }
+    afterRender() {
+        const prevButton = this.component.prevCityButton;
+        const nextButton = this.component.nextCityButton;
+        prevButton.style.position = nextButton.style.position = 'absolute';
+        prevButton.style.top = nextButton.style.top = '4.3333333333rem';
+        prevButton.style.left = '1.3333333333rem';
+        nextButton.style.left = '25.0000000000rem';
     }
 }
 Controls.decorate('panel-production-chooser', (val) => new bzProductionChooserScreen(val));
