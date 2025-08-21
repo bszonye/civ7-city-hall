@@ -58,7 +58,10 @@
                     <Item>ui/options/mod-options-decorator.js</Item>
                 </ImportFiles>
                 <UIScripts>
+                    <Item>ui/city-details/bz-model-city-details.js</Item>
+                    <Item>ui/city-details/bz-panel-city-details.js</Item>
                     <Item>ui/lenses/layer/bz-urban-layer.js</Item>
+                    <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-tooltips.js</Item>
                 </UIScripts>
                 <UpdateText>
@@ -85,9 +88,6 @@
                     <Item>ui/production-chooser/production-chooser-unique-quarter.js</Item>
                 </ImportFiles>
                 <UIScripts>
-                    <Item>ui/city-details/bz-model-city-details.js</Item>
-                    <Item>ui/city-details/bz-panel-city-details.js</Item>
-                    <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
                 </UIScripts>
             </Actions>
         </ActionGroup>
