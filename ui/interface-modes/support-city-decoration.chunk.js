@@ -27,7 +27,7 @@ var CityDecorationSupport;
             this.onUnload();
         };
         onPlotChange = () => this.updateGate.call('onPlotChange');
-        updateGate = new UpdateGate(this.decoratePlots.bind(this));
+        updateGate = new UpdateGate(this.updatePlots.bind(this));
         BUILD_SLOT_SPRITE_PADDING = 12;
         YIELD_SPRITE_HEIGHT = 6;
         YIELD_SPRITE_ANGLE = Math.PI / 4;  // 45°
@@ -41,8 +41,6 @@ var CityDecorationSupport;
             this.citySpriteGrid = WorldUI.createSpriteGrid("CityOverlaySpriteGroup", true);
             this.citySpriteGrid.setVisible(false);
             this.urbanLayer = LensManager.layers.get('bz-urban-layer');
-            engine.on('ConstructibleAddedToMap', this.onPlotChange);
-            engine.on('ConstructibleRemovedFromMap', this.onPlotChange);
             engine.on("BeforeUnload", this.beforeUnloadListener);
         }
         realizeBuildSlots(district, grid) {
@@ -50,9 +48,14 @@ var CityDecorationSupport;
             // borrow the realizeBuildSlots method
             WorkerYieldsLensLayer.prototype.realizeBuildSlots.apply(this, [district, grid]);
         }
-        decoratePlots(cityID=this.cityID) {
+        decoratePlots(cityID) {
             this.cityID = cityID;  // remember cityID for update handler
+            this.updatePlots(cityID);
             this.urbanLayer.applyLayer();  // apply urban core outline
+            engine.on('ConstructibleAddedToMap', this.onPlotChange);
+            engine.on('ConstructibleRemovedFromMap', this.onPlotChange);
+        }
+        updatePlots(cityID=this.cityID) {
             this.cityOverlayGroup?.clearAll();
             this.citySpriteGrid?.clear();
             this.citySpriteGrid?.setVisible(true);
@@ -100,6 +103,8 @@ var CityDecorationSupport;
             this.cityOverlayGroup?.clearAll();
             this.citySpriteGrid?.clear();
             this.citySpriteGrid?.setVisible(false);
+            engine.off('ConstructibleAddedToMap', this.onPlotChange);
+            engine.off('ConstructibleRemovedFromMap', this.onPlotChange);
         }
     }
     CityDecorationSupport2.manager = new Instance();
