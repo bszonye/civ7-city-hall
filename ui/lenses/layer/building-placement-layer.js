@@ -1,13 +1,9 @@
-/**
- * @file building-placement-layer
- * @copyright 2023-2025, Firaxis Games
- * @description Lens layer to show yield deltas and adjacencies from placing a building
- */
-import { BuildingPlacementManager, BuildingPlacementHoveredPlotChangedEventName } from '/base-standard/ui/building-placement/building-placement-manager.js';
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
+import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
+import { BuildingPlacementHoveredPlotChangedEventName, BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { S as SortYields } from '/base-standard/ui/utilities/utilities-city-yields.chunk.js';
-const adjacencyIcons = new Map([
+
+const adjacencyIcons = /* @__PURE__ */ new Map([
     [DirectionTypes.DIRECTION_EAST, "adjacencyarrow_east"],
     [DirectionTypes.DIRECTION_NORTHEAST, "adjacencyarrow_northeast"],
     [DirectionTypes.DIRECTION_NORTHWEST, "adjacencyarrow_northwest"],
@@ -29,18 +25,16 @@ function gatherBuildingsTagged(tag) {
     return new Set(GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type));
 }
 const BZ_LARGE = gatherBuildingsTagged("FULL_TILE");
-export class WorkerYieldsLensLayer {
-    constructor() {
-        this.BUILD_SLOT_SPRITE_PADDING = 12;
-        this.YIELD_SPRITE_HEIGHT = 6;
-        this.YIELD_SPRITE_ANGLE = Math.PI / 6;  // 30°
-        this.YIELD_SPRITE_PADDING = 11;
-        this.YIELD_WRAP_AT = 3;
-        this.YIELD_WRAPPED_ROW_OFFSET = 8;
-        this.yieldSpriteGrid = WorldUI.createSpriteGrid("BuildingPlacementYields_SpriteGroup", true);
-        this.adjacenciesSpriteGrid = WorldUI.createSpriteGrid("Adjacencies_SpriteGroup", true);
-        this.buildingPlacementPlotChangedListener = this.onBuildingPlacementPlotChanged.bind(this);
-    }
+class WorkerYieldsLensLayer {
+    BUILD_SLOT_SPRITE_PADDING = 12;
+    YIELD_SPRITE_HEIGHT = 6;
+    YIELD_SPRITE_ANGLE = Math.PI / 6;  // 30°
+    YIELD_SPRITE_PADDING = 11;
+    YIELD_WRAP_AT = 3;
+    YIELD_WRAPPED_ROW_OFFSET = 8;
+    yieldSpriteGrid = WorldUI.createSpriteGrid("BuildingPlacementYields_SpriteGroup", true);
+    adjacenciesSpriteGrid = WorldUI.createSpriteGrid("Adjacencies_SpriteGroup", true);
+    buildingPlacementPlotChangedListener = this.onBuildingPlacementPlotChanged.bind(this);
     initLayer() {
         this.yieldSpriteGrid.setVisible(false);
         this.adjacenciesSpriteGrid.setVisible(false);
@@ -48,51 +42,68 @@ export class WorkerYieldsLensLayer {
     applyLayer() {
         this.realizeBuidlingPlacementSprites();
         this.yieldSpriteGrid.setVisible(true);
-        window.addEventListener(BuildingPlacementHoveredPlotChangedEventName, this.buildingPlacementPlotChangedListener);
+        window.addEventListener(
+            BuildingPlacementHoveredPlotChangedEventName,
+            this.buildingPlacementPlotChangedListener
+        );
     }
     removeLayer() {
         this.yieldSpriteGrid.clear();
         this.yieldSpriteGrid.setVisible(false);
         this.adjacenciesSpriteGrid.clear();
         this.adjacenciesSpriteGrid.setVisible(false);
-        window.removeEventListener(BuildingPlacementHoveredPlotChangedEventName, this.buildingPlacementPlotChangedListener);
+        window.removeEventListener(
+            BuildingPlacementHoveredPlotChangedEventName,
+            this.buildingPlacementPlotChangedListener
+        );
     }
     /** Add the yield deltas and building slots to each valid plot for the current building */
     realizeBuidlingPlacementSprites() {
         if (!BuildingPlacementManager.cityID) {
-            console.error("building-placement-layer: No assigned cityID in the BuildingPlacementManager when attempting to realizeBuildingPlacementSprites");
+            console.error(
+                "building-placement-layer: No assigned cityID in the BuildingPlacementManager when attempting to realizeBuildingPlacementSprites"
+            );
             return;
         }
         if (!BuildingPlacementManager.currentConstructible) {
-            console.error("building-placement-layer: No assigned currentConstructible in the BuildingPlacementManager when attempting to realizeBuildingPlacementSprites");
+            console.error(
+                "building-placement-layer: No assigned currentConstructible in the BuildingPlacementManager when attempting to realizeBuildingPlacementSprites"
+            );
             return;
         }
         const city = Cities.get(BuildingPlacementManager.cityID);
         if (!city) {
-            console.error("building-placement-layer: No valid city with city ID: " + ComponentID.toLogString(BuildingPlacementManager.cityID));
+            console.error(
+                "building-placement-layer: No valid city with city ID: " + ComponentID.toLogString(BuildingPlacementManager.cityID)
+            );
             return;
         }
         if (!city.Yields) {
-            console.error("building-placement-layer: No valid Yields object attached to city with city ID: " + ComponentID.toLogString(BuildingPlacementManager.cityID));
+            console.error(
+                "building-placement-layer: No valid Yields object attached to city with city ID: " + ComponentID.toLogString(BuildingPlacementManager.cityID)
+            );
             return;
         }
-        const validPlots = BuildingPlacementManager.expandablePlots.concat(BuildingPlacementManager.developedPlots.concat(BuildingPlacementManager.urbanPlots.concat(BuildingPlacementManager.reservedPlots)));
-        for (let i = 0; i < validPlots.length; i++) {
+        const validPlots = BuildingPlacementManager.expandablePlots.concat(
+            BuildingPlacementManager.developedPlots.concat(BuildingPlacementManager.urbanPlots.concat(BuildingPlacementManager.reservedPlots))
+        );
+        for (const plotIndex of validPlots) {
             const plotYieldGainPills = [];
             const plotYieldLossPills = [];
-            //Add the yield gain and loss pills
-            BuildingPlacementManager.getTotalYieldChanges(validPlots[i])?.forEach((yieldChangeInfo) => {
+            // Add the yield gain and loss pills
+            BuildingPlacementManager.getTotalYieldChanges(plotIndex)?.forEach((yieldChangeInfo) => {
                 if (yieldChangeInfo.yieldChange != 0) {
                     const yieldPillData = {
-                        iconURL: BuildingPlacementManager.getYieldPillIcon(yieldChangeInfo.yieldType.toString(), yieldChangeInfo.yieldChange, yieldChangeInfo.isMainYield),
+                        iconURL: BuildingPlacementManager.getYieldPillIcon(
+                            yieldChangeInfo.yieldType.toString(),
+                            yieldChangeInfo.yieldChange
+                        ),
                         yieldDelta: yieldChangeInfo.yieldChange,
-                        yieldType: yieldChangeInfo.yieldType,
-                        isMainYield: yieldChangeInfo.isMainYield
+                        yieldType: yieldChangeInfo.yieldType
                     };
                     if (yieldChangeInfo.yieldChange > 0) {
                         plotYieldGainPills.push(yieldPillData);
-                    }
-                    else {
+                    } else {
                         plotYieldLossPills.push(yieldPillData);
                     }
                 }
@@ -100,19 +111,37 @@ export class WorkerYieldsLensLayer {
             SortYields(plotYieldGainPills);
             SortYields(plotYieldLossPills);
             const pillOffsets = this.getXYOffsetForPill(plotYieldGainPills.length + plotYieldLossPills.length);
-            const location = GameplayMap.getLocationFromIndex(validPlots[i]);
+            const location = GameplayMap.getLocationFromIndex(plotIndex);
             plotYieldGainPills.forEach((yieldPillData, i) => {
                 const pillOffset = pillOffsets[i];
-                this.yieldSpriteGrid.addSprite(location, yieldPillData.iconURL, { x: pillOffset.x, y: pillOffset.y, z: 5 });
-                this.yieldSpriteGrid.addText(location, yieldPillData.yieldDelta.toString(), { x: pillOffset.x, y: (pillOffset.y - 3), z: 5 }, { fonts: ["TitleFont"], fontSize: 4, faceCamera: true });
+                this.yieldSpriteGrid.addSprite(location, yieldPillData.iconURL, {
+                    x: pillOffset.x,
+                    y: pillOffset.y,
+                    z: 5
+                });
+                this.yieldSpriteGrid.addText(
+                    location,
+                    yieldPillData.yieldDelta.toString(),
+                    { x: pillOffset.x, y: pillOffset.y - 3, z: 5 },
+                    { fonts: ["TitleFont"], fontSize: 4, faceCamera: true }
+                );
             });
             plotYieldLossPills.forEach((yieldPillData, i) => {
                 const pillOffset = pillOffsets[i + plotYieldGainPills.length];
-                this.yieldSpriteGrid.addSprite(location, yieldPillData.iconURL, { x: pillOffset.x, y: pillOffset.y, z: 5 });
-                this.yieldSpriteGrid.addText(location, yieldPillData.yieldDelta.toString(), { x: pillOffset.x, y: (pillOffset.y - 3), z: 5 }, { fonts: ["TitleFont"], fontSize: 4, faceCamera: true });
+                this.yieldSpriteGrid.addSprite(location, yieldPillData.iconURL, {
+                    x: pillOffset.x,
+                    y: pillOffset.y,
+                    z: 5
+                });
+                this.yieldSpriteGrid.addText(
+                    location,
+                    yieldPillData.yieldDelta.toString(),
+                    { x: pillOffset.x, y: pillOffset.y - 3, z: 5 },
+                    { fonts: ["TitleFont"], fontSize: 4, faceCamera: true }
+                );
             });
-            //Add any filled or open building slots
-            const district = Districts.getAtLocation(validPlots[i]);
+            // Add any filled or open building slots
+            const district = Districts.getAtLocation(plotIndex);
             if (district) {
                 this.realizeBuildSlots(district);
             }
@@ -125,7 +154,7 @@ export class WorkerYieldsLensLayer {
      * @returns array of offsets indexed to the sourced array of pills. ie: 3rd pill (index of 2) offset at offsetArray[2]
      */
     getXYOffsetForPill(totalPills) {
-        let offsets = [];
+        const offsets = [];
         // Determine if we should wrap and if so how many pills in the top and bottom rows
         const shouldWrap = totalPills > this.YIELD_WRAP_AT;
         const numPillsBottomRow = shouldWrap ? Math.trunc(totalPills / 2) : 0;
@@ -133,7 +162,7 @@ export class WorkerYieldsLensLayer {
         // Group width based on top row which should always be the longest row
         const groupWidth = (numPillsTopRow - 1) * this.YIELD_SPRITE_PADDING;
         for (let i = 0; i < totalPills; i++) {
-            const isPillInTopRow = (i + 1) <= numPillsTopRow;
+            const isPillInTopRow = i + 1 <= numPillsTopRow;
             // If this pill is in the bottom row base the index for positioning off relative index within the bottom row
             const rowPosition = isPillInTopRow ? i : i - numPillsTopRow;
             // Generate y offset based on if we need to wrap and what row the pill is in
@@ -142,7 +171,7 @@ export class WorkerYieldsLensLayer {
                 yOffset = isPillInTopRow ? this.YIELD_WRAPPED_ROW_OFFSET : -this.YIELD_WRAPPED_ROW_OFFSET;
             }
             const offset = {
-                x: (rowPosition * this.YIELD_SPRITE_PADDING) + (groupWidth / 2) - groupWidth,
+                x: rowPosition * this.YIELD_SPRITE_PADDING + groupWidth / 2 - groupWidth,
                 y: yOffset
             };
             offsets.push(offset);
@@ -150,30 +179,35 @@ export class WorkerYieldsLensLayer {
         return offsets;
     }
     /*Show building slots below each tile*/
-    realizeBuildSlots(district, grid=null) {
-        if (!grid) grid = this.yieldSpriteGrid;
+    realizeBuildSlots(district, grid=this.yieldSpriteGrid) {
         const districtDefinition = GameInfo.Districts.lookup(district.type);
         if (!districtDefinition) {
-            console.error("building-placement-layer: Unable to retrieve a valid DistrictDefinition with DistrictType: " + district.type);
+            console.error(
+                "building-placement-layer: Unable to retrieve a valid DistrictDefinition with DistrictType: " + district.type
+            );
             return;
         }
-        const constructibles = MapConstructibles.getConstructibles(district.location.x, district.location.y);
+        const constructibles = MapConstructibles.getConstructibles(
+            district.location.x,
+            district.location.y
+        );
         const buildingSlots = [];
         let maxSlots = districtDefinition.MaxConstructibles;
-        for (let i = 0; i < constructibles.length; i++) {
-            const constructibleID = constructibles[i];
+        for (const constructibleID of constructibles) {
             const existingConstructible = Constructibles.getByComponentID(constructibleID);
             if (!existingConstructible) {
-                console.error("building-placement-layer: Unable to find a valid Constructible with ComponentID: " + ComponentID.toLogString(constructibleID));
+                console.error(
+                    "building-placement-layer: Unable to find a valid Constructible with ComponentID: " + ComponentID.toLogString(constructibleID)
+                );
                 continue;
             }
-            const building = GameInfo.Constructibles.lookup(existingConstructible.type);
+            const building = GameInfo.Constructibles.lookup(
+                existingConstructible.type
+            );
             if (!building) {
                 console.error("building-placement-layer: Unable to find a valid ConstructibleDefinition with type: " + existingConstructible.type);
                 continue;
             }
-            //TODO: show turns remaining for in-progress buildings
-            //TODO: show replaceable (obsolete) buildings
             // skip walls
             if (building.ExistingDistrictOnly) continue;
             // large buildings take up an extra slot
@@ -210,34 +244,47 @@ export class WorkerYieldsLensLayer {
         this.adjacenciesSpriteGrid.clear();
         this.adjacenciesSpriteGrid.setVisible(false);
         if (!BuildingPlacementManager.cityID) {
-            console.error("building-placement-layer: No assigned cityID in the BuildingPlacementManager when attempting to realizeBuildingPlacementSprites");
+            console.error(
+                "building-placement-layer: No assigned cityID in the BuildingPlacementManager when attempting to realizeBuildingPlacementSprites"
+            );
             return;
         }
         if (!BuildingPlacementManager.currentConstructible) {
-            console.error("building-placement-layer: No assigned currentConstructible in the BuildingPlacementManager when attempting to realizeBuildingPlacementSprites");
+            console.error(
+                "building-placement-layer: No assigned currentConstructible in the BuildingPlacementManager when attempting to realizeBuildingPlacementSprites"
+            );
             return;
         }
         const city = Cities.get(BuildingPlacementManager.cityID);
         if (!city) {
-            console.error("building-placement-layer: No valid city with city ID: " + ComponentID.toLogString(BuildingPlacementManager.cityID));
+            console.error(
+                "building-placement-layer: No valid city with city ID: " + ComponentID.toLogString(BuildingPlacementManager.cityID)
+            );
             return;
         }
         if (!city.Yields) {
-            console.error("building-placement-layer: No valid Yields object attached to city with city ID: " + ComponentID.toLogString(BuildingPlacementManager.cityID));
+            console.error(
+                "building-placement-layer: No valid Yields object attached to city with city ID: " + ComponentID.toLogString(BuildingPlacementManager.cityID)
+            );
             return;
         }
         if (!BuildingPlacementManager.hoveredPlotIndex || !BuildingPlacementManager.isValidPlacementPlot(BuildingPlacementManager.hoveredPlotIndex)) {
             return;
         }
-        const yieldAdjacencies = city.Yields.calculateAllAdjacencyYieldsForConstructible(BuildingPlacementManager.currentConstructible.ConstructibleType, BuildingPlacementManager.hoveredPlotIndex);
+        const yieldAdjacencies = city.Yields.calculateAllAdjacencyYieldsForConstructible(
+            BuildingPlacementManager.currentConstructible.ConstructibleType,
+            BuildingPlacementManager.hoveredPlotIndex
+        );
         if (yieldAdjacencies.length <= 0) {
             return;
         }
         const multiArrow = {};
-        yieldAdjacencies.forEach(adjacency => {
+        yieldAdjacencies.forEach((adjacency) => {
             const yieldDef = GameInfo.Yields.lookup(adjacency.yieldType);
             if (!yieldDef) {
-                console.error("building-placement-layer: No valid yield definition for yield type: " + adjacency.yieldType.toString());
+                console.error(
+                    "building-placement-layer: No valid yield definition for yield type: " + adjacency.yieldType.toString()
+                );
                 return;
             }
             const buildingLocation = GameplayMap.getLocationFromIndex(BuildingPlacementManager.hoveredPlotIndex);
@@ -245,8 +292,10 @@ export class WorkerYieldsLensLayer {
             const adjacencyDirection = GameplayMap.getDirectionToPlot(buildingLocation, adjacencyLocation);
             // show arrow icons
             const arrowIcon = adjacencyIcons.get(adjacencyDirection);
-            if (arrowIcon === undefined) {
-                console.error("building-placement-layer: No valid adjacency icon for direction: " + adjacencyDirection.toString());
+            if (arrowIcon === void 0) {
+                console.error(
+                    "building-placement-layer: No valid adjacency icon for direction: " + adjacencyDirection.toString()
+                );
                 return;
             }
             const arrowOffset = this.calculateAdjacencyDirectionOffsetLocation(adjacencyDirection);
@@ -257,16 +306,15 @@ export class WorkerYieldsLensLayer {
             // show yield icons
             const yieldIcon = UI.getIconBLP(yieldDef.YieldType + "_5", "YIELD");
             const yieldOffset = { x: shift * arrowOffset.x, y: shift * arrowOffset.y };
-            //scale -1 to flip the arrows to indicate incoming adjacencies
+            // scale -1 to flip the arrows to indicate incoming adjacencies
             this.adjacenciesSpriteGrid.addSprite(buildingLocation, arrowIcon, arrowOffset, { scale: -1 });
             this.adjacenciesSpriteGrid.addSprite(buildingLocation, yieldIcon, yieldOffset, { scale: 1 });
-            //TODO: outgoing adjacencies once implemented in GameCore
+            // TODO: outgoing adjacencies once implemented in GameCore
         });
         this.adjacenciesSpriteGrid.setVisible(true);
     }
     /* Determine where adjacency arrows should go based on adjacency location */
     calculateAdjacencyDirectionOffsetLocation(adjacencyDirection) {
-        //TODO: Will need to be shifted once outgoing adjacencies are displayed
         switch (adjacencyDirection) {
             case DirectionTypes.DIRECTION_EAST:
                 return { x: 32, y: 0 };
@@ -285,6 +333,7 @@ export class WorkerYieldsLensLayer {
         }
     }
 }
-LensManager.registerLensLayer('fxs-building-placement-layer', new WorkerYieldsLensLayer());
 
-//# sourceMappingURL=file:///base-standard/ui/lenses/layer/building-placement-layer.js.map
+export { WorkerYieldsLensLayer };
+LensManager.registerLensLayer("fxs-building-placement-layer", new WorkerYieldsLensLayer());
+//# sourceMappingURL=building-placement-layer.js.map
