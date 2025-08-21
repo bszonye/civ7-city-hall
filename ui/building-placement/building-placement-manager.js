@@ -73,17 +73,17 @@ class BuildingPlacementManagerClass {
     get reservedPlots() {
         return this._reservedPlots;
     }
-    //Plots that are already developed and have buildings placed on them
+    // Plots with buildings
     _urbanPlots = [];
     get urbanPlots() {
         return this._urbanPlots;
     }
-    //Plots that have already been developed/improved (i.e. improved through city growth)
+    // Plots with improvements
     _developedPlots = [];
     get developedPlots() {
         return this._developedPlots;
     }
-    //Plots that have not yet been developed
+    // Plots with nothing
     _expandablePlots = [];
     get expandablePlots() {
         return this._expandablePlots;
