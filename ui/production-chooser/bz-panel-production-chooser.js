@@ -165,16 +165,10 @@ export class bzProductionChooserScreen {
         nextButton.style.left = `${BZ_PANEL_WIDTH - arrow - inset}rem`;
     }
     onCityDetailsClosed() {
-        console.warn(`TRIX ON-CLOSE`);
         this.component.panelProductionSlot.classList.remove("hidden");
-        const currentFocus = FocusManager.getFocus();
-        console.warn(`TRIX FOCUS ${currentFocus?.tagName}`);
-        if (this.component.Root.contains(currentFocus)) {
-            this.component.frame.classList.add("trigger-nav-help");
-        }
+        // this.component.frame.classList.add("trigger-nav-help");
         this.component.cityNameElement.classList.add("trigger-nav-help");
         FocusManager.setFocus(this.component.productionAccordion);
-        console.warn(`TRIX FRAME ${[...this.component.frame.classList]}`);
     }
 }
 Controls.decorate('panel-production-chooser', (val) => new bzProductionChooserScreen(val));

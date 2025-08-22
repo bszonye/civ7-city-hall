@@ -246,8 +246,10 @@ class bzPanelCityDetails {
     static c_renderYieldsSlot;
     static lastTab = 0;
     static tableWidth = 0;
+    cityDetailsSlot;
+    panelProductionSlot;
+    focusRoot;
     focusInListener = this.onFocusIn.bind(this);
-    focusOutListener = this.onFocusOut.bind(this);
     updateListener = this.update.bind(this);
     constructor(component) {
         this.component = component;
@@ -255,7 +257,6 @@ class bzPanelCityDetails {
         this.patchPrototypes(this.component);
         // replace onFocus to override default slot
         this.component.onFocus = () => {
-            console.warn(`TRIX ON-FOCUS`);
             NavTray.clear();
             NavTray.addOrUpdateGenericBack();
             this.selectTab(bzPanelCityDetails.lastTab, true);
@@ -317,16 +318,18 @@ class bzPanelCityDetails {
     }
     // empty decorators
     beforeAttach() {
-        console.warn(`TRIX ATTACH`);
         this.component.Root.classList.remove("trigger-nav-help");
+        // get focus root and verify that it contains both panels
+        this.panelProductionSlot = MustGetElement(".panel-production-slot", document);
+        const focusRoot = this.focusRoot = this.panelProductionSlot.parentNode;
+        this.cityDetailsSlot = MustGetElement(".panel-city-details-slot", focusRoot);
     }
     afterDetach() { }
     onAttributeChanged(_name, _prev, _next) { }
     // attach new & replaced tabs to the panel
     afterAttach() {
         metrics = getFontMetrics();
-        this.component.Root.addEventListener("focusin", this.focusInListener);
-        this.component.Root.addEventListener("focusout", this.focusOutListener);
+        this.focusRoot.addEventListener("focusin", this.focusInListener);
         this.component.tabBar.addEventListener("tab-selected", this.onTabSelected);
         this.selectTab(bzPanelCityDetails.lastTab);
         window.addEventListener(bzUpdateCityDetailsEventName, this.updateListener);
@@ -349,8 +352,7 @@ class bzPanelCityDetails {
         this.update();
     }
     beforeDetach() {
-        this.component.Root.removeEventListener("focusin", this.focusInListener);
-        this.component.Root.removeEventListener("focusout", this.focusOutListener);
+        this.focusRoot.removeEventListener("focusin", this.focusInListener);
         this.component.tabBar.removeEventListener("tab-selected", this.onTabSelected);
         window.removeEventListener(bzUpdateCityDetailsEventName, this.updateOverviewListener);
         window.removeEventListener(UpdateCityDetailsEventName, this.updateConstructiblesListener);
@@ -428,7 +430,6 @@ class bzPanelCityDetails {
         this.updateConstructibles();
         const hasFocus = this.component.Root.contains(FocusManager.getFocus());
         this.component.Root.classList.toggle("trigger-nav-help", hasFocus);
-        console.warn(`TRIX UPDATE ${this.component} ${[...this.component.Root.classList]}`);
     }
     // update data model for new tab slot
     updateOverview() {
@@ -775,23 +776,11 @@ class bzPanelCityDetails {
         return dividerDiv;
     }
     onFocusIn(event) {
-        console.warn(`TRIX FOCUS-IN ${event.target.tagName} ${event.target.id}`);
-        console.warn(`TRIX IN ${[...this.component.Root.classList]}`);
-        const hasFocus = this.component.Root.contains(FocusManager.getFocus());
+        const hasFocus = this.component.Root.contains(event.target);
         this.component.Root.classList.toggle("trigger-nav-help", hasFocus);
-        if (this.component.Root == event.target) {
-            console.warn(`TRIX FOCUSED`);
-            // this.component.Root.classList.add("trigger-nav-help");
-        }
-    }
-    onFocusOut(event) {
-        console.warn(`TRIX FOCUS-OUT ${event.target.tagName} ${event.target.id}`);
-        console.warn(`TRIX OUT ${[...this.component.Root.classList]}`);
-        // const hasFocus = this.component.Root.contains(FocusManager.getFocus());
-        // this.component.Root.classList.toggle("trigger-nav-help", hasFocus);
-        if (!this.component.Root.contains(event.target)) {
-            console.warn(`TRIX UNFOCUSED`);
-            this.component.Root.classList.remove("trigger-nav-help");
+        if (hasFocus) {
+            this.panelProductionSlot.querySelectorAll(".trigger-nav-help")
+                .forEach((e) => e.classList.remove("trigger-nav-help"));
         }
     }
 }
