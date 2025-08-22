@@ -1,10 +1,13 @@
 import FocusManager from '../../../core/ui/input/focus-manager.js';
+
+// TODO: verify these goals
 // decorate ProductionChooserScreen to:
 // - update the list after selecting repairs (fixes "sticky" repairs)
 // - always leave the list open when building repairs
 // - remember Production/Purchase tab selection
-const BZ_PANEL_WIDTH = 37.3333333333;
-// const BZ_PANEL_WIDTH = 28.4444444444;
+
+// const BZ_PANEL_WIDTH = 37.3333333333;
+const BZ_PANEL_WIDTH = 28.4444444444;
 
 const BZ_HEAD_STYLE = [
 `
@@ -31,6 +34,10 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
     height: 1.1111111111rem;
+}
+.bz-city-hall .panel-production-chooser .fxs-editable-header .fxs-edit-button {
+    left: -2.6666666667rem;
+    right: auto;
 }
 `,
 ];
@@ -159,6 +166,7 @@ export class bzProductionChooserScreen {
         engine.off('ConstructibleChanged', this.component.onConstructibleAddedToMap, this.component);
     }
     afterRender() {
+        // arrow buttons
         const prevButton = this.component.prevCityButton;
         const nextButton = this.component.nextCityButton;
         prevButton.style.position = nextButton.style.position = 'absolute';
