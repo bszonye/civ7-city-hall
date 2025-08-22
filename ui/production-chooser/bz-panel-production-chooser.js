@@ -169,9 +169,9 @@ export class bzProductionChooserScreen {
         this.component.panelProductionSlot.classList.remove("hidden");
         const currentFocus = FocusManager.getFocus();
         console.warn(`TRIX FOCUS ${currentFocus?.tagName}`);
-        // if (this.component.Root.contains(currentFocus)) {
-        //     this.component.frame.classList.add("trigger-nav-help");
-        // }
+        if (this.component.Root.contains(currentFocus)) {
+            this.component.frame.classList.add("trigger-nav-help");
+        }
         this.component.cityNameElement.classList.add("trigger-nav-help");
         FocusManager.setFocus(this.component.productionAccordion);
         console.warn(`TRIX FRAME ${[...this.component.frame.classList]}`);

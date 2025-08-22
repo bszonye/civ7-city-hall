@@ -242,27 +242,27 @@ function preloadIcon(icon, context) {
 // PanelCityDetails decorator
 class bzPanelCityDetails {
     static c_prototype;
+    static c_onFocus;
     static c_renderYieldsSlot;
     static lastTab = 0;
     static tableWidth = 0;
     focusInListener = this.onFocusIn.bind(this);
     focusOutListener = this.onFocusOut.bind(this);
+    updateListener = this.update.bind(this);
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
         this.patchPrototypes(this.component);
-        // listen for model updates
-        this.updateOverviewListener = this.updateOverview.bind(this);
-        this.updateConstructiblesListener = this.updateConstructibles.bind(this);
+        // replace onFocus to override default slot
+        this.component.onFocus = () => {
+            console.warn(`TRIX ON-FOCUS`);
+            NavTray.clear();
+            NavTray.addOrUpdateGenericBack();
+            this.selectTab(bzPanelCityDetails.lastTab, true);
+        };
         // remember last tab
         this.onTabSelected = (e) => {
             bzPanelCityDetails.lastTab = e.detail.index;
-        };
-        // redirect from panel
-        this.component.onFocus = () => {
-            NavTray.clear();
-            NavTray.addOrUpdateGenericBack();
-            this.selectTab(bzPanelCityDetails.lastTab);
         };
         Loading.runWhenFinished(() => {
             const icons = [
@@ -304,17 +304,20 @@ class bzPanelCityDetails {
         tabs.unshift(BZ_TAB_OVERVIEW);
         this.component.tabBar.setAttribute("tab-items", JSON.stringify(tabs));
     }
-    selectTab(index) {
+    selectTab(index, focus=false) {
         this.component.tabBar.setAttribute("selected-tab-index", index.toString());
         const tabItems = this.component.tabBar.getAttribute("tab-items");
         const tab = JSON.parse(tabItems).at(index);
         if (!tab?.id) return;
         this.component.slotGroup.setAttribute("selected-slot", tab.id);
+        this.component.Root.classList.toggle("trigger-nav-help", focus);
+        if (!focus) return;
         const slot = this.component.Root.querySelector(`#${tab.id}`);
         if (slot) FocusManager.setFocus(slot);
     }
     // empty decorators
     beforeAttach() {
+        console.warn(`TRIX ATTACH`);
         this.component.Root.classList.remove("trigger-nav-help");
     }
     afterDetach() { }
@@ -326,8 +329,8 @@ class bzPanelCityDetails {
         this.component.Root.addEventListener("focusout", this.focusOutListener);
         this.component.tabBar.addEventListener("tab-selected", this.onTabSelected);
         this.selectTab(bzPanelCityDetails.lastTab);
-        window.addEventListener(bzUpdateCityDetailsEventName, this.updateOverviewListener);
-        window.addEventListener(UpdateCityDetailsEventName, this.updateConstructiblesListener);
+        window.addEventListener(bzUpdateCityDetailsEventName, this.updateListener);
+        window.addEventListener(UpdateCityDetailsEventName, this.updateListener);
         // overview
         const oslot = MustGetElement(`#${cityDetailTabID.overview}`, this.component.Root);
         this.overviewSlot = oslot;
@@ -357,9 +360,6 @@ class bzPanelCityDetails {
         this.patchTabSlots();
         this.renderOverviewSlot();
         this.renderConstructiblesSlot();
-        const close = this.component.frame.querySelector(".fxs-close-button");
-        console.warn(`TRIX CLOSE ${close}`);
-        close?.classList.add("hidden");
     }
     renderOverviewSlot() {
         const slot = document.createElement("fxs-vslot");
@@ -426,6 +426,9 @@ class bzPanelCityDetails {
     update() {
         this.updateOverview();
         this.updateConstructibles();
+        const hasFocus = this.component.Root.contains(FocusManager.getFocus());
+        this.component.Root.classList.toggle("trigger-nav-help", hasFocus);
+        console.warn(`TRIX UPDATE ${this.component} ${[...this.component.Root.classList]}`);
     }
     // update data model for new tab slot
     updateOverview() {
@@ -772,14 +775,22 @@ class bzPanelCityDetails {
         return dividerDiv;
     }
     onFocusIn(event) {
-        console.warn(`TRIX FOCUS-IN ${event.target.tagName}`);
-        if (this.component.Root.contains(event.target)) {
-            this.component.Root.classList.add("trigger-nav-help");
+        console.warn(`TRIX FOCUS-IN ${event.target.tagName} ${event.target.id}`);
+        console.warn(`TRIX IN ${[...this.component.Root.classList]}`);
+        const hasFocus = this.component.Root.contains(FocusManager.getFocus());
+        this.component.Root.classList.toggle("trigger-nav-help", hasFocus);
+        if (this.component.Root == event.target) {
+            console.warn(`TRIX FOCUSED`);
+            // this.component.Root.classList.add("trigger-nav-help");
         }
     }
     onFocusOut(event) {
-        console.warn(`TRIX FOCUS-OUT ${event.target.tagName}`);
-        if (this.component.Root.contains(event.target)) {
+        console.warn(`TRIX FOCUS-OUT ${event.target.tagName} ${event.target.id}`);
+        console.warn(`TRIX OUT ${[...this.component.Root.classList]}`);
+        // const hasFocus = this.component.Root.contains(FocusManager.getFocus());
+        // this.component.Root.classList.toggle("trigger-nav-help", hasFocus);
+        if (!this.component.Root.contains(event.target)) {
+            console.warn(`TRIX UNFOCUSED`);
             this.component.Root.classList.remove("trigger-nav-help");
         }
     }
