@@ -1,19 +1,28 @@
+import FocusManager from '../../../core/ui/input/focus-manager.js';
 // decorate ProductionChooserScreen to:
 // - update the list after selecting repairs (fixes "sticky" repairs)
 // - always leave the list open when building repairs
 // - remember Production/Purchase tab selection
+const BZ_PANEL_WIDTH = 37.3333333333;
+// const BZ_PANEL_WIDTH = 28.4444444444;
+
 const BZ_HEAD_STYLE = [
 `
 .bz-city-hall .panel-production__frame {
-    min-width: 28.4444444444rem;
-    max-width: 28.4444444444rem;
+    min-width: ${BZ_PANEL_WIDTH}rem;
+    max-width: ${BZ_PANEL_WIDTH}rem;
 }
 .bz-city-hall .production-chooser__city-details-button {
     position: fixed;
     top: 3rem;
-    right: 1rem;
-    width: 2.6666666667rem;
-    height: 2.6666666667rem;
+    right: 1.2222222222rem;
+    width: 2.5rem;
+    height: 2.5rem;
+}
+.bz-city-hall .production-chooser__city-details-button:focus .city-details-highlight,
+.bz-city-hall .production-chooser__city-details-button:hover .city-details-highlight,
+.bz-city-hall .production-chooser__city-details-button.pressed .city-details-highlight {
+    box-shadow: #e5d2ac 0 0 0.2222222222rem 0.3333333333rem;
 }
 .bz-city-hall .img-city-details {
     width: 2.6666666667rem;
@@ -117,7 +126,10 @@ export class bzProductionChooserScreen {
         };
         Object.defineProperty(proto, "items", items);
     }
-    beforeAttach() { }
+    beforeAttach() {
+        // replace event handlers to fix nav-help glitches
+        this.component.onCityDetailsClosedListener = this.onCityDetailsClosed.bind(this);
+    }
     afterAttach() {
         engine.on('ConstructibleChanged', this.component.onConstructibleAddedToMap, this.component);
         // restore the city details panel if it was open previously
@@ -147,8 +159,22 @@ export class bzProductionChooserScreen {
         const nextButton = this.component.nextCityButton;
         prevButton.style.position = nextButton.style.position = 'absolute';
         prevButton.style.top = nextButton.style.top = '4.3333333333rem';
-        prevButton.style.left = '1.3333333333rem';
-        nextButton.style.left = '25.0000000000rem';
+        const inset = 1.3333333333;
+        const arrow = 1.7777777778;
+        prevButton.style.left = `${inset}rem`;
+        nextButton.style.left = `${BZ_PANEL_WIDTH - arrow - inset}rem`;
+    }
+    onCityDetailsClosed() {
+        console.warn(`TRIX ON-CLOSE`);
+        this.component.panelProductionSlot.classList.remove("hidden");
+        const currentFocus = FocusManager.getFocus();
+        console.warn(`TRIX FOCUS ${currentFocus?.tagName}`);
+        // if (this.component.Root.contains(currentFocus)) {
+        //     this.component.frame.classList.add("trigger-nav-help");
+        // }
+        this.component.cityNameElement.classList.add("trigger-nav-help");
+        FocusManager.setFocus(this.component.productionAccordion);
+        console.warn(`TRIX FRAME ${[...this.component.frame.classList]}`);
     }
 }
 Controls.decorate('panel-production-chooser', (val) => new bzProductionChooserScreen(val));

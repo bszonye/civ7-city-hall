@@ -245,6 +245,8 @@ class bzPanelCityDetails {
     static c_renderYieldsSlot;
     static lastTab = 0;
     static tableWidth = 0;
+    focusInListener = this.onFocusIn.bind(this);
+    focusOutListener = this.onFocusOut.bind(this);
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
@@ -312,12 +314,16 @@ class bzPanelCityDetails {
         if (slot) FocusManager.setFocus(slot);
     }
     // empty decorators
-    beforeAttach() { }
+    beforeAttach() {
+        this.component.Root.classList.remove("trigger-nav-help");
+    }
     afterDetach() { }
     onAttributeChanged(_name, _prev, _next) { }
     // attach new & replaced tabs to the panel
     afterAttach() {
         metrics = getFontMetrics();
+        this.component.Root.addEventListener("focusin", this.focusInListener);
+        this.component.Root.addEventListener("focusout", this.focusOutListener);
         this.component.tabBar.addEventListener("tab-selected", this.onTabSelected);
         this.selectTab(bzPanelCityDetails.lastTab);
         window.addEventListener(bzUpdateCityDetailsEventName, this.updateOverviewListener);
@@ -340,6 +346,8 @@ class bzPanelCityDetails {
         this.update();
     }
     beforeDetach() {
+        this.component.Root.removeEventListener("focusin", this.focusInListener);
+        this.component.Root.removeEventListener("focusout", this.focusOutListener);
         this.component.tabBar.removeEventListener("tab-selected", this.onTabSelected);
         window.removeEventListener(bzUpdateCityDetailsEventName, this.updateOverviewListener);
         window.removeEventListener(UpdateCityDetailsEventName, this.updateConstructiblesListener);
@@ -349,6 +357,9 @@ class bzPanelCityDetails {
         this.patchTabSlots();
         this.renderOverviewSlot();
         this.renderConstructiblesSlot();
+        const close = this.component.frame.querySelector(".fxs-close-button");
+        console.warn(`TRIX CLOSE ${close}`);
+        close?.classList.add("hidden");
     }
     renderOverviewSlot() {
         const slot = document.createElement("fxs-vslot");
@@ -759,6 +770,18 @@ class bzPanelCityDetails {
         if (style.length) dividerDiv.classList.add(...style);
         dividerDiv.innerHTML = BZ_DIVIDER_LINE;
         return dividerDiv;
+    }
+    onFocusIn(event) {
+        console.warn(`TRIX FOCUS-IN ${event.target.tagName}`);
+        if (this.component.Root.contains(event.target)) {
+            this.component.Root.classList.add("trigger-nav-help");
+        }
+    }
+    onFocusOut(event) {
+        console.warn(`TRIX FOCUS-OUT ${event.target.tagName}`);
+        if (this.component.Root.contains(event.target)) {
+            this.component.Root.classList.remove("trigger-nav-help");
+        }
     }
 }
 Controls.decorate('panel-city-details', (val) => new bzPanelCityDetails(val));
