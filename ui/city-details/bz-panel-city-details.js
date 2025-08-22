@@ -257,8 +257,7 @@ class bzPanelCityDetails {
         this.patchPrototypes(this.component);
         // replace onFocus to override default slot
         this.component.onFocus = () => {
-            NavTray.clear();
-            NavTray.addOrUpdateGenericBack();
+            this.syncFocus(true);
             this.selectTab(bzPanelCityDetails.lastTab, true);
         };
         // remember last tab
@@ -775,13 +774,20 @@ class bzPanelCityDetails {
         dividerDiv.innerHTML = BZ_DIVIDER_LINE;
         return dividerDiv;
     }
-    onFocusIn(event) {
-        const hasFocus = this.component.Root.contains(event.target);
-        this.component.Root.classList.toggle("trigger-nav-help", hasFocus);
-        if (hasFocus) {
+    syncFocus(focus) {
+        this.component.Root.classList.toggle("trigger-nav-help", focus);
+        NavTray.clear();
+        NavTray.addOrUpdateGenericBack();
+        if (focus) {
+            // clear production-chooser focus
             this.panelProductionSlot.querySelectorAll(".trigger-nav-help")
                 .forEach((e) => e.classList.remove("trigger-nav-help"));
         }
+    }
+    onFocusIn(event) {
+        const hadFocus = this.component.Root.classList.contains("trigger-nav-help");
+        const gotFocus = this.component.Root.contains(event.target);
+        if (gotFocus != hadFocus) this.syncFocus(gotFocus);
     }
 }
 Controls.decorate('panel-city-details', (val) => new bzPanelCityDetails(val));

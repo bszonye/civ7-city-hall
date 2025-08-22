@@ -44,6 +44,7 @@ export class bzProductionChooserScreen {
     static c_prototype;
     static isPurchase = false;
     static isCDPanelOpen = true;
+    isGamepadActive = Input.getActiveDeviceType() == InputDeviceType.Controller;
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
@@ -129,6 +130,9 @@ export class bzProductionChooserScreen {
     beforeAttach() {
         // replace event handlers to fix nav-help glitches
         this.component.onCityDetailsClosedListener = this.onCityDetailsClosed.bind(this);
+        engine.on("input-source-changed", (deviceType, _deviceLayout) => {
+            this.onActiveDeviceTypeChanged(deviceType);
+        });
     }
     afterAttach() {
         engine.on('ConstructibleChanged', this.component.onConstructibleAddedToMap, this.component);
@@ -164,11 +168,25 @@ export class bzProductionChooserScreen {
         prevButton.style.left = `${inset}rem`;
         nextButton.style.left = `${BZ_PANEL_WIDTH - arrow - inset}rem`;
     }
+    onActiveDeviceTypeChanged(deviceType) {
+        this.isGamepadActive = deviceType == InputDeviceType.Controller;
+        if (this.isGamepadActive) {
+            const focus = FocusManager.getFocus();
+            const focusedPanel = this.component.getElementParentPanel(focus);
+            focusedPanel?.classList.add("trigger-nav-help");
+            this.component.lastFocusedPanel = focusedPanel;
+            if (focusedPanel === this.component.frame) this.component.updateNavTray();
+        } else {
+            this.component.lastFocusedPanel?.classList.remove("trigger-nav-help");
+        }
+    };
     onCityDetailsClosed() {
         this.component.panelProductionSlot.classList.remove("hidden");
-        // this.component.frame.classList.add("trigger-nav-help");
-        this.component.cityNameElement.classList.add("trigger-nav-help");
-        FocusManager.setFocus(this.component.productionAccordion);
+        if (this.isGamepadActive) {
+            FocusManager.setFocus(this.component.productionAccordion);
+            this.component.frame.classList.add("trigger-nav-help");
+            this.component.cityNameElement.classList.add("trigger-nav-help");
+        }
     }
 }
 Controls.decorate('panel-production-chooser', (val) => new bzProductionChooserScreen(val));
