@@ -8,19 +8,23 @@ import FocusManager from '../../../core/ui/input/focus-manager.js';
 // - always leave the list open when building repairs
 // - remember Production/Purchase tab selection
 
-// const BZ_PANEL_WIDTH = 37.3333333333;
-const BZ_PANEL_WIDTH = 28.4444444444;
-
 const BZ_HEAD_STYLE = [
+// compact mode
 `
 .bz-city-compact .panel-production__frame {
-    min-width: ${BZ_PANEL_WIDTH}rem;
-    max-width: ${BZ_PANEL_WIDTH}rem;
+    min-width: 28.4444444444rem;
+    max-width: 28.4444444444rem;
 }
 .bz-city-compact .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
     height: 1.1111111111rem;
 }
+.bz-city-compact .bz-pci-icon {
+    width: 2.6666666667rem;
+    height: 2.6666666667rem;
+}
+`,  // improve panel header layout
+`
 .bz-city-hall .panel-production-chooser .fxs-editable-header .fxs-edit-button {
     top: -0.5555555556rem;
     left: -2.6666666667rem;
@@ -77,7 +81,7 @@ BZ_HEAD_STYLE.map(style => {
 });
 document.body.classList.add("bz-city-hall");
 document.body.classList.toggle("bz-city-compact", bzCityHallOptions.compact);
-export class bzProductionChooserScreen {
+class bzProductionChooserScreen {
     static c_prototype;
     static isPurchase = false;
     static isCDPanelOpen = true;
@@ -216,10 +220,6 @@ export class bzProductionChooserScreen {
         Databind.classToggle(nameWrapper, "bz-no-help", "!{{g_NavTray.isTrayRequired}}");
         Databind.classToggle(nameWrapper, "bz-nav-help", "{{g_NavTray.isTrayRequired}}");
         nameWrapper.classList.add("mx-2");
-        console.warn(`TRIX INPUT ${Input.getActionIdByName("camera-zoom-in")}`);
-        console.warn(`TRIX INPUT ${Input.getActionIdByName("camera-zoom-out")}`);
-        const x = Input.getGestureDisplayIcons(10, 0, InputDeviceType.Controller, 0, true);
-        console.warn(`TRIX ICONS ${JSON.stringify(x)}`);
     }
     onActiveDeviceTypeChanged(deviceType) {
         this.isGamepadActive = deviceType == InputDeviceType.Controller;
@@ -243,3 +243,55 @@ export class bzProductionChooserScreen {
     }
 }
 Controls.decorate('panel-production-chooser', (val) => new bzProductionChooserScreen(val));
+
+class bzProductionChooserItem {
+    static c_prototype;
+    comma = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL_COMMA", 0).at(2);
+    constructor(component) {
+        this.component = component;
+        component.bzComponent = this;
+        this.patchPrototypes(this.component);
+    }
+    patchPrototypes(component) {
+        const c_prototype = Object.getPrototypeOf(component);
+        if (bzProductionChooserScreen.c_prototype == c_prototype) return;
+        // patch PanelCityDetails methods
+        const proto = bzProductionChooserScreen.c_prototype = c_prototype;
+        // wrap render method to extend it
+        const c_render = proto.render;
+        const after_render = this.afterRender;
+        proto.render = function(...args) {
+            const c_rv = c_render.apply(this, args);
+            const after_rv = after_render.apply(this.bzComponent, args);
+            return after_rv ?? c_rv;
+        }
+    }
+    beforeAttach() { }
+    afterAttach() {
+        // remove commas from yields
+        const yields = this.component.secondaryDetailsElement;
+        if (this.comma) {
+            yields.innerHTML = yields.innerHTML
+                .replaceAll(`${this.comma}</div>`, "</div>");
+        }
+        if (bzCityHallOptions.compact) {
+            yields.innerHTML = yields.innerHTML.replaceAll('"size-8"', '"size-6"')
+            yields.classList.add("text-xs");
+        }
+    }
+    beforeDetach() { }
+    afterDetach() { }
+    onAttributeChanged(_name, _prev, _next) { }
+    afterRender() {
+        const c = this.component;
+        c.iconElement.classList.add("bz-pci-icon");
+        c.itemNameElement.classList.add("bz-pci-name");
+        c.errorTextElement.classList.add("bz-pci-error");
+        c.secondaryDetailsElement.classList.add("bz-pci-details", "font-body");
+        c.recommendationsContainer.classList.add("bz-pci-recs");
+        c.costContainer.classList.add("bz-pci-cost");
+        c.costAmountElement.classList.add("bz-pci-cost-amount");
+        c.costIconElement.classList.add("bz-pci-cost-icon");
+    }
+}
+Controls.decorate('production-chooser-item', (val) => new bzProductionChooserItem(val));
