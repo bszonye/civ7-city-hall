@@ -1,3 +1,4 @@
+import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
 import FocusManager from '../../../core/ui/input/focus-manager.js';
 
 // TODO: verify these goals
@@ -11,10 +12,20 @@ const BZ_PANEL_WIDTH = 28.4444444444;
 
 const BZ_HEAD_STYLE = [
 `
-.bz-city-hall .panel-production__frame {
+.bz-city-compact .panel-production__frame {
     min-width: ${BZ_PANEL_WIDTH}rem;
     max-width: ${BZ_PANEL_WIDTH}rem;
 }
+.bz-city-compact .advisor-recommendation__container .advisor-recommendation__icon {
+    width: 1.1111111111rem;
+    height: 1.1111111111rem;
+}
+.bz-city-compact .panel-production-chooser .fxs-editable-header .fxs-edit-button {
+    left: -2.6666666667rem;
+    right: auto;
+}
+`,  // relocate City Details button
+`
 .bz-city-hall .production-chooser__city-details-button {
     position: fixed;
     top: 3rem;
@@ -31,14 +42,6 @@ const BZ_HEAD_STYLE = [
     width: 2.6666666667rem;
     height: 2.6666666667rem;
 }
-.bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
-    width: 1.1111111111rem;
-    height: 1.1111111111rem;
-}
-.bz-city-hall .panel-production-chooser .fxs-editable-header .fxs-edit-button {
-    left: -2.6666666667rem;
-    right: auto;
-}
 `,
 ];
 BZ_HEAD_STYLE.map(style => {
@@ -47,6 +50,7 @@ BZ_HEAD_STYLE.map(style => {
     document.head.appendChild(e);
 });
 document.body.classList.add("bz-city-hall");
+document.body.classList.toggle("bz-city-compact", bzCityHallOptions.compact);
 export class bzProductionChooserScreen {
     static c_prototype;
     static isPurchase = false;

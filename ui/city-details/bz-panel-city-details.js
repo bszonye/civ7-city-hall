@@ -130,7 +130,7 @@ const BZ_HEAD_STYLE = [
 .overview-entry, .bz-city-hall .growth-entry {
     border-radius: 2rem;
 }
-.overview-entry.bz-odd {
+.overview-entry.bz-odd-row {
     background-color: ${BZ_COLOR.bronze6}99;
 }
 .overview-entry:focus, .overview-entry:hover, .overview-entry.pressed {
@@ -592,7 +592,7 @@ class bzPanelCityDetails {
         for (const [i, item] of bzCityDetails.improvements.entries()) {
             const row = document.createElement("div");
             row.classList.value = "overview-entry flex px-1";
-            if (!(i % 2)) row.classList.add("bz-odd");
+            if (!(i % 2)) row.classList.add("bz-odd-row");
             row.style.minHeight = size;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
