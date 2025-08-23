@@ -14,10 +14,9 @@ const BZ_DIVIDER = `<div class="${BZ_DIVIDER_STYLE}">${BZ_DIVIDER_LINE}</div>`
 
 var cityDetailTabID;
 (function (cityDetailTabID) {
-    // only need to define the ones we're using in the decorator
     cityDetailTabID["overview"] = "city-details-tab-overview";
     cityDetailTabID["constructibles"] = "city-details-tab-constructibles";
-    // cityDetailTabID["growth"] = "city-details-tab-growth";
+    cityDetailTabID["growth"] = "city-details-tab-growth";
     cityDetailTabID["buildings"] = "city-details-tab-buildings";
     cityDetailTabID["yields"] = "city-details-tab-yields";
 })(cityDetailTabID || (cityDetailTabID = {}));
@@ -255,6 +254,8 @@ class bzPanelCityDetails {
     static c_renderYieldsSlot;
     static lastTab = 0;
     static tableWidth = 0;
+    tabs;
+    slots;
     cityDetailsSlot;
     panelProductionSlot;
     focusRoot;
@@ -312,17 +313,18 @@ class bzPanelCityDetails {
         // add Overview tab
         tabs.unshift(BZ_TAB_OVERVIEW);
         this.component.tabBar.setAttribute("tab-items", JSON.stringify(tabs));
+        // store updated tabs
+        this.tabs = tabs;
     }
     selectTab(index, focus=false) {
         this.component.tabBar.setAttribute("selected-tab-index", index.toString());
-        const tabItems = this.component.tabBar.getAttribute("tab-items");
-        const tab = JSON.parse(tabItems).at(index);
-        if (!tab?.id) return;
+        const tab = this.tabs.at(index);
+        const slot = this.slots.at(index);
+        if (!tab?.id || !slot) return;
         this.component.slotGroup.setAttribute("selected-slot", tab.id);
         this.component.Root.classList.toggle("trigger-nav-help", focus);
         if (!focus) return;
-        const slot = this.component.Root.querySelector(`#${tab.id}`);
-        if (slot) FocusManager.setFocus(slot);
+        FocusManager.setFocus(slot);
     }
     // empty decorators
     beforeAttach() {
@@ -338,25 +340,30 @@ class bzPanelCityDetails {
     afterAttach() {
         metrics = getFontMetrics();
         this.focusRoot.addEventListener("focusin", this.focusInListener);
-        this.component.tabBar.addEventListener("tab-selected", this.onTabSelected);
-        this.selectTab(bzPanelCityDetails.lastTab);
         window.addEventListener(bzUpdateCityDetailsEventName, this.updateListener);
         window.addEventListener(UpdateCityDetailsEventName, this.updateListener);
+        // slots by index
+        this.slots = this.tabs.map(t => MustGetElement(`#${t.id}`, this.component.Root));
         // overview
-        const oslot = MustGetElement(`#${cityDetailTabID.overview}`, this.component.Root);
-        this.overviewSlot = oslot;
+        const oslot = this.overviewSlot =
+            MustGetElement(`#${cityDetailTabID.overview}`, this.component.Root);
         this.growthContainer = MustGetElement(".growth-container", oslot);
         this.connectionsContainer = MustGetElement(".connections-container", oslot);
         this.improvementsContainer = MustGetElement(".improvements-container", oslot);
         // constructibles
-        const cslot = MustGetElement(`#${cityDetailTabID.constructibles}`, this.component.Root);
-        this.constructibleSlot = cslot;
+        const cslot = this.constructibleSlot =
+            MustGetElement(`#${cityDetailTabID.constructibles}`, this.component.Root);
         this.buildingsCategory = MustGetElement(".bz-buildings-category", cslot);
         this.buildingsList = MustGetElement(".bz-buildings-list", cslot);
         this.improvementsCategory = MustGetElement(".bz-improvements-category", cslot);
         this.improvementsList = MustGetElement(".bz-improvements-list", cslot);
         this.wondersCategory = MustGetElement(".bz-wonders-category", cslot);
         this.wondersList = MustGetElement(".bz-wonders-list", cslot);
+        // enable navigation back to the left panel
+        this.slots.forEach(slot => slot.removeAttribute("data-navrule-left"));
+        // select tab
+        this.component.tabBar.addEventListener("tab-selected", this.onTabSelected);
+        this.selectTab(bzPanelCityDetails.lastTab);
         this.update();
     }
     beforeDetach() {
@@ -800,6 +807,15 @@ class bzPanelCityDetails {
         const hadFocus = this.component.Root.classList.contains("trigger-nav-help");
         const gotFocus = this.component.Root.contains(event.target);
         if (gotFocus != hadFocus) this.syncFocus(gotFocus);
+        // fix focus when returning to City Details tabs
+        if (event.target.tagName == "FXS-VSLOT" && event.target.id) {
+            const index = this.component.tabBar.getAttribute("selected-tab-index");
+            const tab = this.tabs.at(index);  // string index coerced to integer
+            if (tab && tab.id != event.target.id) {
+                // switch focus to the selected tab
+                setTimeout(() => FocusManager.setFocus(this.slots.at(index)));
+            }
+        }
     }
 }
 Controls.decorate('panel-city-details', (val) => new bzPanelCityDetails(val));
