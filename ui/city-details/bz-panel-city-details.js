@@ -128,6 +128,15 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall #${cityDetailTabID.overview} .shadow {
     filter: drop-shadow(0 0.0555555556rem 0.0555555556rem black);
 }
+.overview-entry, .bz-city-hall .growth-entry {
+    border-radius: 2rem;
+}
+.overview-entry.bz-odd {
+    background-color: ${BZ_COLOR.bronze6}99;
+}
+.overview-entry:focus, .overview-entry:hover, .overview-entry.pressed {
+    background: linear-gradient(90deg, #6b6250 0%, #545559 100%);
+}
 `,
 ];
 BZ_HEAD_STYLE.map(style => {
@@ -365,8 +374,7 @@ class bzPanelCityDetails {
     renderOverviewSlot() {
         const slot = document.createElement("fxs-vslot");
         slot.classList.add("mt-3", "pr-4");
-        slot.setAttribute("data-navrule-left", "stop");
-        slot.setAttribute("data-navrule-right", "stop");
+        // slot.setAttribute("data-navrule-right", "stop");
         slot.id = cityDetailTabID.overview;
         slot.innerHTML = `
         <fxs-scrollable class="w-full">
@@ -382,7 +390,6 @@ class bzPanelCityDetails {
     renderConstructiblesSlot() {
         const slot = document.createElement("fxs-vslot");
         slot.classList.add("pr-4");
-        slot.setAttribute("data-navrule-left", "stop");
         slot.setAttribute("data-navrule-right", "stop");
         slot.id = cityDetailTabID.constructibles;
         slot.innerHTML = `
@@ -471,10 +478,12 @@ class bzPanelCityDetails {
         const small = metrics.sizes(5/6 * metrics.table.spacing.rem).css;
         if (food.isGrowing) {
             const row = document.createElement("div");
-            row.classList.value = "self-start flex px-1 rounded-2xl -mx-1";
+            row.classList.value = "overview-entry self-start flex px-1 -mx-1";
             row.style.backgroundColor = `${BZ_COLOR.food}55`;
             row.style.minHeight = size;
             row.style.marginTop = metrics.body.leading.half.px;
+            row.setAttribute("tabindex", "-1");
+            row.setAttribute("role", "paragraph");
             row.appendChild(docIcon("YIELD_FOOD", size, small, "-mx-1"));
             const current = Locale.compose("LOC_BZ_GROUPED_DIGITS", food.current);
             const threshold = Locale.compose("LOC_BZ_GROUPED_DIGITS", food.threshold);
@@ -490,8 +499,10 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
-            row.classList.value = "flex px-1";
+            row.classList.value = "overview-entry flex px-1";
             row.style.minHeight = size;
+            row.setAttribute("tabindex", "-1");
+            row.setAttribute("role", "paragraph");
             row.appendChild(docIcon(item.icon, size, small, "-mx-1"));
             row.appendChild(docText(item.label, "text-left flex-auto mx-2"));
             const value = docText(item.value, "mx-1 text-right");
@@ -526,8 +537,10 @@ class bzPanelCityDetails {
         ];
         for (const conn of connections) {
             const row = document.createElement("div");
-            row.classList.value = "relative flex justify-start";
+            row.classList.value = "overview-entry relative flex justify-start pr-1";
             row.style.minHeight = size;
+            row.setAttribute("tabindex", "-1");
+            row.setAttribute("role", "paragraph");
             if (conn.isTown) {
                 const focus = getTownFocus(conn);
                 row.appendChild(docIcon(focus.icon, size, size));
@@ -571,12 +584,11 @@ class bzPanelCityDetails {
         table.style.minWidth = bzPanelCityDetails.tableWidth;
         for (const [i, item] of bzCityDetails.improvements.entries()) {
             const row = document.createElement("div");
-            row.classList.value = "flex px-1";
-            if (!(i % 2)) {
-                row.classList.add("rounded-2xl");
-                row.style.backgroundColor = `${BZ_COLOR.bronze6}99`;
-            }
+            row.classList.value = "overview-entry flex px-1";
+            if (!(i % 2)) row.classList.add("bz-odd");
             row.style.minHeight = size;
+            row.setAttribute("tabindex", "-1");
+            row.setAttribute("role", "paragraph");
             row.appendChild(docIcon(item.icon, size, small, "-mx-1"));
             row.appendChild(docText(item.name, "text-left flex-auto mx-2"));
             const modifier = `+${item.count.toFixed()}`;
