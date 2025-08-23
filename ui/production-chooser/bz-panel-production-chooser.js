@@ -15,13 +15,12 @@ const BZ_HEAD_STYLE = [
     min-width: 28.4444444444rem;
     max-width: 28.4444444444rem;
 }
-.bz-city-compact .advisor-recommendation__container .advisor-recommendation__icon {
+.bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
     height: 1.1111111111rem;
 }
-.bz-city-compact .bz-pci-icon {
-    width: 2.6666666667rem;
-    height: 2.6666666667rem;
+.bz-city-hall .production-category .pl-3 {
+    padding-left: 0;
 }
 `,  // improve panel header layout
 `
@@ -182,7 +181,6 @@ class bzProductionChooserScreen {
             this.component.showCityDetails();
         }
     }
-    onAttributeChanged(_name, _prev, _next) { }
     beforeDetach() {
         if (!this.component.isSmallScreen()) {
             // remember whether the city details panel is open
@@ -246,6 +244,7 @@ Controls.decorate('panel-production-chooser', (val) => new bzProductionChooserSc
 
 class bzProductionChooserItem {
     static c_prototype;
+    ageless;
     comma = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL_COMMA", 0).at(2);
     constructor(component) {
         this.component = component;
@@ -257,6 +256,13 @@ class bzProductionChooserItem {
         if (bzProductionChooserScreen.c_prototype == c_prototype) return;
         // patch PanelCityDetails methods
         const proto = bzProductionChooserScreen.c_prototype = c_prototype;
+        // wrap onAttributeChanged method to extend it
+        const c_onAttributeChanged = proto.onAttributeChanged;
+        const onAttributeChanged = this.onAttributeChanged;
+        proto.onAttributeChanged = function(...args) {
+            const more = onAttributeChanged.apply(this.bzComponent, args);
+            if (more) return c_onAttributeChanged.apply(this, args);
+        }
         // wrap render method to extend it
         const c_render = proto.render;
         const after_render = this.afterRender;
@@ -268,30 +274,62 @@ class bzProductionChooserItem {
     }
     beforeAttach() { }
     afterAttach() {
-        // remove commas from yields
-        const yields = this.component.secondaryDetailsElement;
+        const c = this.component;
+        // move ageless and recommendations icons to name container
+        const infoContainer = c.itemNameElement.parentElement;
+        const nameContainer = document.createElement("div");
+        nameContainer.classList.add("flex", "justify-start", "items-center");
+        infoContainer.insertBefore(nameContainer, c.itemNameElement);
+        nameContainer.appendChild(c.itemNameElement);
+        nameContainer.appendChild(c.agelessContainer);
+        nameContainer.appendChild(c.recommendationsContainer);
+        // streamline yields (remove commas, reduce size)
+        const yields = c.secondaryDetailsElement;
+        yields.innerHTML = yields.innerHTML.replaceAll('"size-8"', '"size-6"')
         if (this.comma) {
             yields.innerHTML = yields.innerHTML
                 .replaceAll(`${this.comma}</div>`, "</div>");
         }
-        if (bzCityHallOptions.compact) {
-            yields.innerHTML = yields.innerHTML.replaceAll('"size-8"', '"size-6"')
-            yields.classList.add("text-xs");
-        }
+        // compact mode
+        if (!bzCityHallOptions.compact) return;
+        c.Root.classList.remove("text-sm");
+        c.Root.classList.add("text-xs", "leading-tight");
+        c.container.classList.remove("p-2");
+        c.iconElement.classList.remove("size-16");
+        c.iconElement.classList.add("size-12", "m-1");
+        c.costAmountElement.classList.add("text-base", "mr-1");
+        c.costIconElement.classList.remove("mr-1");
+        c.costIconElement.classList.add("-m-1");
     }
     beforeDetach() { }
     afterDetach() { }
-    onAttributeChanged(_name, _prev, _next) { }
+    onAttributeChanged(name, _oldValue, newValue) {
+        const c = this.component;
+        switch (name) {
+            case "data-is-ageless": {
+                const isAgeless = newValue === "true";
+                this.component.agelessContainer.classList.toggle("hidden", !isAgeless);
+                c.itemNameElement.classList.toggle("text-accent-2", !isAgeless);
+                c.itemNameElement.classList.toggle("text-secondary", isAgeless);
+                return false;
+            }
+        }
+        return true;  // continue to component
+    }
     afterRender() {
         const c = this.component;
-        c.iconElement.classList.add("bz-pci-icon");
-        c.itemNameElement.classList.add("bz-pci-name");
-        c.errorTextElement.classList.add("bz-pci-error");
-        c.secondaryDetailsElement.classList.add("bz-pci-details", "font-body");
-        c.recommendationsContainer.classList.add("bz-pci-recs");
-        c.costContainer.classList.add("bz-pci-cost");
-        c.costAmountElement.classList.add("bz-pci-cost-amount");
-        c.costIconElement.classList.add("bz-pci-cost-icon");
+        // TODO: use classList.value instead
+        c.container.classList.remove("font-title", "tracking-100");
+        c.container.classList.add("flex", "justify-start", "items-center");
+        c.itemNameElement.classList.remove("mb-1");
+        c.itemNameElement.classList.add("mr-2", "my-1");
+        c.recommendationsContainer.classList.remove("mr-2");
+        c.recommendationsContainer.classList.add("h-6");  // hold space for Ageless
+        c.agelessContainer.classList.remove("invisible");
+        c.agelessContainer.classList.add("hidden", "mr-2");
+        c.agelessContainer.innerHTML =
+            '<img src="fs://game/city_ageless.png" class="size-6"/>';
+        c.secondaryDetailsElement.classList.add("font-body-xs", "-ml-1", "mb-1");
     }
 }
-Controls.decorate('production-chooser-item', (val) => new bzProductionChooserItem(val));
+Controls.decorate("production-chooser-item", (val) => new bzProductionChooserItem(val));

@@ -335,7 +335,6 @@ class bzPanelCityDetails {
         this.cityDetailsSlot = MustGetElement(".panel-city-details-slot", focusRoot);
     }
     afterDetach() { }
-    onAttributeChanged(_name, _prev, _next) { }
     // attach new & replaced tabs to the panel
     afterAttach() {
         metrics = getFontMetrics();
