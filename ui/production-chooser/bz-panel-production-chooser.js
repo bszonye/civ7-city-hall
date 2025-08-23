@@ -1,4 +1,5 @@
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
+import { D as Databind } from '../../../core/ui/utilities/utilities-core-databinding.chunk.js';
 import FocusManager from '../../../core/ui/input/focus-manager.js';
 
 // TODO: verify these goals
@@ -20,9 +21,34 @@ const BZ_HEAD_STYLE = [
     width: 1.1111111111rem;
     height: 1.1111111111rem;
 }
-.bz-city-compact .panel-production-chooser .fxs-editable-header .fxs-edit-button {
+.bz-city-hall .panel-production-chooser .fxs-editable-header .fxs-edit-button {
+    top: -0.5555555556rem;
     left: -2.6666666667rem;
-    right: auto;
+}
+.bz-city-hall .bz-city-name .fxs-nav-help {
+    top: -0.1111111111rem;
+    left: -2.4444444444rem;
+}
+.bz-city-hall .bz-city-name .font-fit-shrink {
+    min-height: 1.5rem;
+}
+.bz-city-hall .bz-city-name .max-w-84 {
+    max-width: 100%;
+}
+.bz-city-hall .bz-city-name-wrapper .fxs-nav-help {
+    margin: 0;
+}
+.bz-city-hall .bz-cycle-city {
+    position: relative;
+}
+.bz-city-hall .bz-city-name-wrapper.bz-nav-help .bz-cycle-city {
+    top: 2.1111111111rem;
+    top: 1.8333333333rem;
+    left: 4rem;
+}
+.bz-city-hall .bz-city-name-wrapper.bz-no-help .bz-cycle-city {
+    top: 1.3888888889rem;
+    left: 4rem;
 }
 `,  // relocate City Details button
 `
@@ -170,15 +196,30 @@ export class bzProductionChooserScreen {
         engine.off('ConstructibleChanged', this.component.onConstructibleAddedToMap, this.component);
     }
     afterRender() {
+        // move status icon below name
+        const cityStatus = this.component.cityStatusContainerElement;
+        cityStatus.parentElement.appendChild(cityStatus);
+        cityStatus.classList.add("bz-city-status");
+        this.component.cityStatusTextElement.classList.add("pulse-warn", "pr-6");
         // arrow buttons
-        const prevButton = this.component.prevCityButton;
-        const nextButton = this.component.nextCityButton;
-        prevButton.style.position = nextButton.style.position = 'absolute';
-        prevButton.style.top = nextButton.style.top = '4.3333333333rem';
-        const inset = 1.3333333333;
-        const arrow = 1.7777777778;
-        prevButton.style.left = `${inset}rem`;
-        nextButton.style.left = `${BZ_PANEL_WIDTH - arrow - inset}rem`;
+        this.component.prevCityButton.classList.add("bz-prev-city", "bz-cycle-city");
+        this.component.nextCityButton.classList.add("bz-next-city", "bz-cycle-city");
+        // create a containing block for the arrow buttons
+        const cityName = this.component.cityNameElement;
+        const nameContainer = cityName.parentElement;
+        const nameWrapper = nameContainer.parentElement;
+        cityName.classList.add("bz-city-name");
+        nameContainer.classList.add("bz-city-name-container");
+        nameContainer.classList.remove("px-6");
+        nameWrapper.classList.add("bz-city-name-wrapper");
+        nameWrapper.removeAttribute("data-bind-class-toggle");
+        Databind.classToggle(nameWrapper, "bz-no-help", "!{{g_NavTray.isTrayRequired}}");
+        Databind.classToggle(nameWrapper, "bz-nav-help", "{{g_NavTray.isTrayRequired}}");
+        nameWrapper.classList.add("mx-2");
+        console.warn(`TRIX INPUT ${Input.getActionIdByName("camera-zoom-in")}`);
+        console.warn(`TRIX INPUT ${Input.getActionIdByName("camera-zoom-out")}`);
+        const x = Input.getGestureDisplayIcons(10, 0, InputDeviceType.Controller, 0, true);
+        console.warn(`TRIX ICONS ${JSON.stringify(x)}`);
     }
     onActiveDeviceTypeChanged(deviceType) {
         this.isGamepadActive = deviceType == InputDeviceType.Controller;
