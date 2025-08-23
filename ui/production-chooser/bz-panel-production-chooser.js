@@ -322,14 +322,14 @@ class bzProductionChooserItem {
         c.container.classList.remove("font-title", "tracking-100");
         c.container.classList.add("flex", "justify-start", "items-center");
         c.itemNameElement.classList.remove("mb-1");
-        c.itemNameElement.classList.add("mr-2", "my-1");
+        c.itemNameElement.classList.add("m-1");
         c.recommendationsContainer.classList.remove("mr-2");
-        c.recommendationsContainer.classList.add("h-6");  // hold space for Ageless
+        c.recommendationsContainer.classList.add("mx-1", "h-6");  // space for Ageless
         c.agelessContainer.classList.remove("invisible");
-        c.agelessContainer.classList.add("hidden", "mr-2");
+        c.agelessContainer.classList.add("hidden", "mx-1");
         c.agelessContainer.innerHTML =
             '<img src="fs://game/city_ageless.png" class="size-6"/>';
-        c.secondaryDetailsElement.classList.add("font-body-xs", "-ml-1", "mb-1");
+        c.secondaryDetailsElement.classList.add("font-body-xs", "mb-1");
     }
 }
 Controls.decorate("production-chooser-item", (val) => new bzProductionChooserItem(val));
