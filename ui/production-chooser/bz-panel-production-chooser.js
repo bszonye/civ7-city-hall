@@ -145,17 +145,11 @@ class bzProductionChooserScreen {
             get: c_items.get,
             set(value) {
                 // sort items
-                for (const [_key, list] of Object.entries(value)) {
+                for (const list of Object.values(value)) {
                     list.sort((a, b) => {
-                        // TODO: implement .sortvalue
-                        // sort by value (higher absolute value is better)
-                        const aValue = a.sortValue ?? 0;
-                        const bValue = b.sortValue ?? 0;
-                        if (aValue != bValue) {
-                            // negative values sort first (repairs & civilians)
-                            const dir = aValue < 0 || bValue < 0 ? -1 : +1;
-                            return dir * (bValue - aValue);
-                        }
+                        // TODO: assign sort tiers and values
+                        if (a.sortTier != b.sortTier) return b.sortTier - a.sortTier;
+                        if (a.sortValue != b.sortValue) return b.sortValue - a.sortValue;
                         // sort by name
                         const aName = Locale.compose(a.name);
                         const bName = Locale.compose(b.name);
@@ -252,8 +246,11 @@ Controls.decorate('panel-production-chooser', (val) => new bzProductionChooserSc
 class bzProductionChooserItem {
     static c_prototype;
     static c_render;
-    ageless;
     comma = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL_COMMA", 0).at(2);
+    data = {};
+    pCostContainer = document.createElement("div");
+    pCostIconElement = document.createElement("span");
+    pCostAmountElement = document.createElement("span");
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
@@ -291,6 +288,20 @@ class bzProductionChooserItem {
     onAttributeChanged(name, _oldValue, newValue) {
         const c = this.component;
         switch (name) {
+            case "data-category":
+                this.data.category = newValue;
+                this.updateProductionCost();
+                break;
+            // case "data-name":
+            case "data-type":
+                this.data.type = newValue;
+                this.updateProductionCost();
+                break;
+            // case "data-cost":
+            // case "data-prereq":
+            // case "data-description":
+            // case "data-error":
+            // case "data-is-purchase":
             case "data-is-ageless": {
                 const isAgeless = newValue === "true";
                 this.component.agelessContainer.classList.toggle("hidden", !isAgeless);
@@ -298,6 +309,8 @@ class bzProductionChooserItem {
                 c.itemNameElement.classList.toggle("text-secondary", isAgeless);
                 return false;
             }
+            // case "data-secondary-details":
+            // case "data-recommendations":
         }
         return true;  // continue to component
     }
@@ -310,36 +323,41 @@ class bzProductionChooserItem {
         c.container.appendChild(c.iconElement);
         const infoContainer = document.createElement("div");
         infoContainer.classList.value = "relative flex flex-col flex-auto justify-between";
-        c.itemNameElement.classList.value = "font-title text-xs text-accent-2 m-1 uppercase";
-        infoContainer.appendChild(c.itemNameElement);
-        c.errorTextElement.classList.value = "font-body text-negative-light z-1 pointer-events-none";
+        const nameContainer = document.createElement("div");
+        nameContainer.classList.add("flex", "justify-start", "items-center");
+        c.itemNameElement.classList.value = "font-title text-xs text-accent-2 mx-1 uppercase";
+        nameContainer.appendChild(c.itemNameElement);
+        c.agelessContainer.classList.value = "hidden flex items-center mx-1";
+        c.agelessContainer.innerHTML =
+            '<img src="fs://game/city_ageless.png" class="size-5"/>';
+        nameContainer.appendChild(c.agelessContainer);
+        c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 h-7";
+        nameContainer.appendChild(c.recommendationsContainer);
+        infoContainer.appendChild(nameContainer);
+        c.errorTextElement.classList.value = "font-body text-negative-light mx-1 -mt-1 z-1 pointer-events-none";
         infoContainer.appendChild(c.errorTextElement);
         c.secondaryDetailsElement.classList.value = "invisible flex font-body-xs mb-1 bz-pci-details";
         infoContainer.appendChild(c.secondaryDetailsElement);
         c.container.appendChild(infoContainer);
         const rightColumn = document.createElement("div");
         rightColumn.classList.value = "relative flex flex-col items-end justify-between";
-        c.agelessContainer.classList.value = "hidden flex items-center mx-1";
-        c.agelessContainer.innerHTML =
-            '<img src="fs://game/city_ageless.png" class="size-5"/>';
-        c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 h-7";
-        c.costContainer.appendChild(c.recommendationsContainer);
+        this.pCostContainer.classList.value = "flex items-center mx-1";
+        this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
+        this.pCostContainer.appendChild(this.pCostAmountElement);
+        this.pCostIconElement.classList.value = "size-6 bg-contain bg-center bg-no-repeat mr-1";
+        this.pCostIconElement.style
+            .setProperty("background-image", "url(Yield_Production)");
+        this.pCostIconElement.ariaLabel = Locale.compose("LOC_YIELD_GOLD");
+        this.pCostContainer.appendChild(this.pCostIconElement);
+        rightColumn.appendChild(this.pCostContainer);
         c.costContainer.classList.value = "flex items-center mx-2";
         c.costAmountElement.classList.value = "font-title";
         c.costContainer.appendChild(c.costAmountElement);
-        c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat mr-1";
+        c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat";
         c.costContainer.appendChild(c.costIconElement);
-        rightColumn.appendChild(c.agelessContainer);
+        rightColumn.appendChild(this.pCostContainer);
         rightColumn.appendChild(c.costContainer);
         c.container.appendChild(rightColumn);
-        // move ageless and recommendations icons to name container
-        const bzInfoContainer = c.itemNameElement.parentElement;
-        const nameContainer = document.createElement("div");
-        nameContainer.classList.add("flex", "justify-start", "items-center");
-        bzInfoContainer.replaceChild(nameContainer, c.itemNameElement);
-        nameContainer.appendChild(c.itemNameElement);
-        nameContainer.appendChild(c.agelessContainer);
-        nameContainer.appendChild(c.recommendationsContainer);
         // compact mode
         if (!compact) return;
         c.Root.classList.remove("text-sm");
@@ -350,6 +368,30 @@ class bzProductionChooserItem {
         c.costAmountElement.classList.add("text-base", "mr-1");
         c.costIconElement.classList.remove("mr-1");
         c.costIconElement.classList.add("-m-1");
+    }
+    updateProductionCost() {
+        if (!this.data.type) return;
+        const cityID = UI.Player.getHeadSelectedCity();
+        const city = cityID && Cities.get(cityID);
+        if (!city) return;
+        switch (this.data.category) {
+            case "buildings":
+            case "wonders":
+                this.data.productionCost =
+                    city.Production?.getConstructibleProductionCost(this.data.type);
+                break;
+            case "units":
+                this.data.productionCost =
+                    city.Production?.getUnitProductionCost(this.data.type);
+                break;
+            default:
+                this.data.productionCost = void 0;
+                return;
+        }
+        const pcost = this.data.productionCost;
+        const hide = isNaN(pcost) || pcost < 0;
+        this.pCostContainer.classList.toggle("hidden", hide);
+        this.pCostAmountElement.textContent = pcost;
     }
 }
 Controls.decorate("production-chooser-item", (val) => new bzProductionChooserItem(val));
