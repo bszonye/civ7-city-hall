@@ -1,3 +1,4 @@
+// TODO: adjust arrow & nav-help positions
 import bzCityDetails, { bzUpdateCityDetailsEventName } from "/bz-city-hall/ui/city-details/bz-model-city-details.js";
 import { C as CityDetails, U as UpdateCityDetailsEventName } from "/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js";
 import { N as NavTray } from "/core/ui/navigation-tray/model-navigation-tray.chunk.js";
@@ -250,7 +251,6 @@ function preloadIcon(icon, context) {
 // PanelCityDetails decorator
 class bzPanelCityDetails {
     static c_prototype;
-    static c_onFocus;
     static c_renderYieldsSlot;
     static lastTab = 0;
     static tableWidth = 0;

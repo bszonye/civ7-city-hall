@@ -15,12 +15,16 @@ const BZ_HEAD_STYLE = [
     min-width: 28.4444444444rem;
     max-width: 28.4444444444rem;
 }
+.bz-city-compact .production-category .pl-3 {
+    padding-left: 0;
+}
+.bz-city-hall .bz-pci-details img.size-8 {
+    width: 1.3333333333rem;
+    height: 1.3333333333rem;
+}
 .bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
     height: 1.1111111111rem;
-}
-.bz-city-hall .production-category .pl-3 {
-    padding-left: 0;
 }
 `,  // improve panel header layout
 `
@@ -143,7 +147,7 @@ class bzProductionChooserScreen {
                 // sort items
                 for (const [_key, list] of Object.entries(value)) {
                     list.sort((a, b) => {
-                        // TODO: implement .sortvalue and .sortCost
+                        // TODO: implement .sortvalue
                         // sort by value (higher absolute value is better)
                         const aValue = a.sortValue ?? 0;
                         const bValue = b.sortValue ?? 0;
@@ -152,11 +156,7 @@ class bzProductionChooserScreen {
                             const dir = aValue < 0 || bValue < 0 ? -1 : +1;
                             return dir * (bValue - aValue);
                         }
-                        // sort by cost (lower is better)
-                        const aCost = a.sortCost ?? 0;
-                        const bCost = b.sortCost ?? 0;
-                        if (aCost != bCost) return aCost - bCost;
-                        // finally, sort by name
+                        // sort by name
                         const aName = Locale.compose(a.name);
                         const bName = Locale.compose(b.name);
                         return aName.localeCompare(bName);
@@ -198,16 +198,17 @@ class bzProductionChooserScreen {
         engine.off('ConstructibleChanged', this.component.onConstructibleAddedToMap, this.component);
     }
     afterRender() {
+        const c = this.component;
         // move status icon below name
-        const cityStatus = this.component.cityStatusContainerElement;
+        const cityStatus = c.cityStatusContainerElement;
         cityStatus.parentElement.appendChild(cityStatus);
         cityStatus.classList.add("bz-city-status");
-        this.component.cityStatusTextElement.classList.add("pulse-warn", "pr-6");
+        c.cityStatusTextElement.classList.add("pulse-warn", "pr-6");
         // arrow buttons
-        this.component.prevCityButton.classList.add("bz-prev-city", "bz-cycle-city");
-        this.component.nextCityButton.classList.add("bz-next-city", "bz-cycle-city");
+        c.prevCityButton.classList.add("bz-prev-city", "bz-cycle-city");
+        c.nextCityButton.classList.add("bz-next-city", "bz-cycle-city");
         // create a containing block for the arrow buttons
-        const cityName = this.component.cityNameElement;
+        const cityName = c.cityNameElement;
         const nameContainer = cityName.parentElement;
         const nameWrapper = nameContainer.parentElement;
         cityName.classList.add("bz-city-name");
@@ -218,6 +219,12 @@ class bzProductionChooserScreen {
         Databind.classToggle(nameWrapper, "bz-no-help", "!{{g_NavTray.isTrayRequired}}");
         Databind.classToggle(nameWrapper, "bz-nav-help", "{{g_NavTray.isTrayRequired}}");
         nameWrapper.classList.add("mx-2");
+        // compact matching Production/Purchase headings
+        const tabs = JSON.parse(c.productionPurchaseTabBar.getAttribute("tab-items"));
+        tabs.forEach(t => t.className = "px-2 text-sm tracking-100");
+        c.productionPurchaseTabBar.setAttribute("tab-items", JSON.stringify(tabs));
+        c.townPurchaseLabel.innerHTML = c.townPurchaseLabel.innerHTML
+            .replaceAll("text-xs", "text-sm tracking-100 mt-1");
     }
     onActiveDeviceTypeChanged(deviceType) {
         this.isGamepadActive = deviceType == InputDeviceType.Controller;
@@ -244,6 +251,7 @@ Controls.decorate('panel-production-chooser', (val) => new bzProductionChooserSc
 
 class bzProductionChooserItem {
     static c_prototype;
+    static c_render;
     ageless;
     comma = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL_COMMA", 0).at(2);
     constructor(component) {
@@ -263,43 +271,20 @@ class bzProductionChooserItem {
             const more = onAttributeChanged.apply(this.bzComponent, args);
             if (more) return c_onAttributeChanged.apply(this, args);
         }
-        // wrap render method to extend it
-        const c_render = proto.render;
-        const after_render = this.afterRender;
-        proto.render = function(...args) {
-            const c_rv = c_render.apply(this, args);
-            const after_rv = after_render.apply(this.bzComponent, args);
-            return after_rv ?? c_rv;
+        // override render method
+        bzProductionChooserItem.c_render = proto.render;
+        proto.render = function() {
+            return this.bzComponent.render();
         }
     }
     beforeAttach() { }
     afterAttach() {
         const c = this.component;
-        // move ageless and recommendations icons to name container
-        const infoContainer = c.itemNameElement.parentElement;
-        const nameContainer = document.createElement("div");
-        nameContainer.classList.add("flex", "justify-start", "items-center");
-        infoContainer.insertBefore(nameContainer, c.itemNameElement);
-        nameContainer.appendChild(c.itemNameElement);
-        nameContainer.appendChild(c.agelessContainer);
-        nameContainer.appendChild(c.recommendationsContainer);
-        // streamline yields (remove commas, reduce size)
-        const yields = c.secondaryDetailsElement;
-        yields.innerHTML = yields.innerHTML.replaceAll('"size-8"', '"size-6"')
+        // remove commas from yield and unit icons
         if (this.comma) {
-            yields.innerHTML = yields.innerHTML
+            c.secondaryDetailsElement.innerHTML = c.secondaryDetailsElement.innerHTML
                 .replaceAll(`${this.comma}</div>`, "</div>");
         }
-        // compact mode
-        if (!bzCityHallOptions.compact) return;
-        c.Root.classList.remove("text-sm");
-        c.Root.classList.add("text-xs", "leading-tight");
-        c.container.classList.remove("p-2");
-        c.iconElement.classList.remove("size-16");
-        c.iconElement.classList.add("size-12", "m-1");
-        c.costAmountElement.classList.add("text-base", "mr-1");
-        c.costIconElement.classList.remove("mr-1");
-        c.costIconElement.classList.add("-m-1");
     }
     beforeDetach() { }
     afterDetach() { }
@@ -316,20 +301,55 @@ class bzProductionChooserItem {
         }
         return true;  // continue to component
     }
-    afterRender() {
+    render() {
         const c = this.component;
-        // TODO: use classList.value instead
-        c.container.classList.remove("font-title", "tracking-100");
-        c.container.classList.add("flex", "justify-start", "items-center");
-        c.itemNameElement.classList.remove("mb-1");
-        c.itemNameElement.classList.add("m-1");
-        c.recommendationsContainer.classList.remove("mr-2");
-        c.recommendationsContainer.classList.add("mx-1", "h-6");  // space for Ageless
-        c.agelessContainer.classList.remove("invisible");
-        c.agelessContainer.classList.add("hidden", "mx-1");
+        const compact = bzCityHallOptions.compact;
+        c.Root.classList.add("text-sm", "production-chooser-item");
+        c.container.classList.add("p-2", "flex", "justify-start", "items-center");
+        c.iconElement.classList.add("size-16", "bg-contain", "bg-center", "bg-no-repeat", "mr-2");
+        c.container.appendChild(c.iconElement);
+        const infoContainer = document.createElement("div");
+        infoContainer.classList.value = "relative flex flex-col flex-auto justify-between";
+        c.itemNameElement.classList.value = "font-title text-xs text-accent-2 m-1 uppercase";
+        infoContainer.appendChild(c.itemNameElement);
+        c.errorTextElement.classList.value = "font-body text-negative-light z-1 pointer-events-none";
+        infoContainer.appendChild(c.errorTextElement);
+        c.secondaryDetailsElement.classList.value = "invisible flex font-body-xs mb-1 bz-pci-details";
+        infoContainer.appendChild(c.secondaryDetailsElement);
+        c.container.appendChild(infoContainer);
+        const rightColumn = document.createElement("div");
+        rightColumn.classList.value = "relative flex flex-col items-end justify-between";
+        c.agelessContainer.classList.value = "hidden flex items-center mx-1";
         c.agelessContainer.innerHTML =
-            '<img src="fs://game/city_ageless.png" class="size-6"/>';
-        c.secondaryDetailsElement.classList.add("font-body-xs", "mb-1");
+            '<img src="fs://game/city_ageless.png" class="size-5"/>';
+        c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 h-7";
+        c.costContainer.appendChild(c.recommendationsContainer);
+        c.costContainer.classList.value = "flex items-center mx-2";
+        c.costAmountElement.classList.value = "font-title";
+        c.costContainer.appendChild(c.costAmountElement);
+        c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat mr-1";
+        c.costContainer.appendChild(c.costIconElement);
+        rightColumn.appendChild(c.agelessContainer);
+        rightColumn.appendChild(c.costContainer);
+        c.container.appendChild(rightColumn);
+        // move ageless and recommendations icons to name container
+        const bzInfoContainer = c.itemNameElement.parentElement;
+        const nameContainer = document.createElement("div");
+        nameContainer.classList.add("flex", "justify-start", "items-center");
+        bzInfoContainer.replaceChild(nameContainer, c.itemNameElement);
+        nameContainer.appendChild(c.itemNameElement);
+        nameContainer.appendChild(c.agelessContainer);
+        nameContainer.appendChild(c.recommendationsContainer);
+        // compact mode
+        if (!compact) return;
+        c.Root.classList.remove("text-sm");
+        c.Root.classList.add("text-xs", "leading-tight");
+        c.container.classList.remove("p-2");
+        c.iconElement.classList.remove("size-16");
+        c.iconElement.classList.add("size-12", "m-1");
+        c.costAmountElement.classList.add("text-base", "mr-1");
+        c.costIconElement.classList.remove("mr-1");
+        c.costIconElement.classList.add("-m-1");
     }
 }
 Controls.decorate("production-chooser-item", (val) => new bzProductionChooserItem(val));
