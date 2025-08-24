@@ -45,11 +45,10 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-city-name-wrapper .fxs-nav-help {
     margin: 0;
 }
-.bz-city-hall .bz-cycle-city {
+.bz-city-hall .bz-city-name-wrapper .bz-cycle-city {
     position: relative;
 }
 .bz-city-hall .bz-city-name-wrapper.bz-nav-help .bz-cycle-city {
-    top: 2.1111111111rem;
     top: 1.8333333333rem;
     left: 4rem;
 }

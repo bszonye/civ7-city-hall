@@ -2,6 +2,7 @@
 import bzCityDetails, { bzUpdateCityDetailsEventName } from "/bz-city-hall/ui/city-details/bz-model-city-details.js";
 import { C as CityDetails, U as UpdateCityDetailsEventName } from "/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js";
 import { N as NavTray } from "/core/ui/navigation-tray/model-navigation-tray.chunk.js";
+import { D as Databind } from '../../../core/ui/utilities/utilities-core-databinding.chunk.js';
 import { MustGetElement } from "/core/ui/utilities/utilities-dom.chunk.js";
 import FocusManager from '/core/ui/input/focus-manager.js';
 
@@ -128,13 +129,24 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall #${cityDetailTabID.overview} .shadow {
     filter: drop-shadow(0 0.0555555556rem 0.0555555556rem black);
 }
-.overview-entry, .bz-city-hall .growth-entry {
+.bz-city-hall .panel-city-details .bz-cycle-city {
+    position: relative;
+}
+.bz-city-hall .panel-city-details.bz-nav-help .bz-cycle-city {
+    top: 0.6666666667rem;
+    left: 1rem;
+}
+.bz-city-hall .panel-city-details.bz-no-help .bz-cycle-city {
+    top: 0.6666666667rem;
+    left: 1rem;
+}
+.bz-overview-entry, .bz-city-hall .growth-entry {
     border-radius: 2rem;
 }
-.overview-entry.bz-odd-row {
+.bz-city-hall .bz-overview-entry.bz-odd-row {
     background-color: ${BZ_COLOR.bronze6}99;
 }
-.overview-entry:focus, .overview-entry:hover, .overview-entry.pressed {
+.bz-overview-entry:focus, .bz-overview-entry:hover, .bz-overview-entry.pressed {
     background: linear-gradient(90deg, #6b6250 0%, #545559 100%);
 }
 `,
@@ -376,6 +388,10 @@ class bzPanelCityDetails {
         this.patchTabSlots();
         this.renderOverviewSlot();
         this.renderConstructiblesSlot();
+        // adjust arrow buttons
+        const c = this.component;
+        c.prevCityButton.classList.add("bz-prev-city", "bz-cycle-city");
+        c.nextCityButton.classList.add("bz-next-city", "bz-cycle-city");
     }
     renderOverviewSlot() {
         const slot = document.createElement("fxs-vslot");
@@ -438,10 +454,13 @@ class bzPanelCityDetails {
     }
     // update data model from both sources
     update() {
+        const c = this.component;
         this.updateOverview();
         this.updateConstructibles();
         const hasFocus = this.component.Root.contains(FocusManager.getFocus());
-        this.component.Root.classList.toggle("trigger-nav-help", hasFocus);
+        c.Root.classList.toggle("trigger-nav-help", hasFocus);
+        Databind.classToggle(c.Root, "bz-no-help", "!{{g_NavTray.isTrayRequired}}");
+        Databind.classToggle(c.Root, "bz-nav-help", "{{g_NavTray.isTrayRequired}}");
     }
     // update data model for new tab slot
     updateOverview() {
@@ -484,7 +503,7 @@ class bzPanelCityDetails {
         const small = metrics.sizes(5/6 * metrics.table.spacing.rem).css;
         if (food.isGrowing) {
             const row = document.createElement("div");
-            row.classList.value = "overview-entry self-start flex px-1 -mx-1";
+            row.classList.value = "bz-overview-entry self-start flex px-1 -mx-1";
             row.style.backgroundColor = `${BZ_COLOR.food}55`;
             row.style.minHeight = size;
             row.style.marginTop = metrics.body.leading.half.px;
@@ -505,7 +524,7 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
-            row.classList.value = "overview-entry flex px-1";
+            row.classList.value = "bz-overview-entry flex px-1";
             row.style.minHeight = size;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
@@ -543,7 +562,7 @@ class bzPanelCityDetails {
         ];
         for (const conn of connections) {
             const row = document.createElement("div");
-            row.classList.value = "overview-entry relative flex justify-start pr-1";
+            row.classList.value = "bz-overview-entry relative flex justify-start pr-1";
             row.style.minHeight = size;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
@@ -590,7 +609,7 @@ class bzPanelCityDetails {
         table.style.minWidth = bzPanelCityDetails.tableWidth;
         for (const [i, item] of bzCityDetails.improvements.entries()) {
             const row = document.createElement("div");
-            row.classList.value = "overview-entry flex px-1";
+            row.classList.value = "bz-overview-entry flex px-1";
             if (!(i % 2)) row.classList.add("bz-odd-row");
             row.style.minHeight = size;
             row.setAttribute("tabindex", "-1");
