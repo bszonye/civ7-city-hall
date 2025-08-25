@@ -427,10 +427,15 @@ class bzProductionChooserItem {
                 this.progressBarFill.style.heightPERCENT = percent;
                 break;
             }
-            case "units":
-                this.data.productionCost =
-                    city.Production?.getUnitProductionCost(type);
+            case "units": {
+                const cost = city.Production?.getUnitProductionCost(type);
+                const progress = city.BuildQueue?.getProgress(type) ?? 0;
+                const percent = city.BuildQueue?.getPercentComplete(type) ?? 0;
+                this.data.productionCost = cost - progress;
+                this.progressBar.classList.toggle("hidden", progress <= 0);
+                this.progressBarFill.style.heightPERCENT = percent;
                 break;
+            }
             default:
                 this.data.productionCost = void 0;
                 break;
