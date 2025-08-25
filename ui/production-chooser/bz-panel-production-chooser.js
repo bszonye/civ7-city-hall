@@ -24,7 +24,7 @@ const BZ_HEAD_STYLE = [
     margin-right: 0.4444444444rem;
 }
 .bz-city-hall .production-category + .production-category {
-    margin-top: 0.2222222222rem;
+    margin-top: 0.4444444444rem;
 }
 .bz-city-hall .production-category > div > div.pl-3 {
     padding-left: 0;
@@ -35,6 +35,23 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-pci-details img.size-8 {
     width: 1.3333333333rem;
     height: 1.3333333333rem;
+}
+.bz-city-hall .bz-queue-progress {
+    border-image: url("fs://game/city_queue_bar_bk.png");
+    border-image-slice: 1;
+    border-width: 0.1111111111rem;
+    border-style: solid;
+    padding: 0 0.2222222222rem 0 0.3333333333rem;
+    margin-right: 0.1111111111rem;
+    background-image: url("fs://game/city_queue_bar.png");
+    background-size: cover;
+}
+.bz-city-hall .bz-queue-progress span.text-accent-4 {
+    color: #c2c4cc;
+}
+.bz-city-hall .bz-queue-progress span {
+    color: #e5e5e5;
+    filter: drop-shadow(0 0.0555555556rem 0.0555555556rem black);
 }
 .bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
@@ -278,6 +295,7 @@ class bzProductionChooserItem {
     static c_render;
     comma = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL_COMMA", 0).at(2);
     data = {};
+    costColumn = document.createElement("div");
     pCostContainer = document.createElement("div");
     pCostIconElement = document.createElement("span");
     pCostAmountElement = document.createElement("span");
@@ -368,8 +386,7 @@ class bzProductionChooserItem {
         c.secondaryDetailsElement.classList.value = "invisible flex font-body-xs mb-1 bz-pci-details";
         infoContainer.appendChild(c.secondaryDetailsElement);
         c.container.appendChild(infoContainer);
-        const rightColumn = document.createElement("div");
-        rightColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
+        this.costColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
         this.pCostContainer.classList.value = "flex items-center";
         this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
         this.pCostContainer.appendChild(this.pCostAmountElement);
@@ -378,33 +395,34 @@ class bzProductionChooserItem {
             .setProperty("background-image", "url(Yield_Production)");
         this.pCostIconElement.ariaLabel = Locale.compose("LOC_YIELD_GOLD");
         this.pCostContainer.appendChild(this.pCostIconElement);
-        rightColumn.appendChild(this.pCostContainer);
+        this.costColumn.appendChild(this.pCostContainer);
         c.costContainer.classList.value = "flex items-center";
         c.costAmountElement.classList.value = "font-title-sm mr-1";
         c.costContainer.appendChild(c.costAmountElement);
         c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat -m-1";
         c.costContainer.appendChild(c.costIconElement);
-        rightColumn.appendChild(this.pCostContainer);
-        rightColumn.appendChild(c.costContainer);
-        c.container.appendChild(rightColumn);
+        this.costColumn.appendChild(this.pCostContainer);
+        this.costColumn.appendChild(c.costContainer);
+        c.container.appendChild(this.costColumn);
     }
     updateProductionCost() {
         if (!this.data.type) return;
         const cityID = UI.Player.getHeadSelectedCity();
         const city = cityID && Cities.get(cityID);
         if (!city) return;
+        const type = Game.getHash(this.data.type);
         switch (this.data.category) {
             case "buildings":
             case "wonders": {
-                const type = Game.getHash(this.data.type);
                 const cost = city.Production?.getConstructibleProductionCost(type);
                 const progress = city.BuildQueue?.getProgress(type) ?? 0;
                 this.data.productionCost = cost - progress;
+                this.costColumn.classList.toggle("bz-queue-progress", progress);
                 break;
             }
             case "units":
                 this.data.productionCost =
-                    city.Production?.getUnitProductionCost(this.data.type);
+                    city.Production?.getUnitProductionCost(type);
                 break;
             default:
                 this.data.productionCost = void 0;
