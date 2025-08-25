@@ -305,7 +305,7 @@ class bzProductionChooserItem {
                 const isAgeless = newValue === "true";
                 this.component.agelessContainer.classList.toggle("hidden", !isAgeless);
                 c.itemNameElement.classList.toggle("text-accent-2", !isAgeless);
-                c.itemNameElement.classList.toggle("text-secondary", isAgeless);
+                c.itemNameElement.classList.toggle("text-gradient-secondary", isAgeless);
                 return false;
             }
             // case "data-secondary-details":
@@ -315,16 +315,15 @@ class bzProductionChooserItem {
     }
     render() {
         const c = this.component;
-        const compact = bzCityHallOptions.compact;
-        c.Root.classList.add("text-sm", "production-chooser-item");
-        c.container.classList.add("p-2", "flex", "justify-start", "items-center");
-        c.iconElement.classList.add("size-16", "bg-contain", "bg-center", "bg-no-repeat", "mr-2");
+        c.Root.classList.add("production-chooser-item", "text-xs", "leading-tight");
+        c.container.classList.add("flex", "justify-start", "items-center");
+        c.iconElement.classList.value = "size-12 bg-contain bg-center bg-no-repeat m-1";
         c.container.appendChild(c.iconElement);
         const infoContainer = document.createElement("div");
         infoContainer.classList.value = "relative flex flex-col flex-auto justify-between";
         const nameContainer = document.createElement("div");
-        nameContainer.classList.add("flex", "justify-start", "items-center");
-        c.itemNameElement.classList.value = "font-title text-xs text-accent-2 mx-1 uppercase";
+        nameContainer.classList.value = "flex justify-start items-center";
+        c.itemNameElement.classList.value = "font-title-xs text-accent-2 mx-1 uppercase";
         nameContainer.appendChild(c.itemNameElement);
         c.agelessContainer.classList.value = "hidden flex items-center mx-1";
         c.agelessContainer.innerHTML =
@@ -333,40 +332,30 @@ class bzProductionChooserItem {
         c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 h-7";
         nameContainer.appendChild(c.recommendationsContainer);
         infoContainer.appendChild(nameContainer);
-        c.errorTextElement.classList.value = "font-body text-negative-light mx-1 -mt-1 z-1 pointer-events-none";
+        c.errorTextElement.classList.value = "font-body-xs text-negative-light mx-1 -mt-1 z-1 pointer-events-none";
         infoContainer.appendChild(c.errorTextElement);
         c.secondaryDetailsElement.classList.value = "invisible flex font-body-xs mb-1 bz-pci-details";
         infoContainer.appendChild(c.secondaryDetailsElement);
         c.container.appendChild(infoContainer);
         const rightColumn = document.createElement("div");
-        rightColumn.classList.value = "relative flex flex-col items-end justify-between";
-        this.pCostContainer.classList.value = "flex items-center mx-1";
+        rightColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
+        this.pCostContainer.classList.value = "flex items-center";
         this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
         this.pCostContainer.appendChild(this.pCostAmountElement);
-        this.pCostIconElement.classList.value = "size-6 bg-contain bg-center bg-no-repeat mr-1";
+        this.pCostIconElement.classList.value = "size-6 bg-contain bg-center bg-no-repeat";
         this.pCostIconElement.style
             .setProperty("background-image", "url(Yield_Production)");
         this.pCostIconElement.ariaLabel = Locale.compose("LOC_YIELD_GOLD");
         this.pCostContainer.appendChild(this.pCostIconElement);
         rightColumn.appendChild(this.pCostContainer);
-        c.costContainer.classList.value = "flex items-center mx-2";
-        c.costAmountElement.classList.value = "font-title";
+        c.costContainer.classList.value = "flex items-center";
+        c.costAmountElement.classList.value = "font-title-sm mr-1";
         c.costContainer.appendChild(c.costAmountElement);
-        c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat";
+        c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat -m-1";
         c.costContainer.appendChild(c.costIconElement);
         rightColumn.appendChild(this.pCostContainer);
         rightColumn.appendChild(c.costContainer);
         c.container.appendChild(rightColumn);
-        // compact mode
-        if (!compact) return;
-        c.Root.classList.remove("text-sm");
-        c.Root.classList.add("text-xs", "leading-tight");
-        c.container.classList.remove("p-2");
-        c.iconElement.classList.remove("size-16");
-        c.iconElement.classList.add("size-12", "m-1");
-        c.costAmountElement.classList.add("text-base", "mr-1");
-        c.costIconElement.classList.remove("mr-1");
-        c.costIconElement.classList.add("-m-1");
     }
     updateProductionCost() {
         if (!this.data.type) return;
