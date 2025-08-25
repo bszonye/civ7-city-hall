@@ -381,7 +381,6 @@ class bzProductionChooserItem {
             "flex-col-reverse",
             "h-10",
             "w-4",
-            "bg-contain",
             "mr-2",
             "hidden",
         );
