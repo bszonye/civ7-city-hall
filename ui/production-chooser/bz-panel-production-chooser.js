@@ -77,7 +77,7 @@ const BZ_HEAD_STYLE = [
 `,
 ];
 BZ_HEAD_STYLE.map(style => {
-    const e = document.createElement('style');
+    const e = document.createElement("style");
     e.textContent = style;
     document.head.appendChild(e);
 });
@@ -168,7 +168,7 @@ class bzProductionChooserScreen {
         });
     }
     afterAttach() {
-        engine.on('ConstructibleChanged', this.component.onConstructibleAddedToMap, this.component);
+        engine.on("ConstructibleChanged", this.component.onConstructibleAddedToMap, this.component);
         // restore the city details panel if it was open previously
         if (bzProductionChooserScreen.isCDPanelOpen && !this.component.isSmallScreen()) {
             this.component.showCityDetails();
@@ -188,7 +188,7 @@ class bzProductionChooserScreen {
         // this includes switches to the building-placement interface,
         // but that has its own means of restoring the Purchase tab.
         bzProductionChooserScreen.isPurchase = false;
-        engine.off('ConstructibleChanged', this.component.onConstructibleAddedToMap, this.component);
+        engine.off("ConstructibleChanged", this.component.onConstructibleAddedToMap, this.component);
     }
     afterRender() {
         const c = this.component;
@@ -240,7 +240,7 @@ class bzProductionChooserScreen {
         }
     }
 }
-Controls.decorate('panel-production-chooser', (val) => new bzProductionChooserScreen(val));
+Controls.decorate("panel-production-chooser", (val) => new bzProductionChooserScreen(val));
 
 class bzProductionChooserItem {
     static c_prototype;

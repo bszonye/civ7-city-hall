@@ -152,7 +152,7 @@ const BZ_HEAD_STYLE = [
 `,
 ];
 BZ_HEAD_STYLE.map(style => {
-    const e = document.createElement('style');
+    const e = document.createElement("style");
     e.textContent = style;
     document.head.appendChild(e);
 });
@@ -175,7 +175,7 @@ function docIcon(image, size, resize, ...style) {
 function docText(text, style) {
     const e = document.createElement("div");
     if (style) e.classList.value = style;
-    e.setAttribute('data-l10n-id', text);
+    e.setAttribute("data-l10n-id", text);
     return e;
 }
 function docTimer(size, resize, ...style) {
@@ -219,19 +219,19 @@ function getFontMetrics() {
         const digits = (n) => sizes(n * figure.rem, Math.ceil);
         return { size, ratio, cap, spacing, leading, margin, figure, digits, };
     }
-    const head = font('base', 1.25);
-    const body = font('base', 1.25);
-    const note = font('sm', 1);
-    const rules = font('base');
+    const head = font("base", 1.25);
+    const body = font("base", 1.25);
+    const note = font("sm", 1);
+    const rules = font("base");
     rules.width = sizes(BZ_RULES_WIDTH);
-    const table = font('base');
+    const table = font("base");
     const yields = font(8/9);
     const radius = sizes(2/3 * padding.rem);
     radius.content = sizes(radius.rem);
     radius.tooltip = sizes(radius.rem + border.rem);
     // minimum end banner height to avoid radius glitches
     const bumper = sizes(Math.max(table.spacing.rem, 2*radius.rem));
-    const isIdeographic = Locale.getCurrentDisplayLocale().startsWith('zh_');
+    const isIdeographic = Locale.getCurrentDisplayLocale().startsWith("zh_");
     return {
         sizes, font,
         padding, margin, border,
@@ -254,10 +254,10 @@ const BZ_PRELOADED_ICONS = {};
 function preloadIcon(icon, context) {
     if (!icon) return;
     const url = icon.startsWith("url(") ? icon : UI.getIcon(icon, context);
-    const name = url.replace(/url|[(\042\047)]/g, '');  // \042\047 = quotation marks
+    const name = url.replace(/url|[(\042\047)]/g, "");  // \042\047 = quotation marks
     if (!name || name in BZ_PRELOADED_ICONS) return;
     BZ_PRELOADED_ICONS[name] = true;
-    Controls.preloadImage(name, 'plot-tooltip');
+    Controls.preloadImage(name, "plot-tooltip");
 }
 
 // PanelCityDetails decorator
@@ -474,7 +474,7 @@ class bzPanelCityDetails {
         if (overviewHasFocus) FocusManager.setFocus(this.overviewSlot);
     }
     renderGrowth(container) {
-        container.innerHTML = '';
+        container.innerHTML = "";
         container.style.lineHeight = metrics.table.ratio;
         this.renderTitleHeading(container, "LOC_UI_CITY_DETAILS_GROWTH_TAB");
         if (!bzCityDetails.growth) return;
@@ -546,7 +546,7 @@ class bzPanelCityDetails {
     }
     renderConnections(container) {
         this.removeCityLinkListeners();
-        container.innerHTML = '';
+        container.innerHTML = "";
         container.style.lineHeight = metrics.table.ratio;
         // show settlement count in the title
         const total = bzCityDetails.connections?.settlements?.length ?? 0;
@@ -598,7 +598,7 @@ class bzPanelCityDetails {
         container.appendChild(table);
     }
     renderImprovements(container) {
-        container.innerHTML = '';
+        container.innerHTML = "";
         container.style.lineHeight = metrics.table.ratio;
         this.renderTitleHeading(container,
             "LOC_BUILDING_PLACEMENT_WAREHOUSE_YIELDS_HEADER");
@@ -627,7 +627,7 @@ class bzPanelCityDetails {
             table.appendChild(row);
         }
         requestAnimationFrame(() => {
-            const gcol = this.growthContainer.querySelector('.flex-col');
+            const gcol = this.growthContainer.querySelector(".flex-col");
             const gwidth = gcol?.clientWidth;
             if (!gwidth) return;
             table.style.minWidth = bzPanelCityDetails.tableWidth = `${gwidth}px`;
@@ -645,7 +645,7 @@ class bzPanelCityDetails {
         layout.style.lineHeight = metrics.head.ratio;
         layout.style.marginTop = metrics.head.margin.px;
         const ttText = document.createElement("div");
-        ttText.setAttribute('data-l10n-id', text);
+        ttText.setAttribute("data-l10n-id", text);
         layout.appendChild(ttText);
         container.appendChild(layout);
     }
@@ -722,7 +722,7 @@ class bzPanelCityDetails {
         mainDiv.classList.add("constructible-entry", "flex", "flex-col");
         mainDiv.setAttribute("tabindex", "-1");
         mainDiv.setAttribute("data-type", constructibleData.type);
-        mainDiv.setAttribute('data-tooltip-style', 'production-constructible-tooltip');
+        mainDiv.setAttribute("data-tooltip-style", "production-constructible-tooltip");
         const topDiv = document.createElement("div");
         topDiv.classList.add("constructible-entry-highlight", "flex", "my-1", "pointer-events-none", "items-center");
         const icon = document.createElement("fxs-icon");
@@ -853,4 +853,4 @@ class bzPanelCityDetails {
         }
     }
 }
-Controls.decorate('panel-city-details', (val) => new bzPanelCityDetails(val));
+Controls.decorate("panel-city-details", (val) => new bzPanelCityDetails(val));
