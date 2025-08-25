@@ -358,18 +358,18 @@ class bzProductionChooserItem {
         infoContainer.classList.value = "relative flex flex-col flex-auto justify-between";
         const nameContainer = document.createElement("div");
         nameContainer.classList.value = "flex justify-start items-center";
-        c.itemNameElement.classList.value = "font-title-xs text-accent-2 mx-1 uppercase";
+        c.itemNameElement.classList.value = "font-title-xs text-accent-2 m-1 uppercase";
         nameContainer.appendChild(c.itemNameElement);
-        c.agelessContainer.classList.value = "hidden flex items-center mx-1";
+        c.agelessContainer.classList.value = "hidden flex items-center mx-1 -my-2";
         c.agelessContainer.innerHTML =
             '<img src="fs://game/city_ageless.png" class="size-5"/>';
         nameContainer.appendChild(c.agelessContainer);
-        c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 h-7";
+        c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 -my-2";
         nameContainer.appendChild(c.recommendationsContainer);
         infoContainer.appendChild(nameContainer);
         c.errorTextElement.classList.value = "font-body-xs text-negative-light mx-1 -mt-1 z-1 pointer-events-none";
         infoContainer.appendChild(c.errorTextElement);
-        c.secondaryDetailsElement.classList.value = "invisible flex font-body-xs mb-1 bz-pci-details";
+        c.secondaryDetailsElement.classList.value = "invisible flex font-body-xs mt-0\\.5 mb-1 bz-pci-details";
         infoContainer.appendChild(c.secondaryDetailsElement);
         c.container.appendChild(infoContainer);
         // progress bar
@@ -415,26 +415,20 @@ class bzProductionChooserItem {
         const city = cityID && Cities.get(cityID);
         if (!city) return;
         const type = Game.getHash(this.data.type);
+        const progress = city.BuildQueue?.getProgress(type) ?? 0;
+        const percent = city.BuildQueue?.getPercentComplete(type) ?? 0;
+        this.progressBar.classList.toggle("hidden", progress <= 0);
+        this.progressBarFill.style.heightPERCENT = percent;
         switch (this.data.category) {
             case "buildings":
-            case "wonders": {
-                const cost = city.Production?.getConstructibleProductionCost(type);
-                const progress = city.BuildQueue?.getProgress(type) ?? 0;
-                const percent = city.BuildQueue?.getPercentComplete(type) ?? 0;
-                this.data.productionCost = cost - progress;
-                this.progressBar.classList.toggle("hidden", progress <= 0);
-                this.progressBarFill.style.heightPERCENT = percent;
+            case "wonders":
+                this.data.productionCost =
+                    city.Production?.getConstructibleProductionCost(type) - progress;
                 break;
-            }
-            case "units": {
-                const cost = city.Production?.getUnitProductionCost(type);
-                const progress = city.BuildQueue?.getProgress(type) ?? 0;
-                const percent = city.BuildQueue?.getPercentComplete(type) ?? 0;
-                this.data.productionCost = cost - progress;
-                this.progressBar.classList.toggle("hidden", progress <= 0);
-                this.progressBarFill.style.heightPERCENT = percent;
+            case "units":
+                this.data.productionCost =
+                    city.Production?.getUnitProductionCost(type) - progress;
                 break;
-            }
             default:
                 this.data.productionCost = void 0;
                 break;
