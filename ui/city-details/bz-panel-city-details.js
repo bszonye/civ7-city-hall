@@ -273,6 +273,7 @@ class bzPanelCityDetails {
     focusRoot;
     focusInListener = this.onFocusIn.bind(this);
     updateListener = this.update.bind(this);
+    onCityLinkListener = this.onCityLink.bind(this);
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
@@ -382,6 +383,7 @@ class bzPanelCityDetails {
         this.component.tabBar.removeEventListener("tab-selected", this.onTabSelected);
         window.removeEventListener(bzUpdateCityDetailsEventName, this.updateOverviewListener);
         window.removeEventListener(UpdateCityDetailsEventName, this.updateConstructiblesListener);
+        this.removeCityLinkListeners();
     }
     // render new & replaced tabs
     afterRender() {
@@ -543,6 +545,7 @@ class bzPanelCityDetails {
         container.appendChild(wrap);
     }
     renderConnections(container) {
+        this.removeCityLinkListeners();
         container.innerHTML = '';
         container.style.lineHeight = metrics.table.ratio;
         // show settlement count in the title
@@ -561,11 +564,13 @@ class bzPanelCityDetails {
             ...bzCityDetails.connections.focused,
         ];
         for (const conn of connections) {
-            const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry relative flex justify-start pr-1";
+            const row = document.createElement("fxs-activatable");
+            row.classList.value = "bz-overview-entry bz-city-link relative flex justify-start pr-1";
             row.style.minHeight = size;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
+            row.setAttribute("bz-city-id", JSON.stringify(conn.id));
+            row.addEventListener("action-activate", this.onCityLinkListener);
             if (conn.isTown) {
                 const focus = getTownFocus(conn);
                 row.appendChild(docIcon(focus.icon, size, size));
@@ -574,7 +579,7 @@ class bzPanelCityDetails {
             }
             const name = document.createElement("div");
             name.classList.value = "mx-1 text-left";
-            name.setAttribute('data-l10n-id', conn.name);
+            name.setAttribute("data-l10n-id", conn.name);
             row.appendChild(name);
             rows.push(row);
         }
@@ -833,6 +838,18 @@ class bzPanelCityDetails {
                 // switch focus to the selected tab
                 setTimeout(() => FocusManager.setFocus(this.slots.at(index)));
             }
+        }
+    }
+    removeCityLinkListeners() {
+        this.overviewSlot.querySelectorAll(".bz-city-link").forEach((link) => {
+            link.removeEventListener("action-activate", this.onCityLinkListener);
+        });
+    }
+    onCityLink(event) {
+        const link = event.target?.getAttribute("bz-city-id");
+        if (link) {
+            const id = JSON.parse(link);
+            UI.Player.selectCity(id);
         }
     }
 }
