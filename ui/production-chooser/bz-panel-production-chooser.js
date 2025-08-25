@@ -19,12 +19,14 @@ const BZ_HEAD_STYLE = [
 }
 .bz-city-hall .panel-production-chooser .subsystem-frame__content {
     padding-right: 0.2222222222rem;
+    margin-bottom: -0.3333333333rem;
 }
 .bz-city-hall .production-category {
     margin-right: 0.4444444444rem;
+    margin-bottom: 0.7222222222rem;
 }
-.bz-city-hall .production-category + .production-category {
-    margin-top: 0.4444444444rem;
+.bz-city-hall .production-category:last-child {
+    margin-bottom: 0;
 }
 .bz-city-hall .production-category > div > div.pl-3 {
     padding-left: 0;
@@ -35,23 +37,6 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-pci-details img.size-8 {
     width: 1.3333333333rem;
     height: 1.3333333333rem;
-}
-.bz-city-hall .bz-queue-progress {
-    border-image: url("fs://game/city_queue_bar_bk.png");
-    border-image-slice: 1;
-    border-width: 0.1111111111rem;
-    border-style: solid;
-    padding: 0 0.2222222222rem 0 0.3333333333rem;
-    margin-right: 0.1111111111rem;
-    background-image: url("fs://game/city_queue_bar.png");
-    background-size: cover;
-}
-.bz-city-hall .bz-queue-progress span.text-accent-4 {
-    color: #c2c4cc;
-}
-.bz-city-hall .bz-queue-progress span {
-    color: #e5e5e5;
-    filter: drop-shadow(0 0.0555555556rem 0.0555555556rem black);
 }
 .bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
@@ -260,7 +245,7 @@ class bzProductionChooserScreen {
         Databind.classToggle(nameWrapper, "bz-no-help", "!{{g_NavTray.isTrayRequired}}");
         Databind.classToggle(nameWrapper, "bz-nav-help", "{{g_NavTray.isTrayRequired}}");
         nameWrapper.classList.add("mx-2");
-        // compact matching Production/Purchase headings
+        // make Production/Purchase tabs more compact and consistent
         const tabs = JSON.parse(c.productionPurchaseTabBar.getAttribute("tab-items"));
         tabs.forEach(t => t.className = "px-2 text-sm tracking-100");
         c.productionPurchaseTabBar.setAttribute("tab-items", JSON.stringify(tabs));
@@ -295,10 +280,11 @@ class bzProductionChooserItem {
     static c_render;
     comma = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL_COMMA", 0).at(2);
     data = {};
-    costColumn = document.createElement("div");
     pCostContainer = document.createElement("div");
     pCostIconElement = document.createElement("span");
     pCostAmountElement = document.createElement("span");
+    progressBar = document.createElement("div");
+    progressBarFill = document.createElement("div");
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
@@ -386,7 +372,26 @@ class bzProductionChooserItem {
         c.secondaryDetailsElement.classList.value = "invisible flex font-body-xs mb-1 bz-pci-details";
         infoContainer.appendChild(c.secondaryDetailsElement);
         c.container.appendChild(infoContainer);
-        this.costColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
+        // progress bar
+        this.progressBar.classList.add(
+            "build-queue__item-progress-bar",
+            "relative",
+            "p-0\\.5",
+            "flex",
+            "flex-col-reverse",
+            "h-10",
+            "w-4",
+            "bg-contain",
+            "mr-2",
+            "hidden",
+        );
+        this.progressBarFill.classList.add("build-queue__progress-bar-fill", "relative", "bg-contain", "w-3");
+        this.progressBar.appendChild(this.progressBarFill);
+        this.progressBarFill.style.heightPERCENT = 100;
+        c.container.appendChild(this.progressBar);
+        // production and purchase costs
+        const rightColumn = document.createElement("div");
+        rightColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
         this.pCostContainer.classList.value = "flex items-center";
         this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
         this.pCostContainer.appendChild(this.pCostAmountElement);
@@ -395,15 +400,15 @@ class bzProductionChooserItem {
             .setProperty("background-image", "url(Yield_Production)");
         this.pCostIconElement.ariaLabel = Locale.compose("LOC_YIELD_GOLD");
         this.pCostContainer.appendChild(this.pCostIconElement);
-        this.costColumn.appendChild(this.pCostContainer);
+        rightColumn.appendChild(this.pCostContainer);
         c.costContainer.classList.value = "flex items-center";
         c.costAmountElement.classList.value = "font-title-sm mr-1";
         c.costContainer.appendChild(c.costAmountElement);
         c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat -m-1";
         c.costContainer.appendChild(c.costIconElement);
-        this.costColumn.appendChild(this.pCostContainer);
-        this.costColumn.appendChild(c.costContainer);
-        c.container.appendChild(this.costColumn);
+        rightColumn.appendChild(this.pCostContainer);
+        rightColumn.appendChild(c.costContainer);
+        c.container.appendChild(rightColumn);
     }
     updateProductionCost() {
         if (!this.data.type) return;
@@ -416,8 +421,10 @@ class bzProductionChooserItem {
             case "wonders": {
                 const cost = city.Production?.getConstructibleProductionCost(type);
                 const progress = city.BuildQueue?.getProgress(type) ?? 0;
+                const percent = city.BuildQueue?.getPercentComplete(type) ?? 0;
                 this.data.productionCost = cost - progress;
-                this.costColumn.classList.toggle("bz-queue-progress", progress);
+                this.progressBar.classList.toggle("hidden", progress <= 0);
+                this.progressBarFill.style.heightPERCENT = percent;
                 break;
             }
             case "units":
