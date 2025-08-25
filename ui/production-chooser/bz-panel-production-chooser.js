@@ -1,8 +1,7 @@
-// TODO: shift scrollbar to the right
-// TOOD: item sorting
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
-import { D as Databind } from '../../../core/ui/utilities/utilities-core-databinding.chunk.js';
-import FocusManager from '../../../core/ui/input/focus-manager.js';
+import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
+import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
+import FocusManager from '/core/ui/input/focus-manager.js';
 
 // TODO: verify these goals
 // decorate ProductionChooserScreen to:
@@ -180,13 +179,6 @@ class bzProductionChooserScreen {
         };
         Object.defineProperty(proto, "items", items);
     }
-    unitSortValue(type) {
-        // unit value for sorting
-        const stats = GameInfo.Unit_Stats.lookup(type);
-        // sort by combat value.  negative value (civilian) sorts first.
-        const combatValue = stats?.RangedCombat || stats?.Combat || -1;
-        return combatValue;
-    }
     sortItems(list) {
         for (const item of list) {
             const type = Game.getHash(item.type);
@@ -194,11 +186,11 @@ class bzProductionChooserScreen {
             const city = cityID && Cities.get(cityID);
             const progress = city?.BuildQueue?.getProgress(type) ?? 0;
             const consInfo = GameInfo.Constructibles.lookup(type);
-            const unitInfo = GameInfo.Units.lookup(type);
             // TODO: units
             if (progress) {  // show in-progress items first
                 item.sortTier = 9;
-            } else if (unitInfo) {
+            } else if (item.category == "units") {
+                const unitInfo = GameInfo.Units.lookup(type);
                 const unitStats = GameInfo.Unit_Stats.lookup(type);
                 const cv = unitInfo.CanEarnExperience ? Number.MAX_VALUE :
                     unitStats?.RangedCombat || unitStats?.Combat || 0;
@@ -221,6 +213,13 @@ class bzProductionChooserScreen {
                 item.sortTier = -1;
             } else {
                 item.sortTier = 0;
+            }
+            if (item.category == "buildings") {
+                const info = GameInfo.Constructibles.lookup(type);
+                const yields = BuildingPlacementManager
+                    .getBestYieldForConstructible(city.id, info);
+                yields.sort((a, b) => b - a);
+                item.sortValue = yields.reduce((a, b, i) => a + b/(i+1), 0);
             }
         }
         list.sort((a, b) => {
@@ -471,13 +470,11 @@ class bzProductionChooserItem {
         if (!info) return;
         const isRepair = this.data.name != info.Name || this.data.type == "IMPROVEMENT_REPAIR_ALL";
         const isAgeless = this.data.ageless && !isRepair;
-        const c = this.component;
-        c.itemNameElement.classList.toggle("bz-city-repair", isRepair);
-        c.itemNameElement.classList.toggle("text-accent-2", !isAgeless && !isRepair);
-        c.itemNameElement.classList.toggle("text-gradient-secondary", isAgeless && !isRepair);
+        const cname = this.component.itemNameElement;
+        cname.classList.toggle("bz-city-repair", isRepair);
+        cname.classList.toggle("text-accent-2", !isAgeless && !isRepair);
+        cname.classList.toggle("text-gradient-secondary", isAgeless && !isRepair);
         this.component.agelessContainer.classList.toggle("hidden", !isAgeless);
-
-        console.warn(`TRIX B ${Object.keys(info)}`);
     }
     updateProductionCost() {
         if (!this.data.type) return;
