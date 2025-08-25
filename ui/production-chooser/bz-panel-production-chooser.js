@@ -15,7 +15,7 @@ const BZ_HEAD_STYLE = [
     min-width: 28.4444444444rem;
     max-width: 28.4444444444rem;
 }
-.bz-city-compact .production-category .pl-3 {
+.bz-city-compact .production-category .pl-3.shrink-0 {
     padding-left: 0;
 }
 .bz-city-hall .bz-pci-details img.size-8 {
@@ -145,20 +145,37 @@ class bzProductionChooserScreen {
             set(value) {
                 // sort items
                 for (const list of Object.values(value)) {
-                    list.sort((a, b) => {
-                        // TODO: assign sort tiers and values
-                        if (a.sortTier != b.sortTier) return b.sortTier - a.sortTier;
-                        if (a.sortValue != b.sortValue) return b.sortValue - a.sortValue;
-                        // sort by name
-                        const aName = Locale.compose(a.name);
-                        const bName = Locale.compose(b.name);
-                        return aName.localeCompare(bName);
-                    });
+                    this.bzComponent.sortItems(list);
                 }
+                // call vanilla property
                 c_items.set.apply(this, [value]);
+                // adjust UQ formatting
+                if (this.uniqueQuarter) this.bzComponent.afterUniqueQuarter();
             },
         };
         Object.defineProperty(proto, "items", items);
+    }
+    sortItems(list) {
+        list.sort((a, b) => {
+            // TODO: assign sort tiers and values
+            if (a.sortTier != b.sortTier) return b.sortTier - a.sortTier;
+            if (a.sortValue != b.sortValue) return b.sortValue - a.sortValue;
+            // sort by name
+            const aName = Locale.compose(a.name);
+            const bName = Locale.compose(b.name);
+            return aName.localeCompare(bName);
+        });
+    }
+    afterUniqueQuarter() {
+        const uq = this.component.uniqueQuarter;
+        uq.uqInfoCols.className = "production-chooser-item flex items-center mx-2 mb-2 hover\\:text-secondary-1 focus\\:text-secondary-1";
+        const uqCol1 = uq.uqInfoCols.firstChild;
+        uqCol1.className = "size-10 ml-2\\.5 mr-3";
+        uq.nameElement.className = "font-title-sm leading-tight uppercase text-gradient-secondary transition-color";
+        const labelElement = uq.nameElement.nextSibling;
+        labelElement.className = "font-body-xs leading-tight transition-color";
+        uq.completionStatusText.className = "font-body text-xs leading-tight transition-color";
+        uq.buildingContainer.className = "flex flex-col pl-2\\.5";
     }
     beforeAttach() {
         // replace event handlers to fix nav-help glitches
