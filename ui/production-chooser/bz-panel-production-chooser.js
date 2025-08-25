@@ -1,3 +1,5 @@
+// TODO: shift scrollbar to the right
+// TOOD: item sorting
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
 import { D as Databind } from '../../../core/ui/utilities/utilities-core-databinding.chunk.js';
 import FocusManager from '../../../core/ui/input/focus-manager.js';
