@@ -19,12 +19,6 @@
         <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT_DESCRIPTION">
             <Text>Streamlines the city production panel.</Text>
         </Replace>
-        <Replace Tag="LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS">
-            <Text>City Hall • one click repairs</Text>
-        </Replace>
-        <Replace Tag="LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS_DESCRIPTION">
-            <Text>When there is only one possible location for a repair, skip the building placement interface.</Text>
-        </Replace>
         <Replace Tag="LOC_OPTIONS_GROUP_BZ_MODS">
             <Text>trixie's mods</Text>
         </Replace>

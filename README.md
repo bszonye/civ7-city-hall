@@ -6,7 +6,6 @@ new and improved features:
 
 - color-coded city views with buildings and adjacency bonuses
 - unique quarter assistant
-- one-click repairs
 - compact production list and building breakdown
 - production list sorted by total yield, combat strength, and cost
 - building breakdown sorted by improvement and wonder names
@@ -37,24 +36,11 @@ orange hexes to warn you before blocking a unique quarter by:
 the interface now recognizes unique buildings in progress and in the
 production queue, to help you plan both buildings at the same time.
 
-## one-click repairs
-when your city needs repairs, you can buy them with just one click.
-
-- repairs always appear at the top of the production list, highlighted
-- you don't need to select a tile unless there's more than one choice
-
 ## compatibility with other mods
 known interactions:
 
-- **Sukritact's Simple UI Adjustments: no conflicts.**
 - **F1rstDan's Cool UI: no conflicts.** when both mods are installed,
   you can use the Options menu to customize production list styling.
-- **MantisMaestro's Compact Production Chooser: mostly compatible.**
-  when both mods are installed, MM's production list replaces the City
-  Hall version, which also disables some features like one-click
-  repairs.
-- **Slothoth's Abbreviated Repair: incompatible,** but City Hall
-  provides an equivalent feature, one-click repairs.
 
 ## localization
 supported languages:
