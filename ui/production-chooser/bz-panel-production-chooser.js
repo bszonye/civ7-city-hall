@@ -395,10 +395,13 @@ class bzProductionChooserItem {
         if (!city) return;
         switch (this.data.category) {
             case "buildings":
-            case "wonders":
-                this.data.productionCost =
-                    city.Production?.getConstructibleProductionCost(this.data.type);
+            case "wonders": {
+                const type = Game.getHash(this.data.type);
+                const cost = city.Production?.getConstructibleProductionCost(type);
+                const progress = city.BuildQueue?.getProgress(type) ?? 0;
+                this.data.productionCost = cost - progress;
                 break;
+            }
             case "units":
                 this.data.productionCost =
                     city.Production?.getUnitProductionCost(this.data.type);
