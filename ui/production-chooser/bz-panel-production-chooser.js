@@ -17,8 +17,20 @@ const BZ_HEAD_STYLE = [
     min-width: 28.4444444444rem;
     max-width: 28.4444444444rem;
 }
-.bz-city-compact .production-category .pl-3.shrink-0 {
+.bz-city-hall .panel-production-chooser .subsystem-frame__content {
+    padding-right: 0.2222222222rem;
+}
+.bz-city-hall .production-category {
+    margin-right: 0.4444444444rem;
+}
+.bz-city-hall .production-category + .production-category {
+    margin-top: 0.2222222222rem;
+}
+.bz-city-hall .production-category > div > div.pl-3 {
     padding-left: 0;
+}
+.bz-city-hall .panel-production-chooser .fxs-scrollbar__track--vertical {
+    margin-left: -0.2222222222rem;
 }
 .bz-city-hall .bz-pci-details img.size-8 {
     width: 1.3333333333rem;
@@ -393,7 +405,7 @@ class bzProductionChooserItem {
                 break;
             default:
                 this.data.productionCost = void 0;
-                return;
+                break;
         }
         const pcost = this.data.productionCost;
         const hide = isNaN(pcost) || pcost < 0;
