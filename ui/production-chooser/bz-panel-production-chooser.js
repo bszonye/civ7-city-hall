@@ -34,6 +34,15 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .panel-production-chooser .fxs-scrollbar__track--vertical {
     margin-left: -0.2222222222rem;
 }
+.bz-city-hall .bz-city-repair {
+    color: black;
+    background-color: #cea92f;
+    font-weight: 700;
+    line-height: 1.5;
+    border-radius: 1rem;
+    padding: 0 0.5rem;
+    margin: 0.2222222222rem 0;
+}
 .bz-city-hall .bz-pci-details img.size-8 {
     width: 1.3333333333rem;
     height: 1.3333333333rem;
@@ -171,14 +180,56 @@ class bzProductionChooserScreen {
         };
         Object.defineProperty(proto, "items", items);
     }
+    unitSortValue(type) {
+        // unit value for sorting
+        const stats = GameInfo.Unit_Stats.lookup(type);
+        // sort by combat value.  negative value (civilian) sorts first.
+        const combatValue = stats?.RangedCombat || stats?.Combat || -1;
+        return combatValue;
+    }
     sortItems(list) {
+        for (const item of list) {
+            const type = Game.getHash(item.type);
+            const cityID = UI.Player.getHeadSelectedCity();
+            const city = cityID && Cities.get(cityID);
+            const progress = city?.BuildQueue?.getProgress(type) ?? 0;
+            const consInfo = GameInfo.Constructibles.lookup(type);
+            const unitInfo = GameInfo.Units.lookup(type);
+            // TODO: units
+            if (progress) {  // show in-progress items first
+                item.sortTier = 9;
+            } else if (unitInfo) {
+                const unitStats = GameInfo.Unit_Stats.lookup(type);
+                const cv = unitInfo.CanEarnExperience ? Number.MAX_VALUE :
+                    unitStats?.RangedCombat || unitStats?.Combat || 0;
+                item.sortTier =
+                    unitInfo.FoundCity ? 2 :  // settlers
+                    unitInfo.CoreClass == "CORE_CLASS_RECON" ? 1 :  // scouts
+                    cv <= 0 ? 0 :  // civilians
+                    unitInfo.Domain == "DOMAIN_LAND" ? -1 :
+                    unitInfo.Domain == "DOMAIN_SEA" ? -2 :
+                    unitInfo.Domain == "DOMAIN_AIR" ? -3 :
+                    9;  // unknown (list first for investigation)
+                item.sortValue = cv;
+            } else if (item.type == "IMPROVEMENT_REPAIR_ALL") {
+                item.sortTier = 3;
+            } else if (item.repairDamaged) {
+                item.sortTier = 2;
+            } else if (consInfo?.ConstructibleClass == "IMPROVEMENT") {
+                item.sortTier = 1;
+            } else if (item.ageless) {
+                item.sortTier = -1;
+            } else {
+                item.sortTier = 0;
+            }
+        }
         list.sort((a, b) => {
             // TODO: assign sort tiers and values
             if (a.sortTier != b.sortTier) return b.sortTier - a.sortTier;
             if (a.sortValue != b.sortValue) return b.sortValue - a.sortValue;
             // sort by name
-            const aName = Locale.compose(a.name);
-            const bName = Locale.compose(b.name);
+            const aName = Locale.compose(a.name).toUpperCase();
+            const bName = Locale.compose(b.name).toUpperCase();
             return aName.localeCompare(bName);
         });
     }
@@ -320,15 +371,18 @@ class bzProductionChooserItem {
     beforeDetach() { }
     afterDetach() { }
     onAttributeChanged(name, _oldValue, newValue) {
-        const c = this.component;
         switch (name) {
             case "data-category":
                 this.data.category = newValue;
                 this.updateProductionCost();
                 break;
-            // case "data-name":
+            case "data-name":
+                this.data.name = newValue;
+                this.updateName();
+                break;
             case "data-type":
                 this.data.type = newValue;
+                this.updateName();
                 this.updateProductionCost();
                 break;
             // case "data-cost":
@@ -337,10 +391,8 @@ class bzProductionChooserItem {
             // case "data-error":
             // case "data-is-purchase":
             case "data-is-ageless": {
-                const isAgeless = newValue === "true";
-                this.component.agelessContainer.classList.toggle("hidden", !isAgeless);
-                c.itemNameElement.classList.toggle("text-accent-2", !isAgeless);
-                c.itemNameElement.classList.toggle("text-gradient-secondary", isAgeless);
+                this.data.ageless = newValue === "true";
+                this.updateName();
                 return false;
             }
             // case "data-secondary-details":
@@ -355,7 +407,8 @@ class bzProductionChooserItem {
         c.iconElement.classList.value = "size-12 bg-contain bg-center bg-no-repeat m-1";
         c.container.appendChild(c.iconElement);
         const infoContainer = document.createElement("div");
-        infoContainer.classList.value = "relative flex flex-col flex-auto justify-between";
+        infoContainer.classList.value = "relative flex flex-col flex-auto justify-center";
+        // name and ageless/advisor icons
         const nameContainer = document.createElement("div");
         nameContainer.classList.value = "flex justify-start items-center";
         c.itemNameElement.classList.value = "font-title-xs text-accent-2 m-1 uppercase";
@@ -367,9 +420,11 @@ class bzProductionChooserItem {
         c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 -my-2";
         nameContainer.appendChild(c.recommendationsContainer);
         infoContainer.appendChild(nameContainer);
+        // error messages
         c.errorTextElement.classList.value = "font-body-xs text-negative-light mx-1 -mt-1 z-1 pointer-events-none";
         infoContainer.appendChild(c.errorTextElement);
-        c.secondaryDetailsElement.classList.value = "invisible flex font-body-xs mt-0\\.5 mb-1 bz-pci-details";
+        // yields and unit stats
+        c.secondaryDetailsElement.classList.value = "invisible flex font-body-xs my-0\\.5 bz-pci-details";
         infoContainer.appendChild(c.secondaryDetailsElement);
         c.container.appendChild(infoContainer);
         // progress bar
@@ -409,6 +464,21 @@ class bzProductionChooserItem {
         rightColumn.appendChild(c.costContainer);
         c.container.appendChild(rightColumn);
     }
+    updateName() {
+        if (!this.data.name || !this.data.type) return;
+        const type = Game.getHash(this.data.type);
+        const info = GameInfo.Constructibles.lookup(type);
+        if (!info) return;
+        const isRepair = this.data.name != info.Name || this.data.type == "IMPROVEMENT_REPAIR_ALL";
+        const isAgeless = this.data.ageless && !isRepair;
+        const c = this.component;
+        c.itemNameElement.classList.toggle("bz-city-repair", isRepair);
+        c.itemNameElement.classList.toggle("text-accent-2", !isAgeless && !isRepair);
+        c.itemNameElement.classList.toggle("text-gradient-secondary", isAgeless && !isRepair);
+        this.component.agelessContainer.classList.toggle("hidden", !isAgeless);
+
+        console.warn(`TRIX B ${Object.keys(info)}`);
+    }
     updateProductionCost() {
         if (!this.data.type) return;
         const cityID = UI.Player.getHeadSelectedCity();
@@ -429,12 +499,16 @@ class bzProductionChooserItem {
                 this.data.productionCost =
                     city.Production?.getUnitProductionCost(type) - progress;
                 break;
+            case "projects":
+                this.data.productionCost =
+                    city.Production?.getProjectProductionCost(type) - progress;
+                break;
             default:
                 this.data.productionCost = void 0;
                 break;
         }
         const pcost = this.data.productionCost;
-        const hide = isNaN(pcost) || pcost < 0;
+        const hide = isNaN(pcost) || pcost <= 0;
         this.pCostContainer.classList.toggle("hidden", hide);
         this.pCostAmountElement.textContent = pcost;
     }
