@@ -439,11 +439,9 @@ class bzProductionChooserItem {
     onAttributeChanged(name, _oldValue, newValue) {
         switch (name) {
             case "disabled":
-                if (newValue === "true") return this.fixRepairAll(name);
+                if (newValue === "true") return this.fixRepairAll();
                 break;
-            case "data-category":
-                this.updateProductionCost();
-                break;
+            // case "data-category":
             case "data-name":
                 this.updateInfo();
                 break;
@@ -455,10 +453,9 @@ class bzProductionChooserItem {
             // case "data-prereq":
             // case "data-description":
             case "data-error":
-                if (newValue) return this.fixRepairAll(name);
+                if (newValue) return this.fixRepairAll();
                 break;
-            case "data-is-purchase":
-                break;
+            // case "data-is-purchase":
             case "data-is-ageless": {
                 this.updateInfo();
                 return false;
@@ -535,7 +532,7 @@ class bzProductionChooserItem {
         costColumn.appendChild(c.costContainer);
         c.container.appendChild(costColumn);
     }
-    fixRepairAll(attr) {
+    fixRepairAll() {
         // fix insufficient funds error on the Production tab
         const e = this.component.Root;
         if (e.getAttribute("disabled") !== "true" ||
@@ -546,8 +543,7 @@ class bzProductionChooserItem {
         }
         e.setAttribute("disabled", "false");
         e.removeAttribute("data-error");
-        // block incorrect attribute updates
-        return !(attr == "disabled" || attr == "data-error");
+        return false;  // block incorrect attribute updates
     }
     updateInfo() {
         const c = this.component;
