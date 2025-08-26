@@ -4,14 +4,13 @@ better city & town tools for Civilization VII
 ## improved production list and city details
 new and improved features:
 
-- color-coded city views with buildings and adjacency bonuses
-- unique quarter assistant
+- City Overview tab with extra stats and clickable connections
 - compact production list and building breakdown
-- production list sorted by total yield, combat strength, and cost
-- building breakdown sorted by improvement and wonder names
-- a new City Overview tab showing demographics and connected settlements
+- better city maps and overlays
+- unique quarter assistant
+- improved controller interface
 
-## better map view
+## better city maps
 see your settlements clearly with gentle shading outside city limits and
 brighter colors for developed tiles:
 
@@ -20,10 +19,7 @@ brighter colors for developed tiles:
 - teal for offshore improvements
 - green for other rural improvements
 
-the center stays purple in building placement mode, to help you stay
-oriented.  (it turns a darker purple if you can't build in the center.)
-the city map shows building icons in the main view, and the buildings
-have flags with their adjacency bonus yields.
+all overlays show white outlines around the city center and urban core.
 
 ## unique quarter assistant
 guides unique building construction in the building interface, with
