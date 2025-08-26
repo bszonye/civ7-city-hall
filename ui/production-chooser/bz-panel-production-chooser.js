@@ -3,6 +3,10 @@ import { BuildingPlacementManager } from '/base-standard/ui/building-placement/b
 import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
 import FocusManager from '/core/ui/input/focus-manager.js';
 
+const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";
+const BZ_REPAIR_ALL_ID = Game.getHash(BZ_REPAIR_ALL);
+const BZ_INSUFFICIENT_FUNDS = "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS";
+
 // color palette
 const BZ_COLOR = {
     // game colors
@@ -266,7 +270,7 @@ class bzProductionChooserScreen {
                     unitInfo.Domain == "DOMAIN_AIR" ? -3 :
                     9;  // unknown (list first for investigation)
                 item.sortValue = cv;
-            } else if (item.type == "IMPROVEMENT_REPAIR_ALL") {
+            } else if (type == BZ_REPAIR_ALL_ID) {
                 item.sortTier = 8;
                 item.sortValue = 0;
             } else if (item.repairDamaged) {
@@ -393,7 +397,6 @@ class bzProductionChooserItem {
     static c_prototype;
     static c_render;
     comma = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL_COMMA", 0).at(2);
-    data = {};
     pCostContainer = document.createElement("div");
     pCostIconElement = document.createElement("span");
     pCostAmountElement = document.createElement("span");
@@ -435,17 +438,17 @@ class bzProductionChooserItem {
     afterDetach() { }
     onAttributeChanged(name, _oldValue, newValue) {
         switch (name) {
+            case "disabled":
+                if (newValue === "true") return this.fixRepairAll(name);
+                break;
             case "data-category":
-                this.data.category = newValue;
                 this.updateProductionCost();
                 break;
             case "data-name":
-                this.data.name = newValue;
                 this.updateInfo();
                 break;
             case "data-type":
-                this.data.type = newValue;
-                this.fixRepairAll();
+                this.fixRepairAll(name);
                 this.updateInfo();
                 this.updateProductionCost();
                 break;
@@ -453,21 +456,17 @@ class bzProductionChooserItem {
             // case "data-prereq":
             // case "data-description":
             case "data-error":
-                this.data.error = newValue;
-                if (this.fixRepairAll()) return false;
+                if (newValue) return this.fixRepairAll(name);
                 break;
             case "data-is-purchase":
-                this.data.isPurchase = newValue === "true";
-                this.fixRepairAll();
+                this.fixRepairAll(name);
                 break;
             case "data-is-ageless": {
-                this.data.isAgeless = newValue === "true";
                 this.updateInfo();
                 return false;
             }
             // case "data-secondary-details":
             case "data-secondary-details": {
-                this.data.details = newValue;
                 this.updateInfo();
                 return false;
             }
@@ -538,72 +537,82 @@ class bzProductionChooserItem {
         costColumn.appendChild(c.costContainer);
         c.container.appendChild(costColumn);
     }
-    fixRepairAll() {
+    fixRepairAll(attr) {
         // fix insufficient funds error on the Production tab
-        if (this.data.isPurchase) return;
-        if (this.data.type != "IMPROVEMENT_REPAIR_ALL") return;
-        if (this.data.error != "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS") return;
-        const c = this.component;
-        // clear disabled attribute
-        c.Root.setAttribute("disabled", "false");
-        c.Root.classList.remove("fxs-chooser-item-disabled");
-        // clear data-error attribute
-        this.data.error = undefined;
-        c.errorTextElement.classList.add("hidden");
-        c.errorTextElement.removeAttribute("data-l10n-id");
-        c.Root.removeAttribute("data-error");
-        // block data-error update
-        return true;
+        const e = this.component.Root;
+        if (e.getAttribute("disabled") !== "true" ||
+            e.getAttribute("data-is-purchase") === "true" ||
+            e.getAttribute("data-type") != BZ_REPAIR_ALL ||
+            e.getAttribute("data-error") != BZ_INSUFFICIENT_FUNDS) {
+            return true;  // continue onAttributeChanged chain
+        }
+        console.warn(`TRIX FIX =======================================================`);
+        e.setAttribute("disabled", "false");
+        e.removeAttribute("data-error");
+        console.warn(`TRIX FIX =======================================================`);
+        // block incorrect attribute updates
+        return !(attr == "disabled" || attr == "data-error");
     }
     updateInfo() {
-        if (!this.data.name || !this.data.type) return;
         const c = this.component;
-        const type = Game.getHash(this.data.type);
+        // get attributes
+        const e = c.Root;
+        const dataType = e.getAttribute("data-type");
+        const type = Game.getHash(dataType);
         const info = GameInfo.Constructibles.lookup(type);
         if (!info) return;
-        const isRepair = this.data.name != info.Name || this.data.type == "IMPROVEMENT_REPAIR_ALL";
-        const isAgeless = this.data.isAgeless && !isRepair;
-        const cname = this.component.itemNameElement;
+        const dataName = e.getAttribute("data-name");
+        const dataIsAgeless = e.getAttribute("data-is-ageless") === "true";
+        const dataSecondaryDetails = e.getAttribute("data-secondary-details");
+        // interpret attributes
+        const isRepair = type == BZ_REPAIR_ALL_ID || dataName != info.Name;
+        const isAgeless = dataIsAgeless && !isRepair;
+        const details = !isRepair && dataSecondaryDetails || "";
+        const cname = c.itemNameElement;
         cname.classList.toggle("bz-city-repair", isRepair);
         cname.classList.toggle("text-accent-2", !isAgeless && !isRepair);
         cname.classList.toggle("text-gradient-secondary", isAgeless && !isRepair);
         c.agelessContainer.classList.toggle("hidden", !isAgeless);
-        const details = !isRepair && this.data.details || "";
         c.secondaryDetailsElement.innerHTML = details;
         c.secondaryDetailsElement.classList.toggle("hidden", !details);
     }
     updateProductionCost() {
-        if (!this.data.type) return;
         const cityID = UI.Player.getHeadSelectedCity();
         const city = cityID && Cities.get(cityID);
         if (!city) return;
-        const type = Game.getHash(this.data.type);
+        const c = this.component;
+        // get attributes
+        const e = c.Root;
+        const dataCategory = e.getAttribute("data-category");
+        const dataType = e.getAttribute("data-type");
+        const type = Game.getHash(dataType);
         const progress = city.BuildQueue?.getProgress(type) ?? 0;
         const percent = city.BuildQueue?.getPercentComplete(type) ?? 0;
         this.progressBar.classList.toggle("hidden", progress <= 0);
         this.progressBarFill.style.heightPERCENT = percent;
-        switch (this.data.category) {
+        const update = (base) => {
+            if (isNaN(base)) {
+                this.pCostContainer.classList.add("hidden");
+                return;
+            }
+            this.pCostContainer.classList.remove("hidden");
+            this.pCostAmountElement.textContent = base - progress;
+        }
+        switch (dataCategory) {
             case "buildings":
             case "wonders":
-                this.data.productionCost =
-                    city.Production?.getConstructibleProductionCost(type) - progress;
+                update(city.Production?.getConstructibleProductionCost(type));
                 break;
             case "units":
-                this.data.productionCost =
-                    city.Production?.getUnitProductionCost(type) - progress;
+                update(city.Production?.getUnitProductionCost(type));
                 break;
             case "projects":
-                this.data.productionCost =
-                    city.Production?.getProjectProductionCost(type) - progress;
+                update(city.Production?.getProjectProductionCost(type));
                 break;
             default:
-                this.data.productionCost = void 0;
+                this.pCostContainer.classList.add("hidden");
                 break;
         }
-        const pcost = this.data.productionCost;
-        const hide = isNaN(pcost) || pcost <= 0;
-        this.pCostContainer.classList.toggle("hidden", hide);
-        this.pCostAmountElement.textContent = pcost;
     }
 }
 Controls.decorate("production-chooser-item", (val) => new bzProductionChooserItem(val));
