@@ -171,7 +171,6 @@ proto.findExistingUniqueBuilding = function(uniqueQuarterDef) {
     ].filter(ub => ub);  // eliminate empty/null/undefined buildings
     // match UQ buildings by their hashed constructible IDs
     const ubset = new Set(ublist.map(ub => Game.getHash(ub)));
-    console.warn(`TRIX UQ ${ublist} ${[...ubset]}`);
     if (!ubset.size) return -1;  // no unique quarter
     // check for a unique building in progress
     for (const ConstructibleType of ubset) {
@@ -181,14 +180,12 @@ proto.findExistingUniqueBuilding = function(uniqueQuarterDef) {
     }
     // check the production queue
     const queued = city.BuildQueue?.getQueue().find(q => ubset.has(q.constructibleType));
-    console.warn(`TRIX QUEUE ${JSON.stringify(queued)}`);
     if (queued) return GameplayMap.getIndexFromLocation(queued.location);
     // check the finished buildings
     for (const id of city.Constructibles.getIds()) {
-        const cons = Constructibles.getByComponentID(id);
-        if (cons && ubset.has(cons.type)) {
-            console.warn(`TRIX CONS ${JSON.stringify(id)} = ${JSON.stringify(cons)}`);
-            return GameplayMap.getIndexFromLocation(cons.location);
+        const con = Constructibles.getByComponentID(id);
+        if (con && ubset.has(con.type)) {
+            return GameplayMap.getIndexFromLocation(con.location);
         }
     }
     // not found
