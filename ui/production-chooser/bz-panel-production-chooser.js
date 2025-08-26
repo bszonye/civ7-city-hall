@@ -92,9 +92,10 @@ const BZ_HEAD_STYLE = [
     color: black;
     background-color: ${BZ_COLOR.caution};
     font-weight: 700;
+    line-height: 1.625;
     border-radius: 1rem;
-    padding: 0.1111111111rem 0.5rem;
-    margin: 0.1111111111rem 0;
+    padding: 0 0.5rem;
+    margin: 0.2777777778rem 0 0.3333333333rem;
 }
 .bz-city-hall .bz-pci-ageless {
     background-image: url("fs://game/city_ageless.png");
@@ -242,7 +243,7 @@ class bzProductionChooserScreen {
         const city = cityID && Cities.get(cityID);
         if (!city) return;
         const buildingTier = (item, info) =>
-            info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.ageless ? -1 : 0;
+            info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.isAgeless ? -1 : 0;
         for (const item of list) {
             const type = Game.getHash(item.type);
             const progress = city.BuildQueue?.getProgress(type) ?? 0;
@@ -435,7 +436,6 @@ class bzProductionChooserItem {
     beforeDetach() { }
     afterDetach() { }
     onAttributeChanged(name, _oldValue, newValue) {
-        const c = this.component;
         switch (name) {
             case "data-category":
                 this.data.category = newValue;
@@ -443,32 +443,34 @@ class bzProductionChooserItem {
                 break;
             case "data-name":
                 this.data.name = newValue;
-                this.updateName();
+                this.updateInfo();
                 break;
             case "data-type":
                 this.data.type = newValue;
-                this.updateName();
+                this.fixRepairAll();
+                this.updateInfo();
                 this.updateProductionCost();
                 break;
             // case "data-cost":
             // case "data-prereq":
             // case "data-description":
-            // case "data-error":
-            // case "data-is-purchase":
+            case "data-error":
+                this.data.error = newValue;
+                if (this.fixRepairAll()) return false;
+                break;
+            case "data-is-purchase":
+                this.data.isPurchase = newValue === "true";
+                this.fixRepairAll();
+                break;
             case "data-is-ageless": {
-                this.data.ageless = newValue === "true";
-                this.updateName();
+                this.data.isAgeless = newValue === "true";
+                this.updateInfo();
                 return false;
             }
             // case "data-secondary-details":
             case "data-secondary-details": {
-                // TODO: not on repairs
-                if (newValue) {
-                    c.secondaryDetailsElement.innerHTML = newValue;
-                    c.secondaryDetailsElement.classList.remove("hidden");
-                } else {
-                    c.secondaryDetailsElement.classList.add("hidden");
-                }
+                this.data.details = newValue;
+                this.updateInfo();
                 return false;
             }
             // case "data-recommendations":
@@ -495,10 +497,10 @@ class bzProductionChooserItem {
         nameContainer.appendChild(c.recommendationsContainer);
         infoColumn.appendChild(nameContainer);
         // error messages
-        c.errorTextElement.classList.value = "bz-pci-error hidden font-body-xs text-negative-light mx-1 -mt-1 z-1 pointer-events-none";
+        c.errorTextElement.classList.value = "bz-pci-error hidden font-body-xs text-negative-light mx-1 -mt-1 mb-1 z-1 pointer-events-none";
         infoColumn.appendChild(c.errorTextElement);
         // yields and unit stats
-        c.secondaryDetailsElement.classList.value = "bz-pci-details hidden flex font-body-xs -mt-0\\.5";
+        c.secondaryDetailsElement.classList.value = "bz-pci-details hidden flex font-body-xs -mt-1";
         infoColumn.appendChild(c.secondaryDetailsElement);
         c.container.appendChild(infoColumn);
         // progress bar
@@ -538,18 +540,39 @@ class bzProductionChooserItem {
         costColumn.appendChild(c.costContainer);
         c.container.appendChild(costColumn);
     }
-    updateName() {
+    fixRepairAll() {
+        // fix insufficient funds error on the Production tab
+        if (this.data.isPurchase) return;
+        if (this.data.type != "IMPROVEMENT_REPAIR_ALL") return;
+        if (this.data.error != "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS") return;
+        const c = this.component;
+        // clear disabled attribute
+        c.Root.setAttribute("disabled", "false");
+        c.Root.classList.remove("fxs-chooser-item-disabled");
+        // clear data-error attribute
+        this.data.error = undefined;
+        c.errorTextElement.classList.add("hidden");
+        c.errorTextElement.removeAttribute("data-l10n-id");
+        c.Root.removeAttribute("data-error");
+        // block data-error update
+        return true;
+    }
+    updateInfo() {
         if (!this.data.name || !this.data.type) return;
+        const c = this.component;
         const type = Game.getHash(this.data.type);
         const info = GameInfo.Constructibles.lookup(type);
         if (!info) return;
         const isRepair = this.data.name != info.Name || this.data.type == "IMPROVEMENT_REPAIR_ALL";
-        const isAgeless = this.data.ageless && !isRepair;
+        const isAgeless = this.data.isAgeless && !isRepair;
         const cname = this.component.itemNameElement;
         cname.classList.toggle("bz-city-repair", isRepair);
         cname.classList.toggle("text-accent-2", !isAgeless && !isRepair);
         cname.classList.toggle("text-gradient-secondary", isAgeless && !isRepair);
-        this.component.agelessContainer.classList.toggle("hidden", !isAgeless);
+        c.agelessContainer.classList.toggle("hidden", !isAgeless);
+        const details = !isRepair && this.data.details || "";
+        c.secondaryDetailsElement.innerHTML = details;
+        c.secondaryDetailsElement.classList.toggle("hidden", !details);
     }
     updateProductionCost() {
         if (!this.data.type) return;
