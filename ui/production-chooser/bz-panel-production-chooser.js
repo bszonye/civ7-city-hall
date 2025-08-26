@@ -84,9 +84,11 @@ const BZ_HEAD_STYLE = [
     margin-left: -0.2222222222rem;
 }
 .bz-city-hall .bz-pci-icon,
-.bz-city-hall .bz-pci-name,
 .bz-city-hall .bz-pci-cost {
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
+}
+.bz-city-hall .bz-pci-name {
+    text-shadow: 0 0.0555555556rem 0.1111111111rem black;
 }
 .bz-city-hall .bz-city-repair {
     color: black;
@@ -243,7 +245,7 @@ class bzProductionChooserScreen {
         const city = cityID && Cities.get(cityID);
         if (!city) return;
         const buildingTier = (item, info) =>
-            info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.isAgeless ? -1 : 0;
+            info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.ageless ? -1 : 0;
         for (const item of list) {
             const type = Game.getHash(item.type);
             const progress = city.BuildQueue?.getProgress(type) ?? 0;
