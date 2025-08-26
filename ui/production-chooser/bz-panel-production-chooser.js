@@ -84,11 +84,9 @@ const BZ_HEAD_STYLE = [
     margin-left: -0.2222222222rem;
 }
 .bz-city-hall .bz-pci-icon,
+.bz-city-hall .bz-pci-name,
 .bz-city-hall .bz-pci-cost {
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
-}
-.bz-city-hall .bz-pci-name {
-    text-shadow: 0 0.0555555556rem 0.1111111111rem black;
 }
 .bz-city-hall .bz-city-repair {
     color: black;
