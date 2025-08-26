@@ -13,11 +13,11 @@
         <Replace Tag="LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB" Language="fr_FR">
             <Text>Vue d'ensemble</Text>
         </Replace>
-        <Replace Tag="LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS" Language="fr_FR">
-            <Text>City Hall • réparations en un clic</Text>
+        <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT" Language="fr_FR">
+            <Text>City Hall • fenêtre de production compacte</Text>
         </Replace>
-        <Replace Tag="LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS_DESCRIPTION" Language="fr_FR">
-            <Text>Lorsqu'il n'y a qu'un seul emplacement possible pour une réparation, ignorez l'interface de placement du bâtiment.</Text>
+        <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT_DESCRIPTION" Language="fr_FR">
+            <Text>Réduit la taille de la fenêtre Production.</Text>
         </Replace>
         <Replace Tag="LOC_OPTIONS_GROUP_BZ_MODS" Language="fr_FR">
             <Text>mods de Trixie</Text>

@@ -1,18 +1,16 @@
-# City Hall 1.13.2
+# City Hall 2.0.0
 better city & town tools for Civilization VII
 
 ## improved production list and city details
 new and improved features:
 
-- color-coded city views with buildings and adjacency bonuses
-- unique quarter assistant
-- one-click repairs
+- City Overview tab with extra stats and clickable connections
 - compact production list and building breakdown
-- production list sorted by total yield, combat strength, and cost
-- building breakdown sorted by improvement and wonder names
-- a new City Overview tab showing demographics and connected settlements
+- better city maps and overlays
+- unique quarter assistant
+- improved controller interface
 
-## better map view
+## better city maps
 see your settlements clearly with gentle shading outside city limits and
 brighter colors for developed tiles:
 
@@ -21,10 +19,7 @@ brighter colors for developed tiles:
 - teal for offshore improvements
 - green for other rural improvements
 
-the center stays purple in building placement mode, to help you stay
-oriented.  (it turns a darker purple if you can't build in the center.)
-the city map shows building icons in the main view, and the buildings
-have flags with their adjacency bonus yields.
+all overlays show white outlines around the city center and urban core.
 
 ## unique quarter assistant
 guides unique building construction in the building interface, with
@@ -37,24 +32,11 @@ orange hexes to warn you before blocking a unique quarter by:
 the interface now recognizes unique buildings in progress and in the
 production queue, to help you plan both buildings at the same time.
 
-## one-click repairs
-when your city needs repairs, you can buy them with just one click.
-
-- repairs always appear at the top of the production list, highlighted
-- you don't need to select a tile unless there's more than one choice
-
 ## compatibility with other mods
 known interactions:
 
-- **Sukritact's Simple UI Adjustments: no conflicts.**
 - **F1rstDan's Cool UI: no conflicts.** when both mods are installed,
   you can use the Options menu to customize production list styling.
-- **MantisMaestro's Compact Production Chooser: mostly compatible.**
-  when both mods are installed, MM's production list replaces the City
-  Hall version, which also disables some features like one-click
-  repairs.
-- **Slothoth's Abbreviated Repair: incompatible,** but City Hall
-  provides an equivalent feature, one-click repairs.
 
 ## localization
 supported languages:

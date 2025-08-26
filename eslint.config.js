@@ -43,6 +43,7 @@ export default [
                 Input: "readonly",
                 InputActionStatuses: "readonly",
                 InputContext: "readonly",
+                InputDeviceType: "readonly",
                 InterfaceMode: "readonly",
                 Loading: "readonly",
                 Locale: "readonly",

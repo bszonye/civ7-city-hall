@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Mod id="bz-city-hall" version="11302"
+<Mod id="bz-city-hall" version="20000"
     xmlns="ModInfo">
     <Properties>
         <Name>LOC_MOD_BZ_CITY_HALL_NAME</Name>
-        <Version>1.13.2</Version>
+        <Version>2.0.0</Version>
         <Description>LOC_MOD_BZ_CITY_HALL_DESCRIPTION</Description>
         <Authors>beezany</Authors>
         <URL>https://forums.civfanatics.com/resources/city-hall.31946/</URL>
@@ -50,15 +50,18 @@
             </Properties>
             <Actions>
                 <ImportFiles>
-                    <Item>ui/building-placement/building-placement-manager.js</Item>
                     <Item>ui/interface-modes/interface-mode-place-building.js</Item>
                     <Item>ui/interface-modes/support-city-decoration.chunk.js</Item>
                     <Item>ui/lenses/layer/building-placement-layer.js</Item>
-                    <Item>ui/options/bz-city-hall-options.js</Item>
-                    <Item>ui/options/mod-options-decorator.js</Item>
                 </ImportFiles>
                 <UIScripts>
+                    <Item>ui/building-placement/bz-building-placement-manager.js</Item>
+                    <Item>ui/city-details/bz-model-city-details.js</Item>
+                    <Item>ui/city-details/bz-panel-city-details.js</Item>
                     <Item>ui/lenses/layer/bz-urban-layer.js</Item>
+                    <Item>ui/options/bz-city-hall-options.js</Item>
+                    <Item>ui/options/mod-options-decorator.js</Item>
+                    <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-tooltips.js</Item>
                 </UIScripts>
                 <UpdateText>
@@ -72,23 +75,6 @@
                     <Item locale="zh_Hans_CN">text/zh_Hans_CN/InGameText.xml</Item>
                     <Item locale="zh_Hant_HK">text/zh_Hant_HK/InGameText.xml</Item>
                 </UpdateText>
-            </Actions>
-        </ActionGroup>
-        <ActionGroup id="bz-city-hall-todo" scope="game" criteria="never">
-            <Properties>
-                <LoadOrder>1000</LoadOrder>
-            </Properties>
-            <Actions>
-                <ImportFiles>
-                    <Item>ui/production-chooser/production-chooser-helpers.chunk.js</Item>
-                    <Item>ui/production-chooser/production-chooser-item.js</Item>
-                    <Item>ui/production-chooser/production-chooser-unique-quarter.js</Item>
-                </ImportFiles>
-                <UIScripts>
-                    <Item>ui/city-details/bz-model-city-details.js</Item>
-                    <Item>ui/city-details/bz-panel-city-details.js</Item>
-                    <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
-                </UIScripts>
             </Actions>
         </ActionGroup>
     </ActionGroups>

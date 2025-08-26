@@ -13,6 +13,12 @@
         <Replace Tag="LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB" Language="zh_Hant_HK">
             <Text>總覽</Text>
         </Replace>
+        <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT" Language="zh_Hant_HK">
+            <Text>City Hall • 緊湊型生產面板</Text>
+        </Replace>
+        <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT_DESCRIPTION" Language="zh_Hant_HK">
+            <Text>縮小生產面板的尺寸。</Text>
+        </Replace>
         <Replace Tag="LOC_OPTIONS_GROUP_BZ_MODS" Language="zh_Hant_HK">
             <Text>trixie 系列模組</Text>
         </Replace>

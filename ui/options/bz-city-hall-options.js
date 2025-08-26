@@ -5,7 +5,7 @@ import ModSettings from '/bz-city-hall/ui/options/mod-options-decorator.js';
 const MOD_ID = "bz-city-hall";
 
 const BZ_DEFAULT_OPTIONS = {
-    oneClickRepairs: true,
+    compact: true,
 };
 const bzCityHallOptions = new class {
     data = { ...BZ_DEFAULT_OPTIONS };
@@ -15,21 +15,22 @@ const bzCityHallOptions = new class {
     }
     save() {
         ModSettings.save(MOD_ID, this.data);
+        document.body.classList.toggle("bz-city-compact", this.compact);
     }
-    get oneClickRepairs() {
-        return this.data.oneClickRepairs ?? BZ_DEFAULT_OPTIONS.oneClickRepairs;
+    get compact() {
+        return this.data.compact ?? BZ_DEFAULT_OPTIONS.compact;
     }
-    set oneClickRepairs(flag) {
-        this.data.oneClickRepairs = !!flag;
+    set compact(flag) {
+        this.data.compact = !!flag;
         this.save();
     }
 };
 
-const onInitOneClickRepairs = (info) => {
-    info.currentValue = bzCityHallOptions.oneClickRepairs;
+const onInitCityCompact = (info) => {
+    info.currentValue = bzCityHallOptions.compact;
 };
-const onUpdateOneClickRepairs = (_info, flag) => {
-    bzCityHallOptions.oneClickRepairs = flag;
+const onUpdateCityCompact = (_info, flag) => {
+    bzCityHallOptions.compact = flag;
 };
 
 Options.addInitCallback(() => {
@@ -38,11 +39,11 @@ Options.addInitCallback(() => {
         // @ts-ignore
         group: "bz_mods",
         type: OptionType.Checkbox,
-        id: "bz-one-click-repairs",
-        initListener: onInitOneClickRepairs,
-        updateListener: onUpdateOneClickRepairs,
-        label: "LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS",
-        description: "LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS_DESCRIPTION",
+        id: "bz-city-compact",
+        initListener: onInitCityCompact,
+        updateListener: onUpdateCityCompact,
+        label: "LOC_OPTIONS_BZ_CITY_COMPACT",
+        description: "LOC_OPTIONS_BZ_CITY_COMPACT_DESCRIPTION",
     });
 });
 
