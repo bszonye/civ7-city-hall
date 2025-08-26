@@ -77,20 +77,6 @@
                 </UpdateText>
             </Actions>
         </ActionGroup>
-        <ActionGroup id="bz-city-hall-todo" scope="game" criteria="never">
-            <Properties>
-                <LoadOrder>1000</LoadOrder>
-            </Properties>
-            <Actions>
-                <ImportFiles>
-                    <Item>ui/production-chooser/production-chooser-helpers.chunk.js</Item>
-                    <Item>ui/production-chooser/production-chooser-item.js</Item>
-                    <Item>ui/production-chooser/production-chooser-unique-quarter.js</Item>
-                </ImportFiles>
-                <UIScripts>
-                </UIScripts>
-            </Actions>
-        </ActionGroup>
     </ActionGroups>
     <LocalizedText>
         <File>text/en_us/ModInfoText.xml</File>
