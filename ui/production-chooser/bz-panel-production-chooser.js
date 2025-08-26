@@ -583,7 +583,7 @@ class bzProductionChooserItem {
         this.progressBar.classList.toggle("hidden", progress <= 0);
         this.progressBarFill.style.heightPERCENT = percent;
         const update = (base) => {
-            if (isNaN(base)) {
+            if (isNaN(base) || base <= 0) {
                 this.pCostContainer.classList.add("hidden");
                 return;
             }
