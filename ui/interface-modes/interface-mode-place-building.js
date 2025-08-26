@@ -186,7 +186,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
         WorldUI.pushRegionColorFilter(selectedCity.getPurchasedPlots(), {}, this.OUTER_REGION_OVERLAY_FILTER);
         // display guide colors for building placement
         this.plotOverlay = overlay.addPlotOverlay();
-        const reserved = BuildingPlacementManager.reservedPlots;
+        const reserved = BuildingPlacementManager.bzReservedPlots;
         const urban = BuildingPlacementManager.urbanPlots;
         const developed = BuildingPlacementManager.developedPlots;
         const expandable = BuildingPlacementManager.expandablePlots;
@@ -276,7 +276,7 @@ class PlaceBuildingInterfaceMode extends ChoosePlotInterfaceMode {
     }
     proposePlot(plot, accept, reject) {
         const plotIndex = GameplayMap.getIndexFromLocation(plot);
-        if (BuildingPlacementManager.reservedPlots.find((p) => p == plotIndex) || BuildingPlacementManager.urbanPlots.find((p) => p == plotIndex) || BuildingPlacementManager.expandablePlots.find((p) => p == plotIndex)) {
+        if (BuildingPlacementManager.bzReservedPlots.find((p) => p == plotIndex) || BuildingPlacementManager.urbanPlots.find((p) => p == plotIndex) || BuildingPlacementManager.expandablePlots.find((p) => p == plotIndex)) {
             accept();
         } else if (BuildingPlacementManager.developedPlots.find((p) => p == plotIndex)) {
             const acceptCallback = () => {

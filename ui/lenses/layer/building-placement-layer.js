@@ -85,7 +85,7 @@ class WorkerYieldsLensLayer {
             return;
         }
         const validPlots = BuildingPlacementManager.expandablePlots.concat(
-            BuildingPlacementManager.developedPlots.concat(BuildingPlacementManager.urbanPlots.concat(BuildingPlacementManager.reservedPlots))
+            BuildingPlacementManager.developedPlots.concat(BuildingPlacementManager.urbanPlots.concat(BuildingPlacementManager.bzReservedPlots))
         );
         for (const plotIndex of validPlots) {
             const plotYieldGainPills = [];

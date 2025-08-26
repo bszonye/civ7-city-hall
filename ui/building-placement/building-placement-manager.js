@@ -26,24 +26,6 @@ const directionNames = /* @__PURE__ */ new Map([
     [DirectionTypes.DIRECTION_SOUTHWEST, "LOC_WORLD_DIRECTION_SOUTHWEST"],
     [DirectionTypes.DIRECTION_WEST, "LOC_WORLD_DIRECTION_WEST"]
 ]);
-function buildingsTagged(tag) {
-    return new Set(GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type));
-}
-// building tag helpers
-let agelessTypes = null;
-function getAgelessTypes() {
-    if (agelessTypes == null) {
-        agelessTypes = buildingsTagged("AGELESS");
-    }
-    return agelessTypes;
-}
-let slotlessTypes = null;
-function getSlotlessTypes() {
-    if (slotlessTypes == null) {
-        slotlessTypes = buildingsTagged("IGNORE_DISTRICT_PLACEMENT_CAP");
-    }
-    return slotlessTypes;
-}
 class BuildingPlacementManagerClass {
     static instance = null;
     _cityID = null;
@@ -68,17 +50,17 @@ class BuildingPlacementManagerClass {
     allPlacementData;
     // Placement data for the currently selected constructible
     selectedPlacementData;
-    // Plots with buildings
+  //Plots that are already developed and have buildings placed on them
     _urbanPlots = [];
     get urbanPlots() {
         return this._urbanPlots;
     }
-    // Plots with improvements
+  //Plots that have already been developed/improved (i.e. improved through city growth)
     _developedPlots = [];
     get developedPlots() {
         return this._developedPlots;
     }
-    // Plots with nothing
+  //Plots that have not yet been developed
     _expandablePlots = [];
     get expandablePlots() {
         return this._expandablePlots;
@@ -136,80 +118,13 @@ class BuildingPlacementManagerClass {
         }
         this._currentConstructible = constructible;
         this.isRepairing = operationResult.RepairDamaged;
-        // is the new building part of a unique quarter?
-        const btype = GameInfo.Buildings.lookup(constructible.ConstructibleType);
-        const newUB = btype?.TraitType;  // for example: TRAIT_ROME
-        // get the civilization's unique quarter
-        const city = Cities.get(cityID);
-        const player = Players.get(city.owner);
-        const civ = GameInfo.Civilizations.lookup(player.civilizationType);
-        const civTraits = GameInfo.CivilizationTraits
-            .filter(trait => trait.CivilizationType === civ.CivilizationType)
-            .map(trait => trait.TraitType);
-        const civUQ = GameInfo.UniqueQuarters.find(uq => civTraits.includes(uq.TraitType));
-        // find a partial unique quarter, if any
-        const partialUQ = this.findExistingUniqueBuilding(civUQ);  // -1 if not found
-        // check whether a district can make a unique quarter
-        // TODO: account for potential blockers in queue / in progress
-        const hasUQBlocker = (p) => {
-            const loc = GameplayMap.getLocationFromIndex(p);
-            const ids = MapConstructibles.getConstructibles(loc.x, loc.y);
-            // get building slots, ignoring walls
-            const slots = ids.map(id => Constructibles.getByComponentID(id))
-                .map(c => GameInfo.Constructibles.lookup(c.type))
-                .filter(c => c.ConstructibleClass == "BUILDING")
-                .filter(c => !getSlotlessTypes().has(c.ConstructibleType));
-            // ageless buildings are blockers
-            if (slots.find(c => getAgelessTypes().has(c.ConstructibleType))) return true;
-            // current-age buildings are blockers
-            const current = Game.age;
-            if (slots.find(c => Database.makeHash(c.Age ?? "") == current)) return true;
-            // otherwise, this district can still make a unique quarter
-            return false;
-        };
-        // check whether placement is UQ-compatible
-        const isUQCompatible = (p) => {
-            // repairs and walls are always compatible with UQs
-            if (this.isRepairing) return true;
-            if (getSlotlessTypes().has(btype?.ConstructibleType)) return true;
-            // unique district selected
-            if (p == partialUQ) {
-                // good: a unique building here finishes the UQ
-                if (newUB) return true;
-                // bad: non-unique building in a unique district
-                return false;
-            }
-            // new unique building NOT on a partial UQ
-            if (newUB) {
-                // bad: there's a partial UQ somewhere else
-                if (partialUQ != -1) return false;
-                // bad: this would create a non-unique quarter
-                if (hasUQBlocker(p)) return false;
-            }
-            return true;
-        };
-        // evaluate existing districts
-        operationResult.Plots?.forEach(p => {
-            if (isUQCompatible(p)) {
-                this._urbanPlots.push(p);
-            } else {
-                this._reservedPlots.push(p);
-            }
-        });
-        // evaluate rural and undeveloped tiles
-        operationResult.ExpandUrbanPlots?.forEach(p => {
-            const loc = GameplayMap.getLocationFromIndex(p);
-            const city = MapCities.getCity(loc.x, loc.y);
-            // still need to check UQ compatibility outside of districts
-            if (!isUQCompatible(p)) {
-                // placement clashes with a unique quarter in queue
-                this._reservedPlots.push(p);
-            } else if (city && MapCities.getDistrict(loc.x, loc.y) != null) {
-                // rural tile: ok, will move citizen
-                this._developedPlots.push(p);
-            }
-            else {
-                // undeveloped tile: good
+    operationResult.Plots?.forEach((plot) => this._urbanPlots.push(plot));
+    operationResult.ExpandUrbanPlots?.forEach((p) => {
+      const location = GameplayMap.getLocationFromIndex(p);
+      const city = MapCities.getCity(location.x, location.y);
+      if (city && MapCities.getDistrict(location.x, location.y) != null) {
+        this._developedPlots.push(p);
+      } else {
                 this._expandablePlots.push(p);
             }
         });
@@ -217,7 +132,6 @@ class BuildingPlacementManagerClass {
             return buildingData.constructibleType == constructible.$hash;
         });
         if (!this.selectedPlacementData) {
-            // This can be an expected case. Example: Repairing a constructible.
             console.warn(
                 `building-placement-manager: Failed to find type ${constructible.ConstructibleType} in allPlacementData`
             );
@@ -225,9 +139,7 @@ class BuildingPlacementManagerClass {
         window.dispatchEvent(new BuildingPlacementConstructibleChangedEvent());
     }
     isPlotIndexSelectable(plotIndex) {
-        return this.reservedPlots.find((index) => {
-            return index == plotIndex;
-        }) != void 0 || this.urbanPlots.find((index) => {
+    return this.urbanPlots.find((index) => {
             return index == plotIndex;
         }) != void 0 || this.developedPlots.find((index) => {
             return index == plotIndex;
@@ -274,7 +186,6 @@ class BuildingPlacementManagerClass {
             return;
         }
         const yieldChangeInfo = [];
-        // Base Yields
         placementPlotData.changeDetails.forEach((changeDetails) => {
             switch (changeDetails.sourceType) {
                 case YieldSourceTypes.BASE: {
@@ -293,7 +204,6 @@ class BuildingPlacementManagerClass {
                 }
             }
         });
-        // Worker Yields
         placementPlotData.changeDetails.forEach((changeDetails) => {
             switch (changeDetails.sourceType) {
                 case YieldSourceTypes.WORKERS: {
@@ -312,7 +222,6 @@ class BuildingPlacementManagerClass {
                 }
             }
         });
-        // Warehouse Bonuses
         const warehouseBonuses = /* @__PURE__ */ new Map();
         placementPlotData.changeDetails.forEach((changeDetails) => {
             switch (changeDetails.sourceType) {
@@ -362,7 +271,6 @@ class BuildingPlacementManagerClass {
                         break;
                     }
                     if (changeDetails.sourcePlotIndex == plotIndex) {
-                        // This adjacency is going to a different plot
                         yieldChangeInfo.push({
                             text: Locale.compose(
                                 "LOC_BUILDING_PLACEMENT_YIELD_NAME_TO_OTHER_BUILDINGS",
@@ -375,7 +283,6 @@ class BuildingPlacementManagerClass {
                         });
                         break;
                     } else {
-                        // This adjacency is coming from a different plot
                         yieldChangeInfo.push({
                             text: Locale.compose(
                                 "LOC_BUILDING_PLACEMENT_YIELD_NAME_FROM_DIRECTION",
@@ -454,7 +361,6 @@ class BuildingPlacementManagerClass {
         }
         if (yieldNum > 0) {
             yieldIconPath += "_pos";
-            // emphasize the main yield for the building we are placing
             if (mainYield) {
                 yieldIconPath += "-lrg";
             }
@@ -466,7 +372,6 @@ class BuildingPlacementManagerClass {
     reset() {
         this._cityID = null;
         this._currentConstructible = null;
-        this._reservedPlots = [];
         this._expandablePlots = [];
         this._urbanPlots = [];
         this._developedPlots = [];
@@ -475,7 +380,7 @@ class BuildingPlacementManagerClass {
         this.isRepairing = false;
     }
     isValidPlacementPlot(plotIndex) {
-        if (BuildingPlacementManager.reservedPlots.find((p) => p == plotIndex) || BuildingPlacementManager.urbanPlots.find((p) => p == plotIndex) || BuildingPlacementManager.developedPlots.find((p) => p == plotIndex) || BuildingPlacementManager.expandablePlots.find((p) => p == plotIndex)) {
+        if (BuildingPlacementManager.urbanPlots.find((p) => p == plotIndex) || BuildingPlacementManager.developedPlots.find((p) => p == plotIndex) || BuildingPlacementManager.expandablePlots.find((p) => p == plotIndex)) {
             return true;
         }
         return false;
@@ -539,17 +444,13 @@ class BuildingPlacementManagerClass {
         const cumulativeData = [];
         const adjacencyData = this.getAdjacencyBonuses();
         adjacencyData.forEach((uniqueData) => {
-            // Look for a matching data entry
             const existingData = cumulativeData.find((data) => {
                 return uniqueData.type == data.type;
             });
-            // If found, add new value to that entry
             if (existingData) {
                 existingData.value += uniqueData.value;
                 return;
             }
-            // If not found, create new entry
-            // No direction value since it's assumed to be coming from multiple directions
             cumulativeData.push({
                 value: uniqueData.value,
                 name: uniqueData.name,
@@ -589,17 +490,13 @@ class BuildingPlacementManagerClass {
         const cumulativeData = [];
         const warehouseData = this.getWarehouseBonuses();
         warehouseData.forEach((uniqueData) => {
-            // Look for a matching data entry
             const existingData = cumulativeData.find((data) => {
                 return uniqueData.type == data.type;
             });
-            // If found, add new value to that entry
             if (existingData) {
                 existingData.value += uniqueData.value;
                 return;
             }
-            // If not found, create new entry
-            // No direction value since it's assumed to be coming from multiple directions
             cumulativeData.push({
                 value: uniqueData.value,
                 name: uniqueData.name,
