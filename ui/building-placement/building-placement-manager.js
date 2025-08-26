@@ -68,11 +68,6 @@ class BuildingPlacementManagerClass {
     allPlacementData;
     // Placement data for the currently selected constructible
     selectedPlacementData;
-    // Plots that would block a unique quarter
-    _reservedPlots = [];
-    get reservedPlots() {
-        return this._reservedPlots;
-    }
     // Plots with buildings
     _urbanPlots = [];
     get urbanPlots() {
@@ -94,7 +89,6 @@ class BuildingPlacementManagerClass {
     }
     set hoveredPlotIndex(plotIndex) {
         if (this._hoveredPlotIndex == plotIndex) {
-            // This plot is already hovered or already null
             return;
         }
         if (plotIndex != null && this.isPlotIndexSelectable(plotIndex)) {
@@ -110,7 +104,6 @@ class BuildingPlacementManagerClass {
     }
     set selectedPlotIndex(plotIndex) {
         if (this._selectedPlotIndex == plotIndex) {
-            // This plot is already selected or already null
             return;
         }
         if (plotIndex != null && this.isPlotIndexSelectable(plotIndex)) {
@@ -616,7 +609,6 @@ class BuildingPlacementManagerClass {
         return cumulativeData;
     }
     findExistingUniqueBuilding(uniqueQuarterDef) {
-        // get city info
         if (!this.cityID || ComponentID.isInvalid(this.cityID)) {
             console.error("building-placement-manager - Invalid cityID passed into findExistingUniqueBuilding");
             return -1;
@@ -626,60 +618,30 @@ class BuildingPlacementManagerClass {
             console.error(`building-placement-manager - Invalid city found for id ${this.cityID}`);
             return -1;
         }
-        // a building can appear in three places:
-        // - Game.CityCommands.canStart (in-progress buildings)
-        // - city.BuildQueue (production queue)
-        // - city.Constructibles (finished buildings)
-        const uniqueBuildings = new Set([
-            uniqueQuarterDef?.BuildingType1,
-            uniqueQuarterDef?.BuildingType2,
-        ].filter(e => e));  // eliminate empty/null/undefined buildings
-        if (!uniqueBuildings.size) return -1;  // no unique quarter
-        // check for a unique building in progress
-        for (const ub of uniqueBuildings) {
-            const typeInfo = GameInfo.Types.lookup(ub);
-            const args = { ConstructibleType: typeInfo.Hash };
-            const result = Game.CityCommands.canStart(
-                city.id, CityCommandTypes.PURCHASE, args, false);
-            if (result.InProgress && result.Plots) {
-                return result.Plots[0];
-            }
-        }
-        // check the production queue
-        const queue = city.BuildQueue?.getQueue();
-        for (const q of queue) {
-            if (q.constructibleType == -1) continue;
-            const ctype = GameInfo.Constructibles.lookup(q.constructibleType);
-            if (uniqueBuildings.has(ctype?.ConstructibleType)) {
-                return GameplayMap.getIndexFromLocation(q.location);
-            }
-        }
-        // check the finished buildings
         const constructibles = city.Constructibles;
         if (!constructibles) {
             console.error(`building-placement-manager - Invalid construcibles found for id ${this.cityID}`);
             return -1;
         }
-        for (const id of constructibles.getIds()) {
-            const constructible = Constructibles.getByComponentID(id);
+        for (const constructibleID of constructibles.getIds()) {
+            const constructible = Constructibles.getByComponentID(constructibleID);
             if (!constructible) {
                 console.error(
-                    `building-placement-manager - Invalid construcible found for id ${id.toString()}`
+                    `building-placement-manager - Invalid construcible found for id ${constructibleID.toString()}`
                 );
                 return -1;
             }
-            const ctype = GameInfo.Constructibles.lookup(constructible.type);
-            if (!ctype) {
+            const constructibleDef = GameInfo.Constructibles.lookup(constructible.type);
+            if (!constructibleDef) {
                 console.error(
                     `building-placement-manager - Invalid constructibleDef found for type ${constructible.type}`
                 );
                 return -1;
             }
-            if (uniqueBuildings.has(ctype.ConstructibleType)) {
+            if (constructibleDef.ConstructibleType == uniqueQuarterDef.BuildingType1 || constructibleDef.ConstructibleType == uniqueQuarterDef.BuildingType2) {
                 return GameplayMap.getIndexFromLocation(constructible.location);
             }
         }
-        // not found
         return -1;
     }
     getBestYieldForConstructible(cityID, constructibleDef) {

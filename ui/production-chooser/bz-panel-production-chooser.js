@@ -180,15 +180,19 @@ class bzProductionChooserScreen {
         Object.defineProperty(proto, "items", items);
     }
     sortItems(list) {
+        const cityID = UI.Player.getHeadSelectedCity();
+        const city = cityID && Cities.get(cityID);
+        if (!city) return;
+        const buildingTier = (item, info) =>
+            info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.ageless ? -1 : 0;
         for (const item of list) {
             const type = Game.getHash(item.type);
-            const cityID = UI.Player.getHeadSelectedCity();
-            const city = cityID && Cities.get(cityID);
-            const progress = city?.BuildQueue?.getProgress(type) ?? 0;
+            const progress = city.BuildQueue?.getProgress(type) ?? 0;
             const consInfo = GameInfo.Constructibles.lookup(type);
-            // TODO: units
-            if (progress) {  // show in-progress items first
+            if (progress) {
+                // show in-progress items first
                 item.sortTier = 9;
+                item.sortValue = city.BuildQueue.getPercentComplete(type);
             } else if (item.category == "units") {
                 const unitInfo = GameInfo.Units.lookup(type);
                 const unitStats = GameInfo.Unit_Stats.lookup(type);
@@ -204,23 +208,26 @@ class bzProductionChooserScreen {
                     9;  // unknown (list first for investigation)
                 item.sortValue = cv;
             } else if (item.type == "IMPROVEMENT_REPAIR_ALL") {
-                item.sortTier = 3;
+                item.sortTier = 8;
+                item.sortValue = 0;
             } else if (item.repairDamaged) {
-                item.sortTier = 2;
-            } else if (consInfo?.ConstructibleClass == "IMPROVEMENT") {
-                item.sortTier = 1;
-            } else if (item.ageless) {
-                item.sortTier = -1;
+                item.sortTier = 7;
+                item.sortValue = buildingTier(item, consInfo);
+            } else if (item.category == "buildings") {
+                item.sortTier = buildingTier(item, consInfo);
+            } else if (item.category == "projects") {
+                item.sortValue = city.Production?.getProjectProductionCost(type) ?? 0;
             } else {
                 item.sortTier = 0;
+                item.sortValue = 0;
             }
-            if (item.category == "buildings") {
-                const info = GameInfo.Constructibles.lookup(type);
-                const yields = BuildingPlacementManager
-                    .getBestYieldForConstructible(city.id, info);
-                yields.sort((a, b) => b - a);
-                item.sortValue = yields.reduce((a, b, i) => a + b/(i+1), 0);
-            }
+            if ("sortValue" in item) continue;
+            // sort buildings by best yields, weighted:
+            // best + 1/2 second-best + 1/3 third-best + ...
+            const info = GameInfo.Constructibles.lookup(type);
+            const yields = BuildingPlacementManager
+                .getBestYieldForConstructible(city.id, info);
+            item.sortValue = BuildingPlacementManager.bzYieldScore(yields);
         }
         list.sort((a, b) => {
             // TODO: assign sort tiers and values
