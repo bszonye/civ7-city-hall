@@ -2,14 +2,11 @@ import { BuildingPlacementManager, BuildingPlacementConstructibleChangedEvent } 
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 
 const proto = Object.getPrototypeOf(BuildingPlacementManager);
-console.warn(`TRIX PROTO ${Object.getOwnPropertyNames(proto)}`);
 
 // building tag helpers
 const tagTypes = (tag) => GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type);
 const BZ_AGELESS = new Set(tagTypes("AGELESS"));
 const BZ_SLOTLESS = new Set(tagTypes("IGNORE_DISTRICT_PLACEMENT_CAP"));
-console.warn(`TRIX AGELESS ${[...BZ_AGELESS]}`);
-console.warn(`TRIX SLOTLESS ${[...BZ_SLOTLESS]}`);
 
 // add BPM.bzReservedPlots property:
 // plots that would block a unique quarter

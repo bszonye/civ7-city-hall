@@ -3,11 +3,61 @@ import { BuildingPlacementManager } from '/base-standard/ui/building-placement/b
 import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
 import FocusManager from '/core/ui/input/focus-manager.js';
 
-// TODO: verify these goals
-// decorate ProductionChooserScreen to:
-// - update the list after selecting repairs (fixes "sticky" repairs)
-// - always leave the list open when building repairs
-// - remember Production/Purchase tab selection
+// color palette
+const BZ_COLOR = {
+    // game colors
+    silver: "#4c5366",  // = primary
+    bronze: "#e5d2ac",  // = secondary
+    primary: "#4c5366",
+    primary1: "#8d97a6",
+    primary2: "#4c5366",
+    primary3: "#333640",
+    primary4: "#23252b",
+    primary5: "#12151f",
+    secondary: "#e5d2ac",
+    secondary1: "#e5d2ac",
+    secondary2: "#8c7e62",
+    secondary3: "#4c473d",
+    accent: "#616266",
+    accent1: "#e5e5e5",
+    accent2: "#c2c4cc",
+    accent3: "#9da0a6",
+    accent4: "#85878c",
+    accent5: "#616266",
+    accent6: "#05070d",
+    // bronze shades
+    bronze1: "#f9ecd2",
+    bronze2: "#e5d2ac",  // = secondary1
+    bronze3: "#c7b28a",
+    bronze4: "#a99670",
+    bronze5: "#8c7e62",  // = secondary 2
+    bronze6: "#4c473d",  // = secondary 3
+    // rules background
+    rules: "#8c7e6233",
+    // alert colors
+    black: "#000000",
+    danger: "#af1b1c99",  // danger = militaristic 60% opacity
+    caution: "#cea92f",  // caution = healthbar-medium
+    note: "#ff800033",  // note = orange 20% opacity
+    // geographic colors
+    hill: "#a9967066",  // Rough terrain = dark bronze 40% opacity
+    vegetated: "#aaff0033",  // Vegetated features = green 20% opacity
+    wet: "#55aaff66",  // Wet features = teal 40% opacity
+    road: "#f9ecd2cc",  // Roads & Railroads = pale bronze 80% opacity
+    // yield types
+    food: "#80b34d",        //  90° 40 50 green
+    production: "#a33d29",  //  10° 60 40 red
+    gold: "#f6ce55",        //  45° 90 65 yellow
+    science: "#6ca6e0",     // 210° 65 65 cyan
+    culture: "#5c5cd6",     // 240° 60 60 violet
+    happiness: "#f5993d",   //  30° 90 60 orange
+    diplomacy: "#afb7cf",   // 225° 25 75 gray
+    // independent power types
+    militaristic: "#af1b1c",
+    scientific: "#4d7c96",
+    economic: "#ffd553",
+    cultural: "#892bb3",
+};
 
 const BZ_HEAD_STYLE = [
 // compact mode
@@ -33,22 +83,30 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .panel-production-chooser .fxs-scrollbar__track--vertical {
     margin-left: -0.2222222222rem;
 }
+.bz-city-hall .bz-pci-icon,
+.bz-city-hall .bz-pci-name,
+.bz-city-hall .bz-pci-cost {
+    filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
+}
 .bz-city-hall .bz-city-repair {
     color: black;
-    background-color: #cea92f;
+    background-color: ${BZ_COLOR.caution};
     font-weight: 700;
-    line-height: 1.5;
     border-radius: 1rem;
-    padding: 0 0.5rem;
-    margin: 0.2222222222rem 0;
+    padding: 0.1111111111rem 0.5rem;
+    margin: 0.1111111111rem 0;
 }
-.bz-city-hall .bz-pci-details img.size-8 {
-    width: 1.3333333333rem;
-    height: 1.3333333333rem;
+.bz-city-hall .bz-pci-ageless {
+    background-image: url("fs://game/city_ageless.png");
+    background-size: cover;
 }
 .bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
     height: 1.1111111111rem;
+}
+.bz-city-hall .bz-pci-details img.size-8 {
+    width: 1.3333333333rem;
+    height: 1.3333333333rem;
 }
 `,  // improve panel header layout
 `
@@ -377,6 +435,7 @@ class bzProductionChooserItem {
     beforeDetach() { }
     afterDetach() { }
     onAttributeChanged(name, _oldValue, newValue) {
+        const c = this.component;
         switch (name) {
             case "data-category":
                 this.data.category = newValue;
@@ -402,6 +461,16 @@ class bzProductionChooserItem {
                 return false;
             }
             // case "data-secondary-details":
+            case "data-secondary-details": {
+                // TODO: not on repairs
+                if (newValue) {
+                    c.secondaryDetailsElement.innerHTML = newValue;
+                    c.secondaryDetailsElement.classList.remove("hidden");
+                } else {
+                    c.secondaryDetailsElement.classList.add("hidden");
+                }
+                return false;
+            }
             // case "data-recommendations":
         }
         return true;  // continue to component
@@ -410,29 +479,28 @@ class bzProductionChooserItem {
         const c = this.component;
         c.Root.classList.add("production-chooser-item", "text-xs", "leading-tight");
         c.container.classList.add("flex", "justify-start", "items-center");
-        c.iconElement.classList.value = "size-12 bg-contain bg-center bg-no-repeat m-1";
+        c.iconElement.classList.value = "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1";
         c.container.appendChild(c.iconElement);
-        const infoContainer = document.createElement("div");
-        infoContainer.classList.value = "relative flex flex-col flex-auto justify-center";
+        const infoColumn = document.createElement("div");
+        infoColumn.classList.value = "bz-pci-info relative flex flex-col flex-auto justify-center";
         // name and ageless/advisor icons
         const nameContainer = document.createElement("div");
         nameContainer.classList.value = "flex justify-start items-center";
-        c.itemNameElement.classList.value = "font-title-xs text-accent-2 m-1 uppercase";
+        c.itemNameElement.classList.value = "bz-pci-name font-title-xs text-accent-2 m-1 uppercase";
         nameContainer.appendChild(c.itemNameElement);
-        c.agelessContainer.classList.value = "hidden flex items-center mx-1 -my-2";
-        c.agelessContainer.innerHTML =
-            '<img src="fs://game/city_ageless.png" class="size-5"/>';
+        c.agelessContainer.classList.value = "bz-pci-ageless hidden size-5 mx-1 -my-2";
+        c.agelessContainer.innerHTML = "";
         nameContainer.appendChild(c.agelessContainer);
         c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 -my-2";
         nameContainer.appendChild(c.recommendationsContainer);
-        infoContainer.appendChild(nameContainer);
+        infoColumn.appendChild(nameContainer);
         // error messages
-        c.errorTextElement.classList.value = "font-body-xs text-negative-light mx-1 -mt-1 z-1 pointer-events-none";
-        infoContainer.appendChild(c.errorTextElement);
+        c.errorTextElement.classList.value = "bz-pci-error hidden font-body-xs text-negative-light mx-1 -mt-1 z-1 pointer-events-none";
+        infoColumn.appendChild(c.errorTextElement);
         // yields and unit stats
-        c.secondaryDetailsElement.classList.value = "invisible flex font-body-xs my-0\\.5 bz-pci-details";
-        infoContainer.appendChild(c.secondaryDetailsElement);
-        c.container.appendChild(infoContainer);
+        c.secondaryDetailsElement.classList.value = "bz-pci-details hidden flex font-body-xs -mt-0\\.5";
+        infoColumn.appendChild(c.secondaryDetailsElement);
+        c.container.appendChild(infoColumn);
         // progress bar
         this.progressBar.classList.add(
             "build-queue__item-progress-bar",
@@ -450,8 +518,8 @@ class bzProductionChooserItem {
         this.progressBarFill.style.heightPERCENT = 100;
         c.container.appendChild(this.progressBar);
         // production and purchase costs
-        const rightColumn = document.createElement("div");
-        rightColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
+        const costColumn = document.createElement("div");
+        costColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
         this.pCostContainer.classList.value = "flex items-center";
         this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
         this.pCostContainer.appendChild(this.pCostAmountElement);
@@ -460,15 +528,15 @@ class bzProductionChooserItem {
             .setProperty("background-image", "url(Yield_Production)");
         this.pCostIconElement.ariaLabel = Locale.compose("LOC_YIELD_GOLD");
         this.pCostContainer.appendChild(this.pCostIconElement);
-        rightColumn.appendChild(this.pCostContainer);
-        c.costContainer.classList.value = "flex items-center";
+        costColumn.appendChild(this.pCostContainer);
+        c.costContainer.classList.value = "bz-pci-cost flex items-center";
         c.costAmountElement.classList.value = "font-title-sm mr-1";
         c.costContainer.appendChild(c.costAmountElement);
         c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat -m-1";
         c.costContainer.appendChild(c.costIconElement);
-        rightColumn.appendChild(this.pCostContainer);
-        rightColumn.appendChild(c.costContainer);
-        c.container.appendChild(rightColumn);
+        costColumn.appendChild(this.pCostContainer);
+        costColumn.appendChild(c.costContainer);
+        c.container.appendChild(costColumn);
     }
     updateName() {
         if (!this.data.name || !this.data.type) return;
