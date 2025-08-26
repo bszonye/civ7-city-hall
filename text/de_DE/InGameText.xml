@@ -14,7 +14,7 @@
             <Text>Überblick</Text>
         </Replace>
         <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT" Language="de_DE">
-            <Text>City Hall • Kompaktes Produktionsmenü</Text>
+            <Text>City Hall • kompaktes Produktionsmenü</Text>
         </Replace>
         <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT_DESCRIPTION" Language="de_DE">
             <Text>Verkleinert das Produktionsmenü</Text>

@@ -14,7 +14,7 @@
             <Text>Vue d'ensemble</Text>
         </Replace>
         <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT" Language="fr_FR">
-            <Text>City Hall • Fenêtre de production compacte</Text>
+            <Text>City Hall • fenêtre de production compacte</Text>
         </Replace>
         <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT_DESCRIPTION" Language="fr_FR">
             <Text>Réduit la taille de la fenêtre Production.</Text>
