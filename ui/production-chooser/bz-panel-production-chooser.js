@@ -448,7 +448,6 @@ class bzProductionChooserItem {
                 this.updateInfo();
                 break;
             case "data-type":
-                this.fixRepairAll(name);
                 this.updateInfo();
                 this.updateProductionCost();
                 break;
@@ -459,7 +458,6 @@ class bzProductionChooserItem {
                 if (newValue) return this.fixRepairAll(name);
                 break;
             case "data-is-purchase":
-                this.fixRepairAll(name);
                 break;
             case "data-is-ageless": {
                 this.updateInfo();
@@ -546,10 +544,8 @@ class bzProductionChooserItem {
             e.getAttribute("data-error") != BZ_INSUFFICIENT_FUNDS) {
             return true;  // continue onAttributeChanged chain
         }
-        console.warn(`TRIX FIX =======================================================`);
         e.setAttribute("disabled", "false");
         e.removeAttribute("data-error");
-        console.warn(`TRIX FIX =======================================================`);
         // block incorrect attribute updates
         return !(attr == "disabled" || attr == "data-error");
     }
