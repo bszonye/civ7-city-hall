@@ -276,19 +276,17 @@ class bzProductionChooserScreen {
                 item.sortValue = buildingTier(item, consInfo);
             } else if (item.category == "buildings") {
                 item.sortTier = buildingTier(item, consInfo);
+                const info = GameInfo.Constructibles.lookup(type);
+                const yields = BuildingPlacementManager
+                    .getBestYieldForConstructible(city.id, info);
+                item.sortValue = BuildingPlacementManager.bzYieldScore(yields);
             } else if (item.category == "projects") {
+                item.sortTier = 0;
                 item.sortValue = city.Production?.getProjectProductionCost(type) ?? 0;
             } else {
                 item.sortTier = 0;
                 item.sortValue = 0;
             }
-            if ("sortValue" in item) continue;
-            // sort buildings by best yields, weighted:
-            // best + 1/2 second-best + 1/3 third-best + ...
-            const info = GameInfo.Constructibles.lookup(type);
-            const yields = BuildingPlacementManager
-                .getBestYieldForConstructible(city.id, info);
-            item.sortValue = BuildingPlacementManager.bzYieldScore(yields);
         }
         list.sort((a, b) => {
             // TODO: assign sort tiers and values
