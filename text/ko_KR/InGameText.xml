@@ -13,11 +13,11 @@
         <Replace Tag="LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB" Language="ko_KR">
             <Text>개요</Text>
         </Replace>
-        <Replace Tag="LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS" Language="ko_KR">
-            <Text>City Hall • 클릭 한번으로 수리</Text>
+        <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT" Language="ko_KR">
+            <Text>City Hall • 컴팩트 생산 패널</Text>
         </Replace>
-        <Replace Tag="LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS_DESCRIPTION" Language="ko_KR">
-            <Text>수리가 가능한 위치가 하나뿐인 경우, 건물 배치 인터페이스를 생략합니다.</Text>
+        <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT_DESCRIPTION" Language="ko_KR">
+            <Text>프로덕션 패널의 크기를 줄입니다.</Text>
         </Replace>
         <Replace Tag="LOC_OPTIONS_GROUP_BZ_MODS" Language="ko_KR">
             <Text>trixie의 다양한 모드</Text>

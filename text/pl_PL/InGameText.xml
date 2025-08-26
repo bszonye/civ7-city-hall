@@ -13,11 +13,11 @@
         <Replace Tag="LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB" Language="pl_PL">
             <Text>Przegląd</Text>
         </Replace>
-        <Replace Tag="LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS" Language="pl_PL">
-            <Text>Ratusz • naprawy jednym kliknięciem</Text>
+        <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT" Language="pl_PL">
+            <Text>City Hall • zwarty panel produkcyjny</Text>
         </Replace>
-        <Replace Tag="LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS_DESCRIPTION" Language="pl_PL">
-            <Text>Jeżeli istnieje tylko jedno możliwe miejsce wykonania naprawy, pomiń interfejs rozmieszczania budynków.</Text>
+        <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT_DESCRIPTION" Language="pl_PL">
+            <Text>Zmniejsza rozmiar panelu Produkcja.</Text>
         </Replace>
         <Replace Tag="LOC_OPTIONS_GROUP_BZ_MODS" Language="pl_PL">
             <Text>mody trixie</Text>

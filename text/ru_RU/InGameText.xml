@@ -13,11 +13,11 @@
         <Replace Tag="LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB" Language="ru_RU">
             <Text>Обзор</Text>
         </Replace>
-        <Replace Tag="LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS" Language="ru_RU">
-            <Text>City Hall • Починка одним кликом</Text>
+        <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT" Language="ru_RU">
+            <Text>City Hall • компактный интерфейс производства</Text>
         </Replace>
-        <Replace Tag="LOC_OPTIONS_BZ_ONE_CLICK_REPAIRS_DESCRIPTION" Language="ru_RU">
-            <Text>Чинит объект автоматически после нажатия на кнопку починки, без клика по клетке (если этот объект один)</Text>
+        <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT_DESCRIPTION" Language="ru_RU">
+            <Text>Уменьшает размер производственного интерфейса.</Text>
         </Replace>
         <Replace Tag="LOC_OPTIONS_GROUP_BZ_MODS" Language="ru_RU">
             <Text>Моды от Trixie</Text>
