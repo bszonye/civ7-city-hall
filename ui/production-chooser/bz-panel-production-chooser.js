@@ -409,9 +409,9 @@ class bzProductionChooserItem {
     }
     patchPrototypes(component) {
         const c_prototype = Object.getPrototypeOf(component);
-        if (bzProductionChooserScreen.c_prototype == c_prototype) return;
+        if (bzProductionChooserItem.c_prototype == c_prototype) return;
         // patch PanelCityDetails methods
-        const proto = bzProductionChooserScreen.c_prototype = c_prototype;
+        const proto = bzProductionChooserItem.c_prototype = c_prototype;
         // wrap onAttributeChanged method to extend it
         const c_onAttributeChanged = proto.onAttributeChanged;
         const onAttributeChanged = this.onAttributeChanged;

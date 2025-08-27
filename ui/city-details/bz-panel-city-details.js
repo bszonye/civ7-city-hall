@@ -378,10 +378,10 @@ class bzPanelCityDetails {
         this.update();
     }
     beforeDetach() {
-        this.focusRoot.removeEventListener("focusin", this.focusInListener);
         this.component.tabBar.removeEventListener("tab-selected", this.onTabSelected);
-        window.removeEventListener(bzUpdateCityDetailsEventName, this.updateOverviewListener);
-        window.removeEventListener(UpdateCityDetailsEventName, this.updateConstructiblesListener);
+        this.focusRoot.removeEventListener("focusin", this.focusInListener);
+        window.removeEventListener(bzUpdateCityDetailsEventName, this.updateListener);
+        window.removeEventListener(UpdateCityDetailsEventName, this.updateListener);
         this.removeCityLinkListeners();
     }
     // render new & replaced tabs
