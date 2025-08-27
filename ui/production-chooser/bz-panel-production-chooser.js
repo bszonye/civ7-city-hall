@@ -550,15 +550,18 @@ class bzProductionChooserItem {
         const c = this.component;
         // get attributes
         const e = c.Root;
+        const dataCategory = e.getAttribute("data-category");
         const dataType = e.getAttribute("data-type");
-        const type = Game.getHash(dataType);
-        const info = GameInfo.Constructibles.lookup(type);
-        if (!info) return;
         const dataName = e.getAttribute("data-name");
         const dataIsAgeless = e.getAttribute("data-is-ageless") === "true";
         const dataSecondaryDetails = e.getAttribute("data-secondary-details");
         // interpret attributes
-        const isRepair = type == BZ_REPAIR_ALL_ID || dataName != info.Name;
+        const isRepair = (() => {
+            if (dataCategory != "buildings") return false;
+            const type = Game.getHash(dataType);
+            const info = GameInfo.Constructibles.lookup(type);
+            return type == BZ_REPAIR_ALL_ID || dataName != info.Name;
+        })();
         const isAgeless = dataIsAgeless && !isRepair;
         const details = !isRepair && dataSecondaryDetails || "";
         const cname = c.itemNameElement;
