@@ -457,15 +457,11 @@ class bzProductionChooserItem {
                 if (newValue) return this.fixRepairAll();
                 break;
             // case "data-is-purchase":
-            case "data-is-ageless": {
+            case "data-is-ageless":
+            case "data-secondary-details":
+                // toggle .hidden instead of .invisible
                 this.updateInfo();
                 return false;
-            }
-            // case "data-secondary-details":
-            case "data-secondary-details": {
-                this.updateInfo();
-                return false;
-            }
             // case "data-recommendations":
         }
         return true;  // continue to component
