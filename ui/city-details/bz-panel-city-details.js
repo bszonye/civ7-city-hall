@@ -555,7 +555,6 @@ class bzPanelCityDetails {
         const table = document.createElement("fxs-activatable");
         table.classList.value = "flex justify-start text-base -mx-1";
         table.addEventListener("action-activate", this.onCityLinkListener);
-        console.warn(`TRIX LISTEN CITY-LINK`);
         const rows = [];
         const connections = [
             ...bzCityDetails.connections.cities,
@@ -839,8 +838,10 @@ class bzPanelCityDetails {
         }
     }
     onCityLink(event) {
-        // TODO: investigate whether this needs explicit removal
-        const link = event.target.querySelector(".bz-city-link");
+        // get the .bz-city-link element under the cursor
+        const target = document.elementFromPoint(event.detail.x, event.detail.y);
+        const link = target?.closest(".bz-city-link");
+        // get the linked cityID and select the city
         const linkID = link?.getAttribute("bz-city-id");
         if (linkID) UI.Player.selectCity(JSON.parse(linkID));
     }
