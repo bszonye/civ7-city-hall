@@ -382,7 +382,6 @@ class bzPanelCityDetails {
         this.focusRoot.removeEventListener("focusin", this.focusInListener);
         window.removeEventListener(bzUpdateCityDetailsEventName, this.updateListener);
         window.removeEventListener(UpdateCityDetailsEventName, this.updateListener);
-        this.removeCityLinkListeners();
     }
     // render new & replaced tabs
     afterRender() {
@@ -544,7 +543,6 @@ class bzPanelCityDetails {
         container.appendChild(wrap);
     }
     renderConnections(container) {
-        this.removeCityLinkListeners();
         container.innerHTML = "";
         container.style.lineHeight = metrics.table.ratio;
         // show settlement count in the title
@@ -554,8 +552,10 @@ class bzPanelCityDetails {
         if (!total) return;
         const size = metrics.table.spacing.css;
         const small = metrics.sizes(2/3 * metrics.table.spacing.rem).css;
-        const table = document.createElement("div");
+        const table = document.createElement("fxs-activatable");
         table.classList.value = "flex justify-start text-base -mx-1";
+        table.addEventListener("action-activate", this.onCityLinkListener);
+        console.warn(`TRIX LISTEN CITY-LINK`);
         const rows = [];
         const connections = [
             ...bzCityDetails.connections.cities,
@@ -563,13 +563,12 @@ class bzPanelCityDetails {
             ...bzCityDetails.connections.focused,
         ];
         for (const conn of connections) {
-            const row = document.createElement("fxs-activatable");
+            const row = document.createElement("div");
             row.classList.value = "bz-overview-entry bz-city-link relative flex justify-start pr-1";
             row.style.minHeight = size;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
             row.setAttribute("bz-city-id", JSON.stringify(conn.id));
-            row.addEventListener("action-activate", this.onCityLinkListener);
             if (conn.isTown) {
                 const focus = getTownFocus(conn);
                 row.appendChild(docIcon(focus.icon, size, size));
@@ -839,17 +838,11 @@ class bzPanelCityDetails {
             }
         }
     }
-    removeCityLinkListeners() {
-        this.overviewSlot.querySelectorAll(".bz-city-link").forEach((link) => {
-            link.removeEventListener("action-activate", this.onCityLinkListener);
-        });
-    }
     onCityLink(event) {
-        const link = event.target?.getAttribute("bz-city-id");
-        if (link) {
-            const id = JSON.parse(link);
-            UI.Player.selectCity(id);
-        }
+        // TODO: investigate whether this needs explicit removal
+        const link = event.target.querySelector(".bz-city-link");
+        const linkID = link?.getAttribute("bz-city-id");
+        if (linkID) UI.Player.selectCity(JSON.parse(linkID));
     }
 }
 Controls.decorate("panel-city-details", (val) => new bzPanelCityDetails(val));
