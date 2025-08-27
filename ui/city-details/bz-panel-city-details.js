@@ -130,13 +130,14 @@ const BZ_HEAD_STYLE = [
 }
 .bz-city-hall .panel-city-details .bz-cycle-city {
     position: relative;
+    z-index: 1;
 }
 .bz-city-hall .panel-city-details.bz-nav-help .bz-cycle-city {
-    top: 0.6666666667rem;
+    top: 0.6111111111rem;
     left: 1rem;
 }
 .bz-city-hall .panel-city-details.bz-no-help .bz-cycle-city {
-    top: 0.6666666667rem;
+    top: 0.6111111111rem;
     left: 1rem;
 }
 .bz-overview-entry, .bz-city-hall .growth-entry {
