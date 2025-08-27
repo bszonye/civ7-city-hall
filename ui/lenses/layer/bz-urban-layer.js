@@ -41,7 +41,6 @@ class bzUrbanLayer {
         this.updateBorders();
         engine.on('ConstructibleAddedToMap', this.onPlotChange);
         engine.on('ConstructibleRemovedFromMap', this.onPlotChange);
-        window.addEventListener('layer-hotkey', this.onLayerHotkeyListener);
         this.cityOverlayGroup.setVisible(false);
         // add layer to lenses
         for (const lens of BZ_LENSES) {
