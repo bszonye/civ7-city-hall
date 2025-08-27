@@ -130,13 +130,14 @@ const BZ_HEAD_STYLE = [
 }
 .bz-city-hall .panel-city-details .bz-cycle-city {
     position: relative;
+    z-index: 1;
 }
 .bz-city-hall .panel-city-details.bz-nav-help .bz-cycle-city {
-    top: 0.6666666667rem;
+    top: 0.6111111111rem;
     left: 1rem;
 }
 .bz-city-hall .panel-city-details.bz-no-help .bz-cycle-city {
-    top: 0.6666666667rem;
+    top: 0.6111111111rem;
     left: 1rem;
 }
 .bz-overview-entry, .bz-city-hall .growth-entry {
@@ -552,9 +553,8 @@ class bzPanelCityDetails {
         if (!total) return;
         const size = metrics.table.spacing.css;
         const small = metrics.sizes(2/3 * metrics.table.spacing.rem).css;
-        const table = document.createElement("fxs-activatable");
+        const table = document.createElement("div");
         table.classList.value = "flex justify-start text-base -mx-1";
-        table.addEventListener("action-activate", this.onCityLinkListener);
         const rows = [];
         const connections = [
             ...bzCityDetails.connections.cities,
@@ -562,12 +562,13 @@ class bzPanelCityDetails {
             ...bzCityDetails.connections.focused,
         ];
         for (const conn of connections) {
-            const row = document.createElement("div");
+            const row = document.createElement("fxs-activatable");
             row.classList.value = "bz-overview-entry bz-city-link relative flex justify-start pr-1";
             row.style.minHeight = size;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
             row.setAttribute("bz-city-id", JSON.stringify(conn.id));
+            row.addEventListener("action-activate", this.onCityLinkListener);
             if (conn.isTown) {
                 const focus = getTownFocus(conn);
                 row.appendChild(docIcon(focus.icon, size, size));
@@ -838,11 +839,8 @@ class bzPanelCityDetails {
         }
     }
     onCityLink(event) {
-        // get the .bz-city-link element under the cursor
-        const target = document.elementFromPoint(event.detail.x, event.detail.y);
-        const link = target?.closest(".bz-city-link");
         // get the linked cityID and select the city
-        const linkID = link?.getAttribute("bz-city-id");
+        const linkID = event.target.getAttribute("bz-city-id");
         if (linkID) UI.Player.selectCity(JSON.parse(linkID));
     }
 }
