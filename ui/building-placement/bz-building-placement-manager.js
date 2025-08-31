@@ -200,6 +200,14 @@ proto.bzYieldScore = function(yields) {
     score.sort((a, b) => Math.abs(b) - Math.abs(a));
     return score.reduce((a, b, i) => a + b/(i+1), 0);
 }
+proto.bzGetPlotYieldForConstructible = function(cityID, constructibleDef, plotIndex) {
+    if (!ComponentID.isMatch(cityID, this.cityID)) return [];
+    if (!this.allPlacementData) return [];
+    const yields = this.allPlacementData.buildings
+        .find(b => b.constructibleType == constructibleDef.$hash)?.placements
+        .find(p => p.plotID == plotIndex)?.yieldChanges;
+    return yields ?? [];
+}
 proto.getBestYieldForConstructible = function(cityID, constructibleDef) {
     if (!ComponentID.isMatch(cityID, this.cityID)) {
         console.error(

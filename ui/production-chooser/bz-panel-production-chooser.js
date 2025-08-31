@@ -1,8 +1,11 @@
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
-import { Icon } from '../../../core/ui/utilities/utilities-image.chunk.js';
-import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
-import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
 import FocusManager from '/core/ui/input/focus-manager.js';
+import { Icon } from '/core/ui/utilities/utilities-image.chunk.js';
+import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
+import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
+import { BuildingPlacementManager as BPM } from '/base-standard/ui/building-placement/building-placement-manager.js';
+import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
+import { g as GetProductionItems } from './bz-production-chooser-helpers.js';
 import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
 
 const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";
@@ -242,6 +245,7 @@ class bzProductionChooserScreen {
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
+        component.updateItems = new UpdateGate(() => this.updateItems());
         this.patchPrototypes(this.component);
     }
     patchPrototypes(component) {
@@ -316,12 +320,6 @@ class bzProductionChooserScreen {
             this.sortItems(city, list);
         }
     }
-    getPlotYields(city, constructible, plotIndex) {
-        const yields = BuildingPlacementManager.allPlacementData?.buildings
-            .find(b => b.constructibleType == constructible.$hash)?.placements
-            .find(p => p.plotID == plotIndex)?.yieldChanges;
-        return yields ?? [];
-    }
     getYieldDetails(yields) {
         const details = [];
         for (const [i, dy] of yields.entries()) {
@@ -374,8 +372,8 @@ class bzProductionChooserScreen {
                 if (!loc) return -1;
                 return GameplayMap.getIndexFromLocation(loc);
             })();
-            const yields = this.getPlotYields(city, info, plot);
-            item.sortValue = BuildingPlacementManager.bzYieldScore(yields);
+            const yields = BPM.bzGetPlotYieldForConstructible(city.id, info, plot);
+            item.sortValue = BPM.bzYieldScore(yields);
             item.secondaryDetails = this.getYieldDetails(yields);
             // update item status and error message
             if (result.InQueue && !isPurchase) {
@@ -426,9 +424,8 @@ class bzProductionChooserScreen {
             } else if (item.category == "buildings") {
                 item.sortTier = buildingTier(item, consInfo);
                 const info = GameInfo.Constructibles.lookup(type);
-                const yields = BuildingPlacementManager
-                    .getBestYieldForConstructible(city.id, info);
-                item.sortValue ??= BuildingPlacementManager.bzYieldScore(yields);
+                const yields = BPM.getBestYieldForConstructible(city.id, info);
+                item.sortValue ??= BPM.bzYieldScore(yields);
             } else if (item.category == "projects") {
                 item.sortTier = 0;
                 item.sortValue = city.Production?.getProjectProductionCost(type) ?? 0;
@@ -514,6 +511,39 @@ class bzProductionChooserScreen {
         c.productionPurchaseTabBar.setAttribute("tab-items", JSON.stringify(tabs));
         c.townPurchaseLabel.innerHTML = c.townPurchaseLabel.innerHTML
             .replaceAll("text-xs", "text-sm tracking-100 mt-1");
+    }
+    updateItems() {
+        const c = this.component;
+        console.warn(`TRIX UPDATE-ITEMS`);
+        if (!c.isInitialLoadComplete) {
+            return;
+        }
+        const city = c.city;
+        const items = GetProductionItems(
+            city,
+            c.recommendations,
+            c.playerGoldBalance,
+            c.isPurchase,
+            c.viewHidden,
+            c.uqInfo
+        );
+        const newItems = Object.values(ProductionPanelCategory).flatMap(
+            (category) => items[category].map((item) => item.type)
+        );
+        const newItemsSet = new Set(newItems);
+        let resetFocus = false;
+        const currentFocus = FocusManager.getFocus();
+        for (const [type, item] of c.itemElementMap) {
+            if (!newItemsSet.has(type)) {
+                resetFocus ||= currentFocus === item;
+                item.remove();
+                c.itemElementMap.delete(type);
+            }
+        }
+        c.items = items;
+        if (resetFocus || c.Root.contains(currentFocus) && !c.buildQueue.contains(currentFocus)) {
+            FocusManager.setFocus(c.productionAccordion);
+        }
     }
     onActiveDeviceTypeChanged(deviceType) {
         this.isGamepadActive = deviceType == InputDeviceType.Controller;

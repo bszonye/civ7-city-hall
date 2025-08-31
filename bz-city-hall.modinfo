@@ -63,6 +63,7 @@
                     <Item>ui/options/mod-options-decorator.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-tooltips.js</Item>
+                    <Item>ui/production-chooser/bz-production-chooser-helpers.js</Item>
                 </UIScripts>
                 <UpdateText>
                     <Item>text/en_us/InGameText.xml</Item>
