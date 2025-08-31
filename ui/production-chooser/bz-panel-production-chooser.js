@@ -2,10 +2,16 @@ import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js'
 import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
 import FocusManager from '/core/ui/input/focus-manager.js';
+import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
 
 const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";
 const BZ_REPAIR_ALL_ID = Game.getHash(BZ_REPAIR_ALL);
+const BZ_ALREADY_IN_QUEUE = "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE";
 const BZ_INSUFFICIENT_FUNDS = "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS";
+
+// building tag helpers
+const tagTypes = (tag) => GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type);
+const BZ_AGELESS = new Set(tagTypes("AGELESS"));
 
 // color palette
 const BZ_COLOR = {
@@ -171,6 +177,57 @@ BZ_HEAD_STYLE.map(style => {
 });
 document.body.classList.add("bz-city-hall");
 document.body.classList.toggle("bz-city-compact", bzCityHallOptions.compact);
+
+const GetQueuedItemData = (city, constructible, operationResult) => {
+    const cityGold = city.Gold;
+    if (!cityGold) {
+        console.error("GetConstructibleItemData: getConstructibleItem: Failed to get cityGold!");
+        return null;
+    }
+    const ageless = BZ_AGELESS.has(constructible.ConstructibleType);
+    const insufficientFunds = operationResult.InsufficientFunds ?? false;
+    // TODO: get yields for actual tile
+    // const bestYields = GetCurrentBestTotalYieldForConstructible(city, constructible.ConstructibleType);
+    // const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
+    const possibleLocations = [];
+    const pushPlots = (p) => {
+        possibleLocations.push(p);
+    };
+    operationResult.Plots?.forEach(pushPlots);
+    operationResult.ExpandUrbanPlots?.forEach(pushPlots);
+    const turns = city.BuildQueue.getTurnsLeft(constructible.ConstructibleType);
+    const category = "buildings";
+    if (!possibleLocations.length) return null;
+    let name = constructible.Name;
+    if (operationResult.RepairDamaged && constructible.Repairable) {
+        name = Locale.compose("LOC_UI_PRODUCTION_REPAIR_NAME", constructible.Name);
+    } else if (operationResult.MoveToNewLocation) {
+        name = Locale.compose("LOC_UI_PRODUCTION_MOVE_NAME", constructible.Name);
+    }
+    const locations = Locale.compose(
+        "LOC_UI_PRODUCTION_LOCATIONS",
+        constructible.Cost,
+        possibleLocations.length
+    );
+    const cost = operationResult.Cost ?? cityGold.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, constructible.ConstructibleType);
+    const item = {
+        name,
+        type: constructible.ConstructibleType,
+        cost,
+        category,
+        ageless,
+        turns,
+        showTurns: turns > -1,
+        showCost: cost > 0,
+        insufficientFunds,
+        disabled: constructible.Cost < 0,
+        locations,
+        interfaceMode: "INTERFACEMODE_PLACE_BUILDING",
+        // secondaryDetails,
+        repairDamaged: operationResult.RepairDamaged
+    };
+    return item;
+};
 class bzProductionChooserScreen {
     static c_prototype;
     static isPurchase = false;
@@ -231,10 +288,8 @@ class bzProductionChooserScreen {
             enumerable: c_items.enumerable,
             get: c_items.get,
             set(value) {
-                // sort items
-                for (const list of Object.values(value)) {
-                    this.bzComponent.sortItems(list);
-                }
+                // modify incoming items array
+                this.bzComponent.beforeSetItems(value);
                 // call vanilla property
                 c_items.set.apply(this, [value]);
                 // adjust UQ formatting
@@ -243,10 +298,79 @@ class bzProductionChooserScreen {
         };
         Object.defineProperty(proto, "items", items);
     }
-    sortItems(list) {
-        const cityID = UI.Player.getHeadSelectedCity();
+    beforeSetItems(value) {
+        const cityID = this.component.cityID;
         const city = cityID && Cities.get(cityID);
         if (!city) return;
+        // add queued buildings
+        this.addBuildingsInProgress(city, value.buildings);
+        // sort items
+        for (const list of Object.values(value)) {
+            this.sortItems(city, list);
+        }
+    }
+    getYieldDetails(city, constructible, plotIndex) {
+        console.warn(`TRIX PLOT ${plotIndex}`);
+        const yields = BuildingPlacementManager.allPlacementData?.buildings
+            ?.find(b => b.constructibleType == constructible.$hash)
+            ?.placements
+            ?.find(p => p.plotID == plotIndex)
+            ?.yieldChanges;
+        console.warn(`TRIX PLACE ${JSON.stringify(yields)}`);
+    }
+    addBuildingsInProgress(city, list) {
+        // always show queued buildings with progress
+        if (!list) return;
+        const c = this.component;
+        const isPurchase = c.isPurchase;
+        const results = isPurchase ?
+            Game.CityCommands.canStartQuery(
+                city.id, CityCommandTypes.PURCHASE, CityQueryType.Constructible
+            ) : Game.CityOperations.canStartQuery(
+                city.id, CityOperationTypes.BUILD, CityQueryType.Constructible
+            );
+        const items = [];
+        const types = new Set();
+        for (const { index, result } of results) {
+            // create entries for in-progress and queued buildings
+            // TODO: exclude repairs?
+            if (!result.InProgress && !result.InQueue) continue;
+            const info = GameInfo.Constructibles.lookup(index);
+            if (info.ConstructibleClass != "BUILDING") continue;
+            // create a new item
+            const item = GetQueuedItemData(city, info, result);
+            items.push(item);
+            types.add(item.type);
+            // get advisor recommendations
+            item.recommendations = AdvisorUtilities.getBuildRecommendationIcons(
+                c.recommendations,
+                item.type
+            );
+            // get yields
+            const plot = result.InProgress ? result.Plots[0] : (() => {
+                const queue = city.BuildQueue?.getQueue();
+                const loc = queue?.find(i => i.type == info.$hash)?.location;
+                if (!loc) return -1;
+                return GameplayMap.getIndexFromLocation(loc);
+            })();
+            const details = this.getYieldDetails(city, info, plot);
+            console.warn(`TRIX DETAILS ${info.ConstructibleType} ${JSON.stringify(details)}`);
+            // update item status and error message
+            if (result.InQueue && !isPurchase) {
+                item.disabled = true;
+                item.error ??= BZ_ALREADY_IN_QUEUE;
+            } else if (item.insufficientFunds) {
+                item.disabled = true;
+                item.error = BZ_INSUFFICIENT_FUNDS;
+            }
+        }
+        if (items.length) {
+            // filter duplicate items and merge lists
+            const dedup = list.filter(item => !types.has(item.type));
+            list.splice(0, Infinity, ...items, ...dedup);
+        }
+    }
+    sortItems(city, list) {
         const buildingTier = (item, info) =>
             info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.ageless ? -1 : 0;
         for (const item of list) {
@@ -292,7 +416,6 @@ class bzProductionChooserScreen {
             }
         }
         list.sort((a, b) => {
-            // TODO: assign sort tiers and values
             if (a.sortTier != b.sortTier) return b.sortTier - a.sortTier;
             if (a.sortValue != b.sortValue) return b.sortValue - a.sortValue;
             // sort by name
@@ -572,8 +695,8 @@ class bzProductionChooserItem {
         const cityID = UI.Player.getHeadSelectedCity();
         const city = cityID && Cities.get(cityID);
         if (!city) return;
-        const c = this.component;
         // get attributes
+        const c = this.component;
         const e = c.Root;
         const dataCategory = e.getAttribute("data-category");
         const dataType = e.getAttribute("data-type");
