@@ -1,4 +1,5 @@
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
+import { Icon } from '../../../core/ui/utilities/utilities-image.chunk.js';
 import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
 import FocusManager from '/core/ui/input/focus-manager.js';
@@ -178,6 +179,11 @@ BZ_HEAD_STYLE.map(style => {
 document.body.classList.add("bz-city-hall");
 document.body.classList.toggle("bz-city-compact", bzCityHallOptions.compact);
 
+const GetSecondaryDetailsHTML = (items) => {
+  return items.reduce((acc, { icon, value, name }) => {
+    return acc + `<div class="flex items-center mr-2"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-8" />${value}</div>`;
+  }, "");
+};
 const GetQueuedItemData = (city, constructible, operationResult) => {
     const cityGold = city.Gold;
     if (!cityGold) {
@@ -303,22 +309,37 @@ class bzProductionChooserScreen {
         const city = cityID && Cities.get(cityID);
         if (!city) return;
         // add queued buildings
-        this.addBuildingsInProgress(city, value.buildings);
+        this.addQueuedItems(city, value.buildings, "BUILDING");
+        this.addQueuedItems(city, value.wonders, "WONDER");
         // sort items
         for (const list of Object.values(value)) {
             this.sortItems(city, list);
         }
     }
-    getYieldDetails(city, constructible, plotIndex) {
-        console.warn(`TRIX PLOT ${plotIndex}`);
+    getPlotYields(city, constructible, plotIndex) {
         const yields = BuildingPlacementManager.allPlacementData?.buildings
-            ?.find(b => b.constructibleType == constructible.$hash)
-            ?.placements
-            ?.find(p => p.plotID == plotIndex)
-            ?.yieldChanges;
-        console.warn(`TRIX PLACE ${JSON.stringify(yields)}`);
+            .find(b => b.constructibleType == constructible.$hash)?.placements
+            .find(p => p.plotID == plotIndex)?.yieldChanges;
+        return yields ?? [];
     }
-    addBuildingsInProgress(city, list) {
+    getYieldDetails(yields) {
+        const details = [];
+        for (const [i, dy] of yields.entries()) {
+            if (dy <= 0) continue;
+            const info = GameInfo.Yields.lookup(i);
+            if (!info) continue;
+            details.push({
+                iconId: i.toString(),
+                icon: Icon.getYieldIcon(info.YieldType),
+                value: Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", dy),
+                name: info.Name,
+                yieldType: info.YieldType,
+                isMainYield: true
+            });
+        }
+        return GetSecondaryDetailsHTML(details);
+    }
+    addQueuedItems(city, list, constructibleClass) {
         // always show queued buildings with progress
         if (!list) return;
         const c = this.component;
@@ -336,7 +357,7 @@ class bzProductionChooserScreen {
             // TODO: exclude repairs?
             if (!result.InProgress && !result.InQueue) continue;
             const info = GameInfo.Constructibles.lookup(index);
-            if (info.ConstructibleClass != "BUILDING") continue;
+            if (info.ConstructibleClass != constructibleClass) continue;
             // create a new item
             const item = GetQueuedItemData(city, info, result);
             items.push(item);
@@ -353,8 +374,9 @@ class bzProductionChooserScreen {
                 if (!loc) return -1;
                 return GameplayMap.getIndexFromLocation(loc);
             })();
-            const details = this.getYieldDetails(city, info, plot);
-            console.warn(`TRIX DETAILS ${info.ConstructibleType} ${JSON.stringify(details)}`);
+            const yields = this.getPlotYields(city, info, plot);
+            item.sortValue = BuildingPlacementManager.bzYieldScore(yields);
+            item.secondaryDetails = this.getYieldDetails(yields);
             // update item status and error message
             if (result.InQueue && !isPurchase) {
                 item.disabled = true;
@@ -406,14 +428,13 @@ class bzProductionChooserScreen {
                 const info = GameInfo.Constructibles.lookup(type);
                 const yields = BuildingPlacementManager
                     .getBestYieldForConstructible(city.id, info);
-                item.sortValue = BuildingPlacementManager.bzYieldScore(yields);
+                item.sortValue ??= BuildingPlacementManager.bzYieldScore(yields);
             } else if (item.category == "projects") {
                 item.sortTier = 0;
                 item.sortValue = city.Production?.getProjectProductionCost(type) ?? 0;
-            } else {
-                item.sortTier = 0;
-                item.sortValue = 0;
             }
+            item.sortTier ??= 0;
+            item.sortValue ??= 0;
         }
         list.sort((a, b) => {
             if (a.sortTier != b.sortTier) return b.sortTier - a.sortTier;
