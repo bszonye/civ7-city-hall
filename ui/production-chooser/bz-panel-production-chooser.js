@@ -306,9 +306,7 @@ class bzProductionChooserScreen {
     }
     updateItems() {
         const c = this.component;
-        if (!c.isInitialLoadComplete) {
-            return;
-        }
+        if (!c.isInitialLoadComplete) return;
         const city = c.city;
         const items = GetProductionItems(
             city,
@@ -332,7 +330,8 @@ class bzProductionChooserScreen {
             }
         }
         c.items = items;
-        if (resetFocus || c.Root.contains(currentFocus) && !c.buildQueue.contains(currentFocus)) {
+        if (resetFocus ||
+            c.Root.contains(currentFocus) && !c.buildQueue.contains(currentFocus)) {
             FocusManager.setFocus(c.productionAccordion);
         }
     }

@@ -16,8 +16,7 @@ const isUnlockable = (playerID, nodeType) => {
 const unlockName = (playerID, nodeType) => {
     const nodeData = Game.ProgressionTrees.getNode(playerID ?? -1, nodeType ?? -1);
     if (!nodeData) return null;
-    const nodeName = getNodeName(nodeData);
-    return Locale.compose("LOC_UI_PRODUCTION_REQUIRES", nodeName);
+    return Locale.compose("LOC_UI_PRODUCTION_REQUIRES", getNodeName(nodeData));
 }
 
 const GetUnitStatsFromDefinition = (definition) => {
@@ -71,20 +70,23 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const improvement = GameInfo.Improvements.lookup(info.ConstructibleType);
     const wonder = GameInfo.Wonders.lookup(info.ConstructibleType);
     const unique = (building ?? improvement ?? wonder)?.TraitType;
+    const multiple = building?.MultiplePerCity ||
+        improvement && !improvement.OnePerSettlement;
+    const category = wonder ? "wonders" : "buildings";
+    const repairDamaged = result.RepairDamaged ?? false;
     const altName =
-        result.RepairDamaged && info.Repairable ? "LOC_UI_PRODUCTION_REPAIR_NAME" :
+        repairDamaged && info.Repairable ? "LOC_UI_PRODUCTION_REPAIR_NAME" :
         result.MoveToNewLocation? "LOC_UI_PRODUCTION_MOVE_NAME" : null;
     const name = altName ? Locale.compose(altName, info.Name) : info.Name;
     const ageless = BZ_AGELESS_TYPES.has(hash);
     const insufficientFunds = result.InsufficientFunds ?? false;
     const recommendations = AdvisorUtilities.getBuildRecommendationIcons(recs, type);
-    const repairDamaged = result.RepairDamaged ?? false;
     // note: some items are not researchable (like locked legacy items)
     const locked = result.Locked ?? false;
     const lockType = result.NeededUnlock ?? -1;  // research type
     const unlockable = isUnlockable(city.owner, lockType);
     const viewable = !locked || unlockable || unique;
-    if (result.Success || viewable && (insufficientFunds || viewHidden)) {
+    if (result.Success || result.InProgress || viewable && (insufficientFunds || viewHidden)) {
         const plots = [];
         if (result.InProgress || repairDamaged) {
             plots.push(...result.Plots);
@@ -98,19 +100,16 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             if (result.ExpandUrbanPlots) plots.push(...result.ExpandUrbanPlots);
         }
         const plotIndex = plots.length == 1 ? plots[0] : -1;
+        const locations = Locale.compose("LOC_UI_PRODUCTION_LOCATIONS", plots.length);
         const yieldChanges = bzGetYieldChanges(city, info, plotIndex);
         const yieldDetails = bzGetYieldDetails(yieldChanges);
         const secondaryDetails = GetSecondaryDetailsHTML(yieldDetails);
         const cost = result.Cost ??
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
-        const disableQueued = result.InQueue && !isPurchase &&
-            info.ConstructibleClass === "BUILDING";
-        const category = getConstructibleClassPanelCategory(info.ConstructibleClass);
+        const disableQueued = result.InQueue && !isPurchase && !multiple;
         const disabled = !plots.length || disableQueued || insufficientFunds;
-        // sort value
-        // console.warn(`TRIX RESULT ${JSON.stringify(result)}`);
-        // console.warn(`TRIX YIELDS ${JSON.stringify(yieldChanges)} ${type}`);
+        // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ? BPM.bzYieldScore(yieldChanges) : 0;
         const sortTier =
@@ -120,12 +119,8 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             !yieldChanges.length ? -10 :
             buildingTier;
         const sortValue = sortTier == buildingTier ? yieldScore : buildingTier;
-        // console.warn(`TRIX SORT ${type} ${sortTier}:${sortValue}`);
+        // assemble item
         if (!disabled) {
-            const locations = Locale.compose(
-                "LOC_UI_PRODUCTION_LOCATIONS",
-                plots.length
-            );
             const item = {
                 sortTier,
                 sortValue,
@@ -158,7 +153,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             return item;
         } else if (insufficientFunds && plots.length || disableQueued || viewHidden) {
             let error = "";
-            if (result.RepairDamaged && info.Repairable) {
+            if (repairDamaged && info.Repairable) {
                 error = result.InsufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" : "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE";
             } else {
                 error =
@@ -190,6 +185,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
                 // data-is-ageless
                 ageless,
                 // data-secondary-details
+                locations,
                 yieldChanges,
                 secondaryDetails,
             };
@@ -215,40 +211,46 @@ const getProjectItems = (city, isPurchase) => {
         // console.warn(`TRIX PROJECT ${info.ProjectType}`);
         // console.warn(`TRIX RESULT ${JSON.stringify(result)}`);
         if (result.Requirements?.FullFailure) continue;
-        if (result.Requirements && result.Requirements?.FullFailure != true) {
-            if (result.Requirements.MeetsRequirements) {
-                const type = info.ProjectType;
-                const hash = info.$hash;
-                const turns = city.BuildQueue.getTurnsLeft(hash);
-                const cost = city.Production.getProjectProductionCost(hash);
-                const projectItem = {
-                    sortTier: 0,
-                    sortValue: cost,
-                    // disabled
-                    disabled: !result.Success,
-                    // data-category
-                    category: "projects" /* PROJECTS */,
-                    // data-name
-                    name: info.Name,
-                    // data-type
-                    type,
-                    // data-cost
-                    cost,
-                    turns,
-                    showTurns: info.UpgradeToCity && info.TownOnly,
-                    showCost: false,
-                    // data-prereq
-                    // data-description
-                    description: info.Description,
-                    // data-error
-                    insufficientFunds: false,
-                };
-                if (info.UpgradeToCity && info.TownOnly) {
-                    projects.unshift(projectItem);
-                } else {
-                    projects.push(projectItem);
-                }
-            }
+        if (!result.Requirements?.MeetsRequirements) continue;
+        const type = info.ProjectType;
+        const hash = info.$hash;
+        const turns = city.BuildQueue.getTurnsLeft(hash);
+        const cost = city.Production.getProjectProductionCost(hash);
+        // limit queuing to MaxPlayerInstances
+        const queue = city.BuildQueue;
+        const inQueue = queue?.getQueue()?.filter(i => i.type == hash)?.length ?? 0;
+        const limited = (info.MaxPlayerInstances ?? 999) <= inQueue;
+        const error = limited ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : null;
+        // sort projects
+        const sortTier = queue?.getProgress(hash) ? 9 : 0;
+        const sortValue = cost;
+        const projectItem = {
+            sortTier,
+            sortValue,
+            // disabled
+            disabled: !result.Success || limited,
+            // data-category
+            category: "projects" /* PROJECTS */,
+            // data-name
+            name: info.Name,
+            // data-type
+            type,
+            // data-cost
+            cost,
+            turns,
+            showTurns: info.UpgradeToCity && info.TownOnly,
+            showCost: false,
+            // data-prereq
+            // data-description
+            description: info.Description,
+            // data-error
+            insufficientFunds: false,
+            error,
+        };
+        if (info.UpgradeToCity && info.TownOnly) {
+            projects.unshift(projectItem);
+        } else {
+            projects.push(projectItem);
         }
     }
     return projects;
@@ -373,7 +375,7 @@ const GetProductionItems = (city, recs, goldBalance, isPurchase, viewHidden, uqI
     }
     // sort items
     for (const list of Object.values(items)) {
-        bzSortProductionItems(list, city);
+        bzSortProductionItems(list);
     }
     // console.warn(`TRIX ITEMS ${items.buildings.map(i => i.type)}`);
     return items;
@@ -401,16 +403,6 @@ const createRepairAllProductionChooserItemData = (cost, turns) => {
         sortTier: 8,
         sortValue: 0,
     };
-};
-const getConstructibleClassPanelCategory = (constructibleClass) => {
-    switch (constructibleClass) {
-        case "IMPROVEMENT":
-            return "buildings" /* BUILDINGS */;
-        case "WONDER":
-            return "wonders" /* WONDERS */;
-        default:
-            return "buildings" /* BUILDINGS */;
-    }
 };
 const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
     const units = [];
@@ -444,10 +436,27 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         if (locked && !unlockable) continue;
         const cost = city.Gold.getUnitPurchaseCost(YieldTypes.YIELD_GOLD, info.UnitType);
         const turns = city.BuildQueue.getTurnsLeft(hash);
-        const stats = GetUnitStatsFromDefinition(info);
-        const secondaryDetails = GetSecondaryDetailsHTML(stats);
+        const unitDetails = GetUnitStatsFromDefinition(info);
+        const secondaryDetails = GetSecondaryDetailsHTML(unitDetails);
         const recommendations = AdvisorUtilities.getBuildRecommendationIcons(recs, type);
+        // sorting
+        const progress = city.BuildQueue?.getProgress(hash) ?? 0;
+        const stats = GameInfo.Unit_Stats.lookup(hash);
+        const cv = info.CanEarnExperience ? Number.MAX_VALUE :
+            stats?.RangedCombat || stats?.Combat || 0;
+        const sortTier =
+            progress ? 9 :
+            info.FoundCity ? 2 :  // settlers
+            info.CoreClass == "CORE_CLASS_RECON" ? 1 :  // scouts
+            cv <= 0 ? 0 :  // civilians
+            info.Domain == "DOMAIN_LAND" ? -1 :
+            info.Domain == "DOMAIN_SEA" ? -2 :
+            info.Domain == "DOMAIN_AIR" ? -3 :
+            10;  // unknown (list first for investigation)
+        const sortValue = cv;
         const data = {
+            sortTier,
+            sortValue,
             // disabled
             disabled: !result.Success,
             // data-category
@@ -507,31 +516,8 @@ function bzGetYieldDetails(yieldChanges) {
     }
     return details;
 }
-function bzSortProductionItems(list, city) {
+function bzSortProductionItems(list) {
     for (const item of list) {
-        const type = Game.getHash(item.type);
-        const progress = city.BuildQueue?.getProgress(type) ?? 0;
-        if ("sortTier" in item) {
-            // already set
-        } else if (progress) {
-            // show in-progress items first
-            item.sortTier = 9;
-            item.sortValue = city.BuildQueue.getPercentComplete(type);
-        } else if (item.category == "units") {
-            const unitInfo = GameInfo.Units.lookup(type);
-            const unitStats = GameInfo.Unit_Stats.lookup(type);
-            const cv = unitInfo.CanEarnExperience ? Number.MAX_VALUE :
-                unitStats?.RangedCombat || unitStats?.Combat || 0;
-            item.sortTier =
-                unitInfo.FoundCity ? 2 :  // settlers
-                unitInfo.CoreClass == "CORE_CLASS_RECON" ? 1 :  // scouts
-                cv <= 0 ? 0 :  // civilians
-                unitInfo.Domain == "DOMAIN_LAND" ? -1 :
-                unitInfo.Domain == "DOMAIN_SEA" ? -2 :
-                unitInfo.Domain == "DOMAIN_AIR" ? -3 :
-                9;  // unknown (list first for investigation)
-            item.sortValue = cv;
-        }
         item.sortTier ??= 0;
         item.sortValue ??= 0;
     }
