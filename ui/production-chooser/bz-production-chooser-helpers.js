@@ -89,7 +89,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     if (result.Success || result.InProgress || viewable && (insufficientFunds || viewHidden)) {
         const plots = [];
         if (result.InProgress || repairDamaged) {
-            plots.push(...result.Plots);
+            if (result.Plots) plots.push(...result.Plots);
         } else if (result.InQueue) {
             // TODO: limit this to the queued location
             const queue = city.BuildQueue?.getQueue();
@@ -108,7 +108,17 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
         const disableQueued = result.InQueue && !isPurchase && !multiple;
+        const repairQueued = repairDamaged && !plots.length;
         const disabled = !plots.length || disableQueued || insufficientFunds;
+        const showError = disableQueued || insufficientFunds && plots.length;
+        console.warn(`TRIX RESULT ${type} ${JSON.stringify(result)}`);
+        if (disabled && !viewHidden && !showError) return null;
+        const error =
+            result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
+            locked && lockType != -1 ? unlockName(city.owner, lockType) :
+            insufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
+            disableQueued || repairQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
+            !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
         // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ? BPM.bzYieldScore(yieldChanges) : 0;
@@ -120,76 +130,37 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             buildingTier;
         const sortValue = sortTier == buildingTier ? yieldScore : buildingTier;
         // assemble item
-        if (!disabled) {
-            const item = {
-                sortTier,
-                sortValue,
-                interfaceMode: "INTERFACEMODE_PLACE_BUILDING",
-                // disabled
-                disabled,
-                // data-category
-                category,
-                // data-name
-                name,
-                // data-type
-                type,
-                repairDamaged,
-                // data-cost
-                cost,
-                turns,
-                showTurns: turns > -1,
-                showCost: cost > 0,
-                // data-error
-                insufficientFunds,
-                // data-is-ageless
-                ageless,
-                // data-secondary-details
-                locations,
-                yieldChanges,
-                secondaryDetails,
-                // data-recommendations
-                recommendations,
-            };
-            return item;
-        } else if (insufficientFunds && plots.length || disableQueued || viewHidden) {
-            let error = "";
-            if (repairDamaged && info.Repairable) {
-                error = result.InsufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" : "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE";
-            } else {
-                error =
-                    result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
-                    locked && lockType != -1 ? unlockName(city.owner, lockType) :
-                    insufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
-                    !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" :
-                    disableQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : "";
-            }
-            return {
-                sortTier,
-                sortValue,
-                // disabled
-                disabled,
-                // data-category
-                category,
-                // data-name
-                name,
-                // data-type
-                type,
-                // data-cost
-                cost,
-                turns,
-                showTurns: turns > -1,
-                showCost: cost > 0,
-                // data-error
-                insufficientFunds,
-                error,
-                // data-is-ageless
-                ageless,
-                // data-secondary-details
-                locations,
-                yieldChanges,
-                secondaryDetails,
-            };
-        }
+        const item = {
+            sortTier,
+            sortValue,
+            interfaceMode: "INTERFACEMODE_PLACE_BUILDING",
+            // disabled
+            disabled,
+            // data-category
+            category,
+            // data-name
+            name,
+            // data-type
+            type,
+            repairDamaged,
+            // data-cost
+            cost,
+            turns,
+            showTurns: turns > -1,
+            showCost: cost > 0,
+            // data-error
+            insufficientFunds,
+            error,
+            // data-is-ageless
+            ageless,
+            // data-secondary-details
+            locations,
+            yieldChanges,
+            secondaryDetails,
+            // data-recommendations
+            recommendations,
+        };
+        return item;
     }
     return null;
 };
@@ -220,7 +191,7 @@ const getProjectItems = (city, isPurchase) => {
         const queue = city.BuildQueue;
         const inQueue = queue?.getQueue()?.filter(i => i.type == hash)?.length ?? 0;
         const limited = (info.MaxPlayerInstances ?? 999) <= inQueue;
-        const error = limited ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : null;
+        const error = limited ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : void 0;
         // sort projects
         const sortTier = queue?.getProgress(hash) ? 9 : 0;
         const sortValue = cost;
@@ -354,13 +325,11 @@ const GetProductionItems = (city, recs, goldBalance, isPurchase, viewHidden, uqI
                 repairableTotalCost += data.cost * numberOfPlots;
                 repairableTotalTurns += data.turns * numberOfPlots;
                 repairItems.push(data);
-            } else {
-                if (data.repairDamaged) {
-                    repairableItemCount++;
-                    repairableTotalCost += data.cost;
-                    repairableTotalTurns += data.turns;
-                    repairItems.push(data);
-                }
+            } else if (data.repairDamaged && !data.disabled) {
+                repairableItemCount++;
+                repairableTotalCost += data.cost;
+                repairableTotalTurns += data.turns;
+                repairItems.push(data);
             }
             items[data.category].push(data);
         }
@@ -390,18 +359,18 @@ const createRepairAllProductionChooserItemData = (cost, turns) => {
     }
     const isInsufficientFunds = cost > (localPlayer.Treasury?.goldBalance || 0);
     return {
-        type: "IMPROVEMENT_REPAIR_ALL",
+        sortTier: 8,
+        sortValue: 0,
+        disabled: isInsufficientFunds,
         category: "buildings" /* BUILDINGS */,
         name: "LOC_UI_PRODUCTION_REPAIR_ALL",
+        type: "IMPROVEMENT_REPAIR_ALL",
         cost,
         turns,
         showTurns: turns > -1,
         showCost: cost > 0,
         insufficientFunds: isInsufficientFunds,
         error: isInsufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" : void 0,
-        disabled: isInsufficientFunds,
-        sortTier: 8,
-        sortValue: 0,
     };
 };
 const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
