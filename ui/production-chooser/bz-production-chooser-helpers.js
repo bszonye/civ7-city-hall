@@ -1,15 +1,24 @@
 import { Icon } from '/core/ui/utilities/utilities-image.chunk.js';
 import { BuildingPlacementManager as BPM } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
-
-const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";
-const BZ_REPAIR_ALL_ID = Game.getHash(BZ_REPAIR_ALL);
-const BZ_ALREADY_IN_QUEUE = "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE";
-const BZ_INSUFFICIENT_FUNDS = "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS";
+import { c as getNodeName } from '/base-standard/ui/utilities/utilities-textprovider.chunk.js';
 
 // building tag helpers
-const tagTypes = (tag) => GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type);
+const tagTypes = (tag) => GameInfo.TypeTags
+    .filter(e => e.Tag == tag).map(e => Game.getHash(e.Type));
 const BZ_AGELESS_TYPES = new Set(tagTypes("AGELESS"));
+
+const isUnlockable = (playerID, nodeType) => {
+    if (nodeType == null) return false;  // null or undefined
+    const state = Game.ProgressionTrees.getNodeState(playerID, nodeType);
+    return ProgressionTreeNodeState.NODE_STATE_OPEN <= state;
+}
+const unlockName = (playerID, nodeType) => {
+    const nodeData = Game.ProgressionTrees.getNode(playerID ?? -1, nodeType ?? -1);
+    if (!nodeData) return null;
+    const nodeName = getNodeName(nodeData);
+    return Locale.compose("LOC_UI_PRODUCTION_REQUIRES", nodeName);
+}
 
 const GetUnitStatsFromDefinition = (definition) => {
     const stats = [];
@@ -55,57 +64,71 @@ const GetSecondaryDetailsHTML = (items) => {
         return acc + `<div class="flex items-center mr-2"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-8" />${value}</div>`;
     }, "");
 };
-const GetConstructibleItemData = (constructible, city, result, viewHidden) => {
-    const cityGold = city.Gold;
-    if (!cityGold) {
-        console.error("GetConstructibleItemData: getConstructibleItem: Failed to get cityGold!");
-        return null;
-    }
-    const ageless = BZ_AGELESS_TYPES.has(constructible.ConstructibleType);
+const GetConstructibleItemData = (info, city, result, viewHidden) => {
+    const type = info.ConstructibleType;
+    const hash = info.$hash;
+    const building = GameInfo.Buildings.lookup(info.ConstructibleType);
+    const improvement = GameInfo.Improvements.lookup(info.ConstructibleType);
+    const wonder = GameInfo.Wonders.lookup(info.ConstructibleType);
+    const unique = (building ?? improvement ?? wonder)?.TraitType;
+    if (unique) console.warn(`TRIX UNIQUE ${type} ${unique}`);
+    const altName =
+        result.RepairDamaged && info.Repairable ? "LOC_UI_PRODUCTION_REPAIR_NAME" :
+        result.MoveToNewLocation? "LOC_UI_PRODUCTION_MOVE_NAME" : null;
+    const name = altName ? Locale.compose(altName, info.Name) : info.Name;
+    const ageless = BZ_AGELESS_TYPES.has(hash);
     const insufficientFunds = result.InsufficientFunds ?? false;
-    // TODO: add .locked property to items for sorting
-    const unlockable = result.Locked && ProgressionTreeNodeState.NODE_STATE_OPEN <=
-        Game.ProgressionTrees.getNodeState(city.owner, result.NeededUnlock);
-    if (unlockable) console.warn(`TRIX UNLOCKABLE ${constructible.ConstructibleType}`);
-    if (result.Success || insufficientFunds || viewHidden || unlockable) {
+    const repairDamaged = result.RepairDamaged ?? false;
+    // note: some items are not researchable (like locked legacy items)
+    const locked = result.Locked ?? false;
+    const lockType = result.NeededUnlock;  // research type
+    const unlockable = isUnlockable(city.owner, lockType);
+    const viewable = !locked || unlockable || unique;
+    if (result.Success || viewable && (insufficientFunds || viewHidden)) {
         const plots = [];
-        if (result.InProgress || result.RepairDamaged) {
+        if (result.InProgress || repairDamaged) {
             plots.push(...result.Plots);
         } else if (result.InQueue) {
             // TODO: limit this to the queued location
             const queue = city.BuildQueue?.getQueue();
-            const loc = queue?.find(i => i.type == constructible.$hash)?.location;
+            const loc = queue?.find(i => i.type == hash)?.location;
             plots.push(GameplayMap.getIndexFromLocation(loc));
         } else {
             if (result.Plots) plots.push(...result.Plots);
             if (result.ExpandUrbanPlots) plots.push(...result.ExpandUrbanPlots);
         }
-        console.warn(`TRIX PLOTS ${constructible.ConstructibleType} ${result.Plots?.length}`);
+        // console.warn(`TRIX PLOTS ${type} ${result.Plots?.length}`);
         const plotIndex = plots.length == 1 ? plots[0] : -1;
-        const yieldChanges = bzGetYieldChanges(city, constructible, plotIndex);
+        const yieldChanges = bzGetYieldChanges(city, info, plotIndex);
         const yieldDetails = bzGetYieldDetails(yieldChanges);
         const secondaryDetails = GetSecondaryDetailsHTML(yieldDetails);
-        const turns = city.BuildQueue.getTurnsLeft(constructible.ConstructibleType);
+        const turns = city.BuildQueue.getTurnsLeft(hash);
         const isPurchase = result.Cost;
+        const buildingTier = improvement ? 1 : ageless ? -1 : 0;
+        const sortTier =
+            result.Locked ? -9 :
+            result.InProgress ? 9 :
+            repairDamaged ? 7 :
+            buildingTier;
+        const sortValue =
+            locked || result.InProgress || repairDamaged ? buildingTier :
+            building || improvement ? BPM.bzYieldScore(yieldChanges) : -1;
+        console.warn(`TRIX SORT ${type} ${sortTier}:${sortValue}`);
         console.warn(`TRIX RESULT ${JSON.stringify(result)}`);
-        const isBuildingAlreadyQueued = result.InQueue && !isPurchase &&
-            constructible.ConstructibleClass === "BUILDING";
-        const category = getConstructibleClassPanelCategory(constructible.ConstructibleClass);
-        if (plots.length && !isBuildingAlreadyQueued && !result.InsufficientFunds) {
-            let name = constructible.Name;
-            if (result.RepairDamaged && constructible.Repairable) {
-                name = Locale.compose("LOC_UI_PRODUCTION_REPAIR_NAME", constructible.Name);
-            } else if (result.MoveToNewLocation) {
-                name = Locale.compose("LOC_UI_PRODUCTION_MOVE_NAME", constructible.Name);
-            }
+        const disableQueued = result.InQueue && !isPurchase &&
+            info.ConstructibleClass === "BUILDING";
+        const category = getConstructibleClassPanelCategory(info.ConstructibleClass);
+        const disabled = !plots.length || disableQueued || insufficientFunds;
+        if (!disabled) {
             const locations = Locale.compose(
                 "LOC_UI_PRODUCTION_LOCATIONS",
                 plots.length
             );
-            const cost = result.Cost ?? cityGold.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, constructible.ConstructibleType);
+            const cost = result.Cost ??
+                city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
             const item = {
                 name,
-                type: constructible.ConstructibleType,
+                type,
                 cost,
                 category,
                 ageless,
@@ -113,39 +136,34 @@ const GetConstructibleItemData = (constructible, city, result, viewHidden) => {
                 showTurns: turns > -1,
                 showCost: cost > 0,
                 insufficientFunds,
-                disabled: constructible.Cost < 0,
+                disabled,
                 locations,
                 interfaceMode: "INTERFACEMODE_PLACE_BUILDING",
                 yieldChanges,
                 secondaryDetails,
-                repairDamaged: result.RepairDamaged
+                repairDamaged,
+                sortTier,
+                sortValue,
             };
             return item;
-        } else if (insufficientFunds && plots.length || isBuildingAlreadyQueued || unlockable || viewHidden) {
-            let name = constructible.Name;
+        } else if (insufficientFunds && plots.length || disableQueued || viewHidden) {
             let error = "";
-            let nodeNeededError = "";
-            if (result.Locked) {
-                const nodeInfo = GameInfo.ProgressionTreeNodes.lookup(result.NeededUnlock);
-                if (nodeInfo) {
-                    nodeNeededError = Locale.compose("LOC_UI_PRODUCTION_REQUIRES", nodeInfo.Name);
-                }
-            }
-            if (result.RepairDamaged && constructible.Repairable) {
-                name = Locale.compose("LOC_UI_PRODUCTION_REPAIR_NAME", constructible.Name);
+            const nodeNeededError = unlockable && unlockName(city.owner, lockType) || "";
+            if (result.RepairDamaged && info.Repairable) {
                 error = result.InsufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" : "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE";
             } else {
                 error =
                     result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
-                    result.NeededUnlock && result.NeededUnlock != -1 ? nodeNeededError :
-                    result.InsufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
-                    plots.length === 0 ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" :
-                    result.InQueue ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : "";
+                    locked && result.NeededUnlock != -1 ? nodeNeededError :
+                    insufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
+                    !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" :
+                    disableQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : "";
             }
-            const cost = result.Cost ?? cityGold.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, constructible.ConstructibleType);
+            const cost = result.Cost ??
+                city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
             return {
                 name,
-                type: constructible.ConstructibleType,
+                type,
                 cost,
                 turns,
                 category,
@@ -153,10 +171,12 @@ const GetConstructibleItemData = (constructible, city, result, viewHidden) => {
                 showTurns: turns > -1,
                 showCost: cost > 0,
                 insufficientFunds,
-                disabled: true,
+                disabled,
                 error,
                 yieldChanges,
-                secondaryDetails
+                secondaryDetails,
+                sortTier,
+                sortValue,
             };
         }
     }
@@ -180,8 +200,9 @@ const getProjectItems = (city, isPurchase) => {
         );
         if (result.Requirements && result.Requirements?.FullFailure != true) {
             if (result.Requirements.MeetsRequirements) {
-                const turns = city.BuildQueue.getTurnsLeft(project.ProjectType);
-                const cost = city.Production.getProjectProductionCost(project.ProjectType);
+                const hash = project.$hash;
+                const turns = city.BuildQueue.getTurnsLeft(hash);
+                const cost = city.Production.getProjectProductionCost(hash);
                 const projectItem = {
                     name: project.Name,
                     description: project.Description,
@@ -192,7 +213,9 @@ const getProjectItems = (city, isPurchase) => {
                     showTurns: project.UpgradeToCity && project.TownOnly,
                     showCost: false,
                     insufficientFunds: false,
-                    disabled: !result.Success
+                    disabled: !result.Success,
+                    sortTier: 0,
+                    sortValue: cost,
                 };
                 if (project.UpgradeToCity && project.TownOnly) {
                     projects.unshift(projectItem);
@@ -342,7 +365,9 @@ const createRepairAllProductionChooserItemData = (cost, turns) => {
         showCost: cost > 0,
         insufficientFunds: isInsufficientFunds,
         error: isInsufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" : void 0,
-        disabled: isInsufficientFunds
+        disabled: isInsufficientFunds,
+        sortTier: 8,
+        sortValue: 0,
     };
 };
 const getConstructibleClassPanelCategory = (constructibleClass) => {
@@ -375,17 +400,21 @@ const getUnits = (city, playerGoldBalance, isPurchase, recommendations, viewHidd
         if (result.Requirements?.FullFailure || result.Requirements?.Obsolete) {
             continue;
         }
-        const definition = GameInfo.Units.lookup(index);
-        if (!definition) {
+        const info = GameInfo.Units.lookup(index);
+        if (!info) {
             console.error(`getUnits: Failed to find UnitDefinition for UnitType: ${index}`);
             continue;
         }
-        const cost = cityGoldLibrary.getUnitPurchaseCost(YieldTypes.YIELD_GOLD, definition.UnitType);
-        const secondaryDetails = GetSecondaryDetailsHTML(GetUnitStatsFromDefinition(definition));
-        const turns = isPurchase ? -1 : city.BuildQueue.getTurnsLeft(definition.UnitType) ?? -1;
+        const lockType = result.Requirements?.NeededProgressionTreeNode;
+        const locked = lockType != null;
+        const unlockable = isUnlockable(city.owner, lockType);
+        if (locked && !unlockable) continue;
+        const cost = cityGoldLibrary.getUnitPurchaseCost(YieldTypes.YIELD_GOLD, info.UnitType);
+        const secondaryDetails = GetSecondaryDetailsHTML(GetUnitStatsFromDefinition(info));
+        const turns = isPurchase ? -1 : city.BuildQueue.getTurnsLeft(info.UnitType) ?? -1;
         const data = {
-            name: definition.Name,
-            type: definition.UnitType,
+            name: info.Name,
+            type: info.UnitType,
             ageless: false,
             cost,
             turns,
@@ -399,11 +428,8 @@ const getUnits = (city, playerGoldBalance, isPurchase, recommendations, viewHidd
         if (result.Requirements?.MeetsRequirements) {
             data.recommendations = AdvisorUtilities.getBuildRecommendationIcons(recommendations, data.type);
         }
-        if (result.Requirements?.NeededProgressionTreeNode) {
-            const nodeInfo = GameInfo.ProgressionTreeNodes.lookup(result.Requirements.NeededProgressionTreeNode);
-            if (nodeInfo) {
-                data.error = Locale.compose("LOC_UI_PRODUCTION_REQUIRES", nodeInfo.Name);
-            }
+        if (locked) {
+            data.error = unlockName(city.owner, lockType);
         }
         if (result.Requirements?.NeededPopulation) {
             data.error = Locale.compose("LOC_UI_PRODUCTION_REQUIRES_POPULATION", result.Requirements.NeededPopulation);
@@ -416,52 +442,6 @@ const getUnits = (city, playerGoldBalance, isPurchase, recommendations, viewHidd
     return units;
 };
 
-const bzGetQueuedItemData = (city, constructible, result) => {
-    const cityGold = city.Gold;
-    if (!cityGold) {
-        console.error("GetConstructibleItemData: getConstructibleItem: Failed to get cityGold!");
-        return null;
-    }
-    const ageless = BZ_AGELESS_TYPES.has(constructible.ConstructibleType);
-    const insufficientFunds = result.InsufficientFunds ?? false;
-    const plots = [];
-    const pushPlots = (p) => {
-        plots.push(p);
-    };
-    result.Plots?.forEach(pushPlots);
-    result.ExpandUrbanPlots?.forEach(pushPlots);
-    const turns = city.BuildQueue.getTurnsLeft(constructible.ConstructibleType);
-    const category = "buildings";
-    if (!plots.length) return null;
-    let name = constructible.Name;
-    if (result.RepairDamaged && constructible.Repairable) {
-        name = Locale.compose("LOC_UI_PRODUCTION_REPAIR_NAME", constructible.Name);
-    } else if (result.MoveToNewLocation) {
-        name = Locale.compose("LOC_UI_PRODUCTION_MOVE_NAME", constructible.Name);
-    }
-    const locations = Locale.compose(
-        "LOC_UI_PRODUCTION_LOCATIONS",
-        plots.length
-    );
-    const cost = result.Cost ?? cityGold.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, constructible.ConstructibleType);
-    const item = {
-        name,
-        type: constructible.ConstructibleType,
-        cost,
-        category,
-        ageless,
-        turns,
-        showTurns: turns > -1,
-        showCost: cost > 0,
-        insufficientFunds,
-        disabled: constructible.Cost < 0,
-        locations,
-        interfaceMode: "INTERFACEMODE_PLACE_BUILDING",
-        // secondaryDetails,
-        repairDamaged: result.RepairDamaged
-    };
-    return item;
-};
 function bzGetYieldChanges(city, constructibleDef, plotIndex=-1) {
     const changes = plotIndex != -1 ?
         BPM.bzGetPlotYieldForConstructible(city.id, constructibleDef, plotIndex) :
@@ -486,68 +466,13 @@ function bzGetYieldDetails(yieldChanges) {
     }
     return details;
 }
-function _bzAddQueuedItems(list, constructibleClass, city, recommendations, isPurchase) {
-    // TODO: REMOVE THIS
-    // always show queued buildings with progress
-    if (!list) return;
-    const results = isPurchase ?
-        Game.CityCommands.canStartQuery(
-            city.id, CityCommandTypes.PURCHASE, CityQueryType.Constructible
-        ) : Game.CityOperations.canStartQuery(
-            city.id, CityOperationTypes.BUILD, CityQueryType.Constructible
-        );
-    const items = [];
-    const types = new Set();
-    for (const { index, result } of results) {
-        // create entries for in-progress and queued buildings
-        // TODO: exclude repairs?
-        if (!result.InProgress && !result.InQueue) continue;
-        const info = GameInfo.Constructibles.lookup(index);
-        if (info.ConstructibleClass != constructibleClass) continue;
-        // create a new item
-        const item = bzGetQueuedItemData(city, info, result);
-        items.push(item);
-        types.add(item.type);
-        // get advisor recommendations
-        item.recommendations = AdvisorUtilities.getBuildRecommendationIcons(
-            recommendations,
-            item.type
-        );
-        // get yields
-        const plot = result.InProgress ? result.Plots[0] : (() => {
-            const queue = city.BuildQueue?.getQueue();
-            const loc = queue?.find(i => i.type == info.$hash)?.location;
-            if (!loc) return -1;
-            return GameplayMap.getIndexFromLocation(loc);
-        })();
-        item.yieldChanges = bzGetYieldChanges(city, info, plot);
-        console.warn(`TRIX YIELDS ${JSON.stringify(item.yieldChanges)}`);
-        item.sortValue = BPM.bzYieldScore(item.yieldChanges);
-        const yieldDetails = bzGetYieldDetails(item.yieldChanges);
-        item.secondaryDetails = GetSecondaryDetailsHTML(yieldDetails);
-        // update item status and error message
-        if (result.InQueue && !isPurchase) {
-            item.disabled = true;
-            item.error ??= BZ_ALREADY_IN_QUEUE;
-        } else if (item.insufficientFunds) {
-            item.disabled = true;
-            item.error = BZ_INSUFFICIENT_FUNDS;
-        }
-    }
-    if (items.length) {
-        // filter duplicate items and merge lists
-        const dedup = list.filter(item => !types.has(item.type));
-        list.splice(0, Infinity, ...items, ...dedup);
-    }
-}
 function bzSortProductionItems(list, city) {
-    const buildingTier = (item, info) =>
-        info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.ageless ? -1 : 0;
     for (const item of list) {
         const type = Game.getHash(item.type);
         const progress = city.BuildQueue?.getProgress(type) ?? 0;
-        const consInfo = GameInfo.Constructibles.lookup(type);
-        if (progress) {
+        if ("sortTier" in item) {
+            // already set
+        } else if (progress) {
             // show in-progress items first
             item.sortTier = 9;
             item.sortValue = city.BuildQueue.getPercentComplete(type);
@@ -565,20 +490,6 @@ function bzSortProductionItems(list, city) {
                 unitInfo.Domain == "DOMAIN_AIR" ? -3 :
                 9;  // unknown (list first for investigation)
             item.sortValue = cv;
-        } else if (type == BZ_REPAIR_ALL_ID) {
-            item.sortTier = 8;
-            item.sortValue = 0;
-        } else if (item.repairDamaged) {
-            item.sortTier = 7;
-            item.sortValue = buildingTier(item, consInfo);
-        } else if (item.category == "buildings") {
-            item.sortTier = buildingTier(item, consInfo);
-            const info = GameInfo.Constructibles.lookup(type);
-            const yieldChanges = BPM.getBestYieldForConstructible(city.id, info);
-            item.sortValue ??= BPM.bzYieldScore(yieldChanges);
-        } else if (item.category == "projects") {
-            item.sortTier = 0;
-            item.sortValue = city.Production?.getProjectProductionCost(type) ?? 0;
         }
         item.sortTier ??= 0;
         item.sortValue ??= 0;
