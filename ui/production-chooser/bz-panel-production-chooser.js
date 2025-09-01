@@ -5,7 +5,7 @@ import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.
 import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
 import { g as GetProductionItems } from './bz-production-chooser-helpers.js';
 
-const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";  // TODO: move to helper script
+const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";
 const BZ_REPAIR_ALL_ID = Game.getHash(BZ_REPAIR_ALL);
 
 // color palette
@@ -366,7 +366,6 @@ Controls.decorate("panel-production-chooser", (val) => new bzProductionChooserSc
 class bzProductionChooserItem {
     static c_prototype;
     static c_render;
-    comma = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL_COMMA", 0).at(2);
     pCostContainer = document.createElement("div");
     pCostIconElement = document.createElement("span");
     pCostAmountElement = document.createElement("span");
@@ -396,14 +395,7 @@ class bzProductionChooserItem {
         }
     }
     beforeAttach() { }
-    afterAttach() {
-        const c = this.component;
-        // remove commas from yield and unit icons
-        if (this.comma) {
-            c.secondaryDetailsElement.innerHTML = c.secondaryDetailsElement.innerHTML
-                .replaceAll(`${this.comma}</div>`, "</div>");
-        }
-    }
+    afterAttach() { }
     beforeDetach() { }
     afterDetach() { }
     onAttributeChanged(name, _oldValue, _newValue) {
@@ -495,6 +487,7 @@ class bzProductionChooserItem {
         c.container.appendChild(costColumn);
     }
     updateInfo() {
+        // styling for repairs, ageless items, and secondary details
         const c = this.component;
         // get attributes
         const e = c.Root;
@@ -521,6 +514,7 @@ class bzProductionChooserItem {
         c.secondaryDetailsElement.classList.toggle("hidden", !details);
     }
     updateProductionCost() {
+        // styling for production costs and progress bars
         const cityID = UI.Player.getHeadSelectedCity();
         const city = cityID && Cities.get(cityID);
         if (!city) return;

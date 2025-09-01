@@ -9,22 +9,8 @@ const BZ_INSUFFICIENT_FUNDS = "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS";
 
 // building tag helpers
 const tagTypes = (tag) => GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type);
-const BZ_AGELESS = new Set(tagTypes("AGELESS"));
+const BZ_AGELESS_TYPES = new Set(tagTypes("AGELESS"));
 
-let agelessItemTypes = null;
-function getAgelessItemTypes() {
-    if (agelessItemTypes != null) {
-        return agelessItemTypes;
-    } else {
-        agelessItemTypes = /* @__PURE__ */ new Set();
-        for (const e of GameInfo.TypeTags) {
-            if (e.Tag == "AGELESS") {
-                agelessItemTypes.add(e.Type);
-            }
-        }
-        return agelessItemTypes;
-    }
-}
 const GetUnitStatsFromDefinition = (definition) => {
     const stats = [];
     if (definition.BaseMoves > 0) {
@@ -64,49 +50,6 @@ const GetUnitStatsFromDefinition = (definition) => {
     }
     return stats;
 };
-const GetCurrentBestTotalYieldForConstructible = (city, constructibleType) => {
-    const yields = [];
-    const constructibleDef = GameInfo.Constructibles.lookup(constructibleType);
-    if (!constructibleDef) {
-        console.error(
-            `production-chooser-helper: GetCurrentBestTotalYieldForConstructible() failed to find constructible definition for type ${constructibleType}`
-        );
-        return [];
-    }
-    const bestYieldChanges = BPM.getBestYieldForConstructible(city.id, constructibleDef);
-    for (let iYield = 0; iYield < GameInfo.Yields.length; iYield++) {
-        if (bestYieldChanges.length <= iYield) {
-            continue;
-        }
-        const change = bestYieldChanges[iYield];
-        if (change <= 0) {
-            continue;
-        }
-        const yieldDef = GameInfo.Yields.lookup(iYield);
-        if (!yieldDef) {
-            console.error(
-                `production-chooser-helper: GetCurrentBestTotalYieldForConstructible() failed to find yield definition for yield index ${iYield}`
-            );
-            continue;
-        }
-        let isLastYield = true;
-        for (let iNextYield = iYield + 1; iNextYield < GameInfo.Yields.length; iNextYield++) {
-            const nextChange = bestYieldChanges[iNextYield];
-            if (nextChange > 0) {
-                isLastYield = false;
-            }
-        }
-        yields.push({
-            iconId: iYield.toString(),
-            icon: Icon.getYieldIcon(yieldDef.YieldType),
-            value: isLastYield ? Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", change) : Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL_COMMA", change),
-            name: yieldDef.Name,
-            yieldType: yieldDef.YieldType,
-            isMainYield: true
-        });
-    }
-    return yields;
-};
 const GetSecondaryDetailsHTML = (items) => {
     return items.reduce((acc, { icon, value, name }) => {
         return acc + `<div class="flex items-center mr-2"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-8" />${value}</div>`;
@@ -118,12 +61,12 @@ const GetConstructibleItemData = (constructible, city, operationResult, hideIfUn
         console.error("GetConstructibleItemData: getConstructibleItem: Failed to get cityGold!");
         return null;
     }
-    const agelessTypes = getAgelessItemTypes();
-    const ageless = agelessTypes.has(constructible.ConstructibleType);
+    const ageless = BZ_AGELESS_TYPES.has(constructible.ConstructibleType);
     const insufficientFunds = operationResult.InsufficientFunds ?? false;
     if (operationResult.Success || insufficientFunds || !hideIfUnavailable || operationResult.NeededUnlock != -1 && !hideIfUnavailable) {
-        const bestYields = GetCurrentBestTotalYieldForConstructible(city, constructible.ConstructibleType);
-        const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
+        const yieldChanges = bzGetYieldChanges(city, constructible);
+        const yieldDetails = bzGetYieldDetails(yieldChanges);
+        const secondaryDetails = GetSecondaryDetailsHTML(yieldDetails);
         if (operationResult.Success || insufficientFunds || !hideIfUnavailable) {
             const possibleLocations = [];
             const pushPlots = (p) => {
@@ -160,6 +103,7 @@ const GetConstructibleItemData = (constructible, city, operationResult, hideIfUn
                     disabled: constructible.Cost < 0,
                     locations,
                     interfaceMode: "INTERFACEMODE_PLACE_BUILDING",
+                    yieldChanges,
                     secondaryDetails,
                     repairDamaged: operationResult.RepairDamaged
                 };
@@ -194,6 +138,7 @@ const GetConstructibleItemData = (constructible, city, operationResult, hideIfUn
                         insufficientFunds,
                         disabled: true,
                         error,
+                        yieldChanges,
                         secondaryDetails
                     };
                 }
@@ -213,6 +158,7 @@ const GetConstructibleItemData = (constructible, city, operationResult, hideIfUn
                     ageless,
                     category: getConstructibleClassPanelCategory(constructible.ConstructibleClass),
                     cost: -1,
+                    yieldChanges,
                     secondaryDetails
                 };
                 const nodeInfo = GameInfo.ProgressionTreeNodes.lookup(prereq);
@@ -489,11 +435,8 @@ const bzGetQueuedItemData = (city, constructible, operationResult) => {
         console.error("GetConstructibleItemData: getConstructibleItem: Failed to get cityGold!");
         return null;
     }
-    const ageless = BZ_AGELESS.has(constructible.ConstructibleType);
+    const ageless = BZ_AGELESS_TYPES.has(constructible.ConstructibleType);
     const insufficientFunds = operationResult.InsufficientFunds ?? false;
-    // TODO: get yields for actual tile
-    // const bestYields = GetCurrentBestTotalYieldForConstructible(city, constructible.ConstructibleType);
-    // const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
     const possibleLocations = [];
     const pushPlots = (p) => {
         possibleLocations.push(p);
@@ -533,9 +476,16 @@ const bzGetQueuedItemData = (city, constructible, operationResult) => {
     };
     return item;
 };
-function bzGetYieldDetails(yields) {
+function bzGetYieldChanges(city, constructibleDef, plotIndex=-1) {
+    const changes = plotIndex != -1 ?
+        BPM.bzGetPlotYieldForConstructible(city.id, constructibleDef, plotIndex) :
+        BPM.getBestYieldForConstructible(city.id, constructibleDef);
+    console.warn(`TRIX CHANGES ${JSON.stringify(changes)}`);
+    return changes;
+}
+function bzGetYieldDetails(yieldChanges) {
     const details = [];
-    for (const [i, dy] of yields.entries()) {
+    for (const [i, dy] of yieldChanges.entries()) {
         if (dy <= 0) continue;
         const info = GameInfo.Yields.lookup(i);
         if (!info) continue;
@@ -548,7 +498,7 @@ function bzGetYieldDetails(yields) {
             isMainYield: true
         });
     }
-    return GetSecondaryDetailsHTML(details);
+    return details;
 }
 function bzAddQueuedItems(list, constructibleClass, city, recommendations, isPurchase) {
     // TODO: integrate these changes into GetConstructibleItemData
@@ -584,9 +534,11 @@ function bzAddQueuedItems(list, constructibleClass, city, recommendations, isPur
             if (!loc) return -1;
             return GameplayMap.getIndexFromLocation(loc);
         })();
-        const yields = BPM.bzGetPlotYieldForConstructible(city.id, info, plot);
-        item.sortValue = BPM.bzYieldScore(yields);
-        item.secondaryDetails = bzGetYieldDetails(yields);
+        item.yieldChanges = bzGetYieldChanges(city, info, plot);
+        console.warn(`TRIX YIELDS ${JSON.stringify(item.yieldChanges)}`);
+        item.sortValue = BPM.bzYieldScore(item.yieldChanges);
+        const yieldDetails = bzGetYieldDetails(item.yieldChanges);
+        item.secondaryDetails = GetSecondaryDetailsHTML(yieldDetails);
         // update item status and error message
         if (result.InQueue && !isPurchase) {
             item.disabled = true;
@@ -636,8 +588,8 @@ function bzSortProductionItems(list, city) {
         } else if (item.category == "buildings") {
             item.sortTier = buildingTier(item, consInfo);
             const info = GameInfo.Constructibles.lookup(type);
-            const yields = BPM.getBestYieldForConstructible(city.id, info);
-            item.sortValue ??= BPM.bzYieldScore(yields);
+            const yieldChanges = BPM.getBestYieldForConstructible(city.id, info);
+            item.sortValue ??= BPM.bzYieldScore(yieldChanges);
         } else if (item.category == "projects") {
             item.sortTier = 0;
             item.sortValue = city.Production?.getProjectProductionCost(type) ?? 0;
