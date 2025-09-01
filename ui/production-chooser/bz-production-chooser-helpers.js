@@ -4,6 +4,12 @@ import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-suppo
 
 const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";
 const BZ_REPAIR_ALL_ID = Game.getHash(BZ_REPAIR_ALL);
+const BZ_ALREADY_IN_QUEUE = "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE";
+const BZ_INSUFFICIENT_FUNDS = "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS";
+
+// building tag helpers
+const tagTypes = (tag) => GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type);
+const BZ_AGELESS = new Set(tagTypes("AGELESS"));
 
 let agelessItemTypes = null;
 function getAgelessItemTypes() {
@@ -375,9 +381,12 @@ const GetProductionItems = (city, recommendations, playerGoldBalance, isPurchase
             items.buildings.unshift(repairAllItem);
         }
     }
+    // add queued buildings
+    bzAddQueuedItems(items.buildings, "BUILDING", city, recommendations, isPurchase);
+    bzAddQueuedItems(items.wonders, "WONDER", city, recommendations, isPurchase);
     // sort items
     for (const list of Object.values(items)) {
-        bzSortProductionItems(city, list);
+        bzSortProductionItems(list, city);
     }
     return items;
 };
@@ -474,7 +483,126 @@ const getUnits = (city, playerGoldBalance, isPurchase, recommendations, viewHidd
     return units;
 };
 
-function bzSortProductionItems(city, list) {
+const bzGetQueuedItemData = (city, constructible, operationResult) => {
+    const cityGold = city.Gold;
+    if (!cityGold) {
+        console.error("GetConstructibleItemData: getConstructibleItem: Failed to get cityGold!");
+        return null;
+    }
+    const ageless = BZ_AGELESS.has(constructible.ConstructibleType);
+    const insufficientFunds = operationResult.InsufficientFunds ?? false;
+    // TODO: get yields for actual tile
+    // const bestYields = GetCurrentBestTotalYieldForConstructible(city, constructible.ConstructibleType);
+    // const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
+    const possibleLocations = [];
+    const pushPlots = (p) => {
+        possibleLocations.push(p);
+    };
+    operationResult.Plots?.forEach(pushPlots);
+    operationResult.ExpandUrbanPlots?.forEach(pushPlots);
+    const turns = city.BuildQueue.getTurnsLeft(constructible.ConstructibleType);
+    const category = "buildings";
+    if (!possibleLocations.length) return null;
+    let name = constructible.Name;
+    if (operationResult.RepairDamaged && constructible.Repairable) {
+        name = Locale.compose("LOC_UI_PRODUCTION_REPAIR_NAME", constructible.Name);
+    } else if (operationResult.MoveToNewLocation) {
+        name = Locale.compose("LOC_UI_PRODUCTION_MOVE_NAME", constructible.Name);
+    }
+    const locations = Locale.compose(
+        "LOC_UI_PRODUCTION_LOCATIONS",
+        constructible.Cost,
+        possibleLocations.length
+    );
+    const cost = operationResult.Cost ?? cityGold.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, constructible.ConstructibleType);
+    const item = {
+        name,
+        type: constructible.ConstructibleType,
+        cost,
+        category,
+        ageless,
+        turns,
+        showTurns: turns > -1,
+        showCost: cost > 0,
+        insufficientFunds,
+        disabled: constructible.Cost < 0,
+        locations,
+        interfaceMode: "INTERFACEMODE_PLACE_BUILDING",
+        // secondaryDetails,
+        repairDamaged: operationResult.RepairDamaged
+    };
+    return item;
+};
+function bzGetYieldDetails(yields) {
+    const details = [];
+    for (const [i, dy] of yields.entries()) {
+        if (dy <= 0) continue;
+        const info = GameInfo.Yields.lookup(i);
+        if (!info) continue;
+        details.push({
+            iconId: i.toString(),
+            icon: Icon.getYieldIcon(info.YieldType),
+            value: Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", dy),
+            name: info.Name,
+            yieldType: info.YieldType,
+            isMainYield: true
+        });
+    }
+    return GetSecondaryDetailsHTML(details);
+}
+function bzAddQueuedItems(list, constructibleClass, city, recommendations, isPurchase) {
+    // TODO: integrate these changes into GetConstructibleItemData
+    // always show queued buildings with progress
+    if (!list) return;
+    const results = isPurchase ?
+        Game.CityCommands.canStartQuery(
+            city.id, CityCommandTypes.PURCHASE, CityQueryType.Constructible
+        ) : Game.CityOperations.canStartQuery(
+            city.id, CityOperationTypes.BUILD, CityQueryType.Constructible
+        );
+    const items = [];
+    const types = new Set();
+    for (const { index, result } of results) {
+        // create entries for in-progress and queued buildings
+        // TODO: exclude repairs?
+        if (!result.InProgress && !result.InQueue) continue;
+        const info = GameInfo.Constructibles.lookup(index);
+        if (info.ConstructibleClass != constructibleClass) continue;
+        // create a new item
+        const item = bzGetQueuedItemData(city, info, result);
+        items.push(item);
+        types.add(item.type);
+        // get advisor recommendations
+        item.recommendations = AdvisorUtilities.getBuildRecommendationIcons(
+            recommendations,
+            item.type
+        );
+        // get yields
+        const plot = result.InProgress ? result.Plots[0] : (() => {
+            const queue = city.BuildQueue?.getQueue();
+            const loc = queue?.find(i => i.type == info.$hash)?.location;
+            if (!loc) return -1;
+            return GameplayMap.getIndexFromLocation(loc);
+        })();
+        const yields = BPM.bzGetPlotYieldForConstructible(city.id, info, plot);
+        item.sortValue = BPM.bzYieldScore(yields);
+        item.secondaryDetails = bzGetYieldDetails(yields);
+        // update item status and error message
+        if (result.InQueue && !isPurchase) {
+            item.disabled = true;
+            item.error ??= BZ_ALREADY_IN_QUEUE;
+        } else if (item.insufficientFunds) {
+            item.disabled = true;
+            item.error = BZ_INSUFFICIENT_FUNDS;
+        }
+    }
+    if (items.length) {
+        // filter duplicate items and merge lists
+        const dedup = list.filter(item => !types.has(item.type));
+        list.splice(0, Infinity, ...items, ...dedup);
+    }
+}
+function bzSortProductionItems(list, city) {
     const buildingTier = (item, info) =>
         info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.ageless ? -1 : 0;
     for (const item of list) {

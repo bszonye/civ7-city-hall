@@ -1,21 +1,12 @@
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
 import FocusManager from '/core/ui/input/focus-manager.js';
-import { Icon } from '/core/ui/utilities/utilities-image.chunk.js';
 import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
-import { BuildingPlacementManager as BPM } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
 import { g as GetProductionItems } from './bz-production-chooser-helpers.js';
-import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
 
 const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";  // TODO: move to helper script
 const BZ_REPAIR_ALL_ID = Game.getHash(BZ_REPAIR_ALL);
-const BZ_ALREADY_IN_QUEUE = "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE";
-const BZ_INSUFFICIENT_FUNDS = "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS";
-
-// building tag helpers
-const tagTypes = (tag) => GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type);
-const BZ_AGELESS = new Set(tagTypes("AGELESS"));
 
 // color palette
 const BZ_COLOR = {
@@ -182,61 +173,6 @@ BZ_HEAD_STYLE.map(style => {
 document.body.classList.add("bz-city-hall");
 document.body.classList.toggle("bz-city-compact", bzCityHallOptions.compact);
 
-const GetSecondaryDetailsHTML = (items) => {
-  return items.reduce((acc, { icon, value, name }) => {
-    return acc + `<div class="flex items-center mr-2"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-8" />${value}</div>`;
-  }, "");
-};
-const GetQueuedItemData = (city, constructible, operationResult) => {
-    const cityGold = city.Gold;
-    if (!cityGold) {
-        console.error("GetConstructibleItemData: getConstructibleItem: Failed to get cityGold!");
-        return null;
-    }
-    const ageless = BZ_AGELESS.has(constructible.ConstructibleType);
-    const insufficientFunds = operationResult.InsufficientFunds ?? false;
-    // TODO: get yields for actual tile
-    // const bestYields = GetCurrentBestTotalYieldForConstructible(city, constructible.ConstructibleType);
-    // const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
-    const possibleLocations = [];
-    const pushPlots = (p) => {
-        possibleLocations.push(p);
-    };
-    operationResult.Plots?.forEach(pushPlots);
-    operationResult.ExpandUrbanPlots?.forEach(pushPlots);
-    const turns = city.BuildQueue.getTurnsLeft(constructible.ConstructibleType);
-    const category = "buildings";
-    if (!possibleLocations.length) return null;
-    let name = constructible.Name;
-    if (operationResult.RepairDamaged && constructible.Repairable) {
-        name = Locale.compose("LOC_UI_PRODUCTION_REPAIR_NAME", constructible.Name);
-    } else if (operationResult.MoveToNewLocation) {
-        name = Locale.compose("LOC_UI_PRODUCTION_MOVE_NAME", constructible.Name);
-    }
-    const locations = Locale.compose(
-        "LOC_UI_PRODUCTION_LOCATIONS",
-        constructible.Cost,
-        possibleLocations.length
-    );
-    const cost = operationResult.Cost ?? cityGold.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, constructible.ConstructibleType);
-    const item = {
-        name,
-        type: constructible.ConstructibleType,
-        cost,
-        category,
-        ageless,
-        turns,
-        showTurns: turns > -1,
-        showCost: cost > 0,
-        insufficientFunds,
-        disabled: constructible.Cost < 0,
-        locations,
-        interfaceMode: "INTERFACEMODE_PLACE_BUILDING",
-        // secondaryDetails,
-        repairDamaged: operationResult.RepairDamaged
-    };
-    return item;
-};
 class bzProductionChooserScreen {
     static c_prototype;
     static isPurchase = false;
@@ -259,6 +195,14 @@ class bzProductionChooserScreen {
         proto.render = function(...args) {
             const c_rv = c_render.apply(this, args);
             const after_rv = after_render.apply(this.bzComponent, args);
+            return after_rv ?? c_rv;
+        }
+        // wrap updateCategories method to extend it
+        const c_updateCategories = proto.updateCategories;
+        const after_updateCategories = this.afterUpdateCategories;
+        proto.updateCategories = function(...args) {
+            const c_rv = c_updateCategories.apply(this, args);
+            const after_rv = after_updateCategories.apply(this.bzComponent, args);
             return after_rv ?? c_rv;
         }
         // override isPurchase property
@@ -290,112 +234,6 @@ class bzProductionChooserScreen {
             },
         };
         Object.defineProperty(proto, "cityID", cityID);
-        // override items property
-        const c_items =
-            Object.getOwnPropertyDescriptor(proto, "items");
-        const items = {
-            configurable: c_items.configurable,
-            enumerable: c_items.enumerable,
-            get: c_items.get,
-            set(value) {
-                // modify incoming items array
-                this.bzComponent.beforeSetItems(value);
-                // call vanilla property
-                c_items.set.apply(this, [value]);
-                // adjust UQ formatting
-                if (this.uniqueQuarter) this.bzComponent.afterUniqueQuarter();
-            },
-        };
-        Object.defineProperty(proto, "items", items);
-    }
-    beforeSetItems(value) {
-        const cityID = this.component.cityID;
-        const city = cityID && Cities.get(cityID);
-        if (!city) return;
-        // add queued buildings
-        this.addQueuedItems(city, value.buildings, "BUILDING");
-        this.addQueuedItems(city, value.wonders, "WONDER");
-    }
-    getYieldDetails(yields) {
-        const details = [];
-        for (const [i, dy] of yields.entries()) {
-            if (dy <= 0) continue;
-            const info = GameInfo.Yields.lookup(i);
-            if (!info) continue;
-            details.push({
-                iconId: i.toString(),
-                icon: Icon.getYieldIcon(info.YieldType),
-                value: Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", dy),
-                name: info.Name,
-                yieldType: info.YieldType,
-                isMainYield: true
-            });
-        }
-        return GetSecondaryDetailsHTML(details);
-    }
-    addQueuedItems(city, list, constructibleClass) {
-        // always show queued buildings with progress
-        if (!list) return;
-        const c = this.component;
-        const isPurchase = c.isPurchase;
-        const results = isPurchase ?
-            Game.CityCommands.canStartQuery(
-                city.id, CityCommandTypes.PURCHASE, CityQueryType.Constructible
-            ) : Game.CityOperations.canStartQuery(
-                city.id, CityOperationTypes.BUILD, CityQueryType.Constructible
-            );
-        const items = [];
-        const types = new Set();
-        for (const { index, result } of results) {
-            // create entries for in-progress and queued buildings
-            // TODO: exclude repairs?
-            if (!result.InProgress && !result.InQueue) continue;
-            const info = GameInfo.Constructibles.lookup(index);
-            if (info.ConstructibleClass != constructibleClass) continue;
-            // create a new item
-            const item = GetQueuedItemData(city, info, result);
-            items.push(item);
-            types.add(item.type);
-            // get advisor recommendations
-            item.recommendations = AdvisorUtilities.getBuildRecommendationIcons(
-                c.recommendations,
-                item.type
-            );
-            // get yields
-            const plot = result.InProgress ? result.Plots[0] : (() => {
-                const queue = city.BuildQueue?.getQueue();
-                const loc = queue?.find(i => i.type == info.$hash)?.location;
-                if (!loc) return -1;
-                return GameplayMap.getIndexFromLocation(loc);
-            })();
-            const yields = BPM.bzGetPlotYieldForConstructible(city.id, info, plot);
-            item.sortValue = BPM.bzYieldScore(yields);
-            item.secondaryDetails = this.getYieldDetails(yields);
-            // update item status and error message
-            if (result.InQueue && !isPurchase) {
-                item.disabled = true;
-                item.error ??= BZ_ALREADY_IN_QUEUE;
-            } else if (item.insufficientFunds) {
-                item.disabled = true;
-                item.error = BZ_INSUFFICIENT_FUNDS;
-            }
-        }
-        if (items.length) {
-            // filter duplicate items and merge lists
-            const dedup = list.filter(item => !types.has(item.type));
-            list.splice(0, Infinity, ...items, ...dedup);
-        }
-    }
-    afterUniqueQuarter() {
-        const uq = this.component.uniqueQuarter;
-        uq.uqInfoCols.className = "production-chooser-item flex items-center mx-2 mb-2 hover\\:text-secondary-1 focus\\:text-secondary-1";
-        const uqCol1 = uq.uqInfoCols.firstChild;
-        uqCol1.className = "size-10 ml-2\\.5 mr-3";
-        uq.nameElement.className = "font-title-sm leading-tight uppercase text-gradient-secondary transition-color";
-        const labelElement = uq.nameElement.nextSibling;
-        labelElement.className = "font-body-xs leading-tight transition-color";
-        uq.completionStatusText.className = "font-body text-xs leading-tight transition-color";
-        uq.buildingContainer.className = "flex flex-col pl-2\\.5";
     }
     beforeAttach() {
         // replace event handlers to fix nav-help glitches
@@ -455,6 +293,19 @@ class bzProductionChooserScreen {
         c.productionPurchaseTabBar.setAttribute("tab-items", JSON.stringify(tabs));
         c.townPurchaseLabel.innerHTML = c.townPurchaseLabel.innerHTML
             .replaceAll("text-xs", "text-sm tracking-100 mt-1");
+    }
+    afterUpdateCategories() {
+        const uq = this.component.uniqueQuarter;
+        if (uq) {
+            uq.uqInfoCols.className = "production-chooser-item flex items-center mx-2 mb-2 hover\\:text-secondary-1 focus\\:text-secondary-1";
+            const uqCol1 = uq.uqInfoCols.firstChild;
+            uqCol1.className = "size-10 ml-2\\.5 mr-3";
+            uq.nameElement.className = "font-title-sm leading-tight uppercase text-gradient-secondary transition-color";
+            const labelElement = uq.nameElement.nextSibling;
+            labelElement.className = "font-body-xs leading-tight transition-color";
+            uq.completionStatusText.className = "font-body text-xs leading-tight transition-color";
+            uq.buildingContainer.className = "flex flex-col pl-2\\.5";
+        }
     }
     updateItems() {
         const c = this.component;
