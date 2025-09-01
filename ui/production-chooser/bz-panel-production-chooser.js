@@ -5,9 +5,6 @@ import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.
 import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
 import { g as GetProductionItems } from './bz-production-chooser-helpers.js';
 
-const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";
-const BZ_REPAIR_ALL_ID = Game.getHash(BZ_REPAIR_ALL);
-
 // color palette
 const BZ_COLOR = {
     // game colors
@@ -309,7 +306,6 @@ class bzProductionChooserScreen {
     }
     updateItems() {
         const c = this.component;
-        console.warn(`TRIX UPDATE-ITEMS`);
         if (!c.isInitialLoadComplete) {
             return;
         }
@@ -494,6 +490,7 @@ class bzProductionChooserItem {
         const dataCategory = e.getAttribute("data-category");
         const dataType = e.getAttribute("data-type");
         const dataName = e.getAttribute("data-name");
+        const dataRepairAll = e.getAttribute("data-repair-all") === "true";
         const dataIsAgeless = e.getAttribute("data-is-ageless") === "true";
         const dataSecondaryDetails = e.getAttribute("data-secondary-details");
         // interpret attributes
@@ -501,7 +498,7 @@ class bzProductionChooserItem {
             if (dataCategory != "buildings") return false;
             const type = Game.getHash(dataType);
             const info = GameInfo.Constructibles.lookup(type);
-            return type == BZ_REPAIR_ALL_ID || dataName != info.Name;
+            return dataRepairAll || dataName != info.Name;
         })();
         const isAgeless = dataIsAgeless && !isRepair;
         const details = !isRepair && dataSecondaryDetails || "";
