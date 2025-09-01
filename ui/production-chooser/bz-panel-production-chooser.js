@@ -8,7 +8,7 @@ import { P as ProductionPanelCategory } from '/base-standard/ui/production-choos
 import { g as GetProductionItems } from './bz-production-chooser-helpers.js';
 import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
 
-const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";
+const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";  // TODO: move to helper script
 const BZ_REPAIR_ALL_ID = Game.getHash(BZ_REPAIR_ALL);
 const BZ_ALREADY_IN_QUEUE = "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE";
 const BZ_INSUFFICIENT_FUNDS = "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS";
@@ -315,10 +315,6 @@ class bzProductionChooserScreen {
         // add queued buildings
         this.addQueuedItems(city, value.buildings, "BUILDING");
         this.addQueuedItems(city, value.wonders, "WONDER");
-        // sort items
-        for (const list of Object.values(value)) {
-            this.sortItems(city, list);
-        }
     }
     getYieldDetails(yields) {
         const details = [];
@@ -389,58 +385,6 @@ class bzProductionChooserScreen {
             const dedup = list.filter(item => !types.has(item.type));
             list.splice(0, Infinity, ...items, ...dedup);
         }
-    }
-    sortItems(city, list) {
-        const buildingTier = (item, info) =>
-            info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.ageless ? -1 : 0;
-        for (const item of list) {
-            const type = Game.getHash(item.type);
-            const progress = city.BuildQueue?.getProgress(type) ?? 0;
-            const consInfo = GameInfo.Constructibles.lookup(type);
-            if (progress) {
-                // show in-progress items first
-                item.sortTier = 9;
-                item.sortValue = city.BuildQueue.getPercentComplete(type);
-            } else if (item.category == "units") {
-                const unitInfo = GameInfo.Units.lookup(type);
-                const unitStats = GameInfo.Unit_Stats.lookup(type);
-                const cv = unitInfo.CanEarnExperience ? Number.MAX_VALUE :
-                    unitStats?.RangedCombat || unitStats?.Combat || 0;
-                item.sortTier =
-                    unitInfo.FoundCity ? 2 :  // settlers
-                    unitInfo.CoreClass == "CORE_CLASS_RECON" ? 1 :  // scouts
-                    cv <= 0 ? 0 :  // civilians
-                    unitInfo.Domain == "DOMAIN_LAND" ? -1 :
-                    unitInfo.Domain == "DOMAIN_SEA" ? -2 :
-                    unitInfo.Domain == "DOMAIN_AIR" ? -3 :
-                    9;  // unknown (list first for investigation)
-                item.sortValue = cv;
-            } else if (type == BZ_REPAIR_ALL_ID) {
-                item.sortTier = 8;
-                item.sortValue = 0;
-            } else if (item.repairDamaged) {
-                item.sortTier = 7;
-                item.sortValue = buildingTier(item, consInfo);
-            } else if (item.category == "buildings") {
-                item.sortTier = buildingTier(item, consInfo);
-                const info = GameInfo.Constructibles.lookup(type);
-                const yields = BPM.getBestYieldForConstructible(city.id, info);
-                item.sortValue ??= BPM.bzYieldScore(yields);
-            } else if (item.category == "projects") {
-                item.sortTier = 0;
-                item.sortValue = city.Production?.getProjectProductionCost(type) ?? 0;
-            }
-            item.sortTier ??= 0;
-            item.sortValue ??= 0;
-        }
-        list.sort((a, b) => {
-            if (a.sortTier != b.sortTier) return b.sortTier - a.sortTier;
-            if (a.sortValue != b.sortValue) return b.sortValue - a.sortValue;
-            // sort by name
-            const aName = Locale.compose(a.name).toUpperCase();
-            const bName = Locale.compose(b.name).toUpperCase();
-            return aName.localeCompare(bName);
-        });
     }
     afterUniqueQuarter() {
         const uq = this.component.uniqueQuarter;
@@ -611,11 +555,9 @@ class bzProductionChooserItem {
     }
     beforeDetach() { }
     afterDetach() { }
-    onAttributeChanged(name, _oldValue, newValue) {
+    onAttributeChanged(name, _oldValue, _newValue) {
         switch (name) {
-            case "disabled":
-                if (newValue === "true") return this.fixRepairAll();
-                break;
+            // case "disabled":
             // case "data-category":
             case "data-name":
                 this.updateInfo();
@@ -627,9 +569,7 @@ class bzProductionChooserItem {
             // case "data-cost":
             // case "data-prereq":
             // case "data-description":
-            case "data-error":
-                if (newValue) return this.fixRepairAll();
-                break;
+            // case "data-error":
             // case "data-is-purchase":
             case "data-is-ageless":
             case "data-secondary-details":
@@ -702,19 +642,6 @@ class bzProductionChooserItem {
         costColumn.appendChild(this.pCostContainer);
         costColumn.appendChild(c.costContainer);
         c.container.appendChild(costColumn);
-    }
-    fixRepairAll() {
-        // fix insufficient funds error on the Production tab
-        const e = this.component.Root;
-        if (e.getAttribute("disabled") !== "true" ||
-            e.getAttribute("data-is-purchase") === "true" ||
-            e.getAttribute("data-type") != BZ_REPAIR_ALL ||
-            e.getAttribute("data-error") != BZ_INSUFFICIENT_FUNDS) {
-            return true;  // continue onAttributeChanged chain
-        }
-        e.setAttribute("disabled", "false");
-        e.removeAttribute("data-error");
-        return false;  // block incorrect attribute updates
     }
     updateInfo() {
         const c = this.component;

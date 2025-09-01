@@ -1,6 +1,9 @@
 import { Icon } from '/core/ui/utilities/utilities-image.chunk.js';
-import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
+import { BuildingPlacementManager as BPM } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
+
+const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";
+const BZ_REPAIR_ALL_ID = Game.getHash(BZ_REPAIR_ALL);
 
 let agelessItemTypes = null;
 function getAgelessItemTypes() {
@@ -64,7 +67,7 @@ const GetCurrentBestTotalYieldForConstructible = (city, constructibleType) => {
         );
         return [];
     }
-    const bestYieldChanges = BuildingPlacementManager.getBestYieldForConstructible(city.id, constructibleDef);
+    const bestYieldChanges = BPM.getBestYieldForConstructible(city.id, constructibleDef);
     for (let iYield = 0; iYield < GameInfo.Yields.length; iYield++) {
         if (bestYieldChanges.length <= iYield) {
             continue;
@@ -365,10 +368,16 @@ const GetProductionItems = (city, recommendations, playerGoldBalance, isPurchase
         }
     }
     if (repairableItemCount > 1) {
-        const repairAllItem = createRepairAllProductionChooserItemData(repairableTotalCost, repairableTotalTurns);
+        const cost = isPurchase ? repairableTotalCost : 0;
+        const turns = isPurchase ? -1 : repairableTotalTurns;
+        const repairAllItem = createRepairAllProductionChooserItemData(cost, turns);
         if (repairAllItem) {
             items.buildings.unshift(repairAllItem);
         }
+    }
+    // sort items
+    for (const list of Object.values(items)) {
+        bzSortProductionItems(city, list);
     }
     return items;
 };
@@ -464,6 +473,59 @@ const getUnits = (city, playerGoldBalance, isPurchase, recommendations, viewHidd
     }
     return units;
 };
+
+function bzSortProductionItems(city, list) {
+    const buildingTier = (item, info) =>
+        info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.ageless ? -1 : 0;
+    for (const item of list) {
+        const type = Game.getHash(item.type);
+        const progress = city.BuildQueue?.getProgress(type) ?? 0;
+        const consInfo = GameInfo.Constructibles.lookup(type);
+        if (progress) {
+            // show in-progress items first
+            item.sortTier = 9;
+            item.sortValue = city.BuildQueue.getPercentComplete(type);
+        } else if (item.category == "units") {
+            const unitInfo = GameInfo.Units.lookup(type);
+            const unitStats = GameInfo.Unit_Stats.lookup(type);
+            const cv = unitInfo.CanEarnExperience ? Number.MAX_VALUE :
+                unitStats?.RangedCombat || unitStats?.Combat || 0;
+            item.sortTier =
+                unitInfo.FoundCity ? 2 :  // settlers
+                unitInfo.CoreClass == "CORE_CLASS_RECON" ? 1 :  // scouts
+                cv <= 0 ? 0 :  // civilians
+                unitInfo.Domain == "DOMAIN_LAND" ? -1 :
+                unitInfo.Domain == "DOMAIN_SEA" ? -2 :
+                unitInfo.Domain == "DOMAIN_AIR" ? -3 :
+                9;  // unknown (list first for investigation)
+            item.sortValue = cv;
+        } else if (type == BZ_REPAIR_ALL_ID) {
+            item.sortTier = 8;
+            item.sortValue = 0;
+        } else if (item.repairDamaged) {
+            item.sortTier = 7;
+            item.sortValue = buildingTier(item, consInfo);
+        } else if (item.category == "buildings") {
+            item.sortTier = buildingTier(item, consInfo);
+            const info = GameInfo.Constructibles.lookup(type);
+            const yields = BPM.getBestYieldForConstructible(city.id, info);
+            item.sortValue ??= BPM.bzYieldScore(yields);
+        } else if (item.category == "projects") {
+            item.sortTier = 0;
+            item.sortValue = city.Production?.getProjectProductionCost(type) ?? 0;
+        }
+        item.sortTier ??= 0;
+        item.sortValue ??= 0;
+    }
+    list.sort((a, b) => {
+        if (a.sortTier != b.sortTier) return b.sortTier - a.sortTier;
+        if (a.sortValue != b.sortValue) return b.sortValue - a.sortValue;
+        // sort by name
+        const aName = Locale.compose(a.name).toUpperCase();
+        const bName = Locale.compose(b.name).toUpperCase();
+        return aName.localeCompare(bName);
+    });
+}
 
 // export { CityDetails as C, GetPrevCityID as G, ProductionPanelCategory as P, RepairConstruct as R, SetTownFocus as S, UpdateCityDetailsEventName as U, GetNextCityID as a, GetTownFocusItems as b, GetTownFocusBlp as c, GetLastProductionData as d, GetCityBuildReccomendations as e, GetUniqueQuarterForPlayer as f, GetProductionItems as g, Construct as h, CreateProductionChooserItem as i, GetNumUniqueQuarterBuildingsCompleted as j, GetCurrentTownFocus as k };
 export { GetProductionItems as g };
