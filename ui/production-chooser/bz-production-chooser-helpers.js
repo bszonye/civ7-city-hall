@@ -107,11 +107,12 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const cost = result.Cost ??
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
+        // error handling
         const disableQueued = result.InQueue && !isPurchase && !multiple;
         const repairQueued = repairDamaged && !plots.length;
         const disabled = !plots.length || disableQueued || insufficientFunds;
-        const showError = disableQueued || insufficientFunds && plots.length;
-        console.warn(`TRIX RESULT ${type} ${JSON.stringify(result)}`);
+        const showError = disableQueued ||
+            insufficientFunds && (plots.length || repairDamaged);
         if (disabled && !viewHidden && !showError) return null;
         const error =
             result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
@@ -179,8 +180,6 @@ const getProjectItems = (city, isPurchase) => {
             { ProjectType: info.$index },
             false
         );
-        // console.warn(`TRIX PROJECT ${info.ProjectType}`);
-        // console.warn(`TRIX RESULT ${JSON.stringify(result)}`);
         if (result.Requirements?.FullFailure) continue;
         if (!result.Requirements?.MeetsRequirements) continue;
         const type = info.ProjectType;
@@ -346,7 +345,6 @@ const GetProductionItems = (city, recs, goldBalance, isPurchase, viewHidden, uqI
     for (const list of Object.values(items)) {
         bzSortProductionItems(list);
     }
-    // console.warn(`TRIX ITEMS ${items.buildings.map(i => i.type)}`);
     return items;
 };
 const createRepairAllProductionChooserItemData = (cost, turns) => {
