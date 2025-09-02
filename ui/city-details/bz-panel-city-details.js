@@ -17,7 +17,6 @@ const BZ_DIVIDER = `<div class="${BZ_DIVIDER_STYLE}">${BZ_DIVIDER_LINE}</div>`
 var cityDetailTabID;
 (function (cityDetailTabID) {
     cityDetailTabID["overview"] = "city-details-tab-overview";
-    cityDetailTabID["constructibles"] = "city-details-tab-constructibles";
     cityDetailTabID["growth"] = "city-details-tab-growth";
     cityDetailTabID["buildings"] = "city-details-tab-buildings";
     cityDetailTabID["yields"] = "city-details-tab-yields";
@@ -32,8 +31,8 @@ const BZ_TAB_OVERVIEW = {
     iconClass: "size-16",
     headerText: "LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB"
 };
-const BZ_TAB_CONSTRUCTIBLES = {
-    id: cityDetailTabID.constructibles,
+const BZ_TAB_BUILDINGS = {
+    id: "city-details-tab-buildings",
     icon: {
         default: UI.getIconBLP("CITY_SETTLEMENT"),
         hover: UI.getIconBLP("CITY_SETTLEMENT_HI"),
@@ -362,7 +361,7 @@ class bzPanelCityDetails {
         // replace city-detail-tabs-buildings
         tabs.forEach((tab, index) => {
             if (tab.id == cityDetailTabID.buildings) {
-                tabs.splice(index + 1, 0, BZ_TAB_CONSTRUCTIBLES);
+                tabs[index] = BZ_TAB_BUILDINGS;
             }
         });
         // add Overview tab
@@ -404,21 +403,12 @@ class bzPanelCityDetails {
         this.growthContainer = MustGetElement(".growth-container", oslot);
         this.connectionsContainer = MustGetElement(".connections-container", oslot);
         this.improvementsContainer = MustGetElement(".improvements-container", oslot);
-        // constructibles
-        const cslot = this.constructibleSlot =
-            MustGetElement(`#${cityDetailTabID.constructibles}`, this.component.Root);
-        this.buildingsCategory = MustGetElement(".bz-buildings-category", cslot);
-        this.buildingsList = MustGetElement(".bz-buildings-list", cslot);
-        this.improvementsCategory = MustGetElement(".bz-improvements-category", cslot);
-        this.improvementsList = MustGetElement(".bz-improvements-list", cslot);
-        this.wondersCategory = MustGetElement(".bz-wonders-category", cslot);
-        this.wondersList = MustGetElement(".bz-wonders-list", cslot);
         // enable navigation back to the left panel
         this.slots.forEach(slot => slot.removeAttribute("data-navrule-left"));
         // select tab
         this.component.tabBar.addEventListener("tab-selected", this.onTabSelected);
         this.selectTab(bzPanelCityDetails.lastTab);
-        this.update();
+        this.updateOverview();
     }
     beforeDetach() {
         this.component.tabBar.removeEventListener("tab-selected", this.onTabSelected);
@@ -430,7 +420,6 @@ class bzPanelCityDetails {
     afterRender() {
         this.patchTabSlots();
         this.renderOverviewSlot();
-        this.renderConstructibleSlot();
         // adjust arrow buttons
         const c = this.component;
         c.prevCityButton.classList.add("bz-prev-city", "bz-cycle-city");
@@ -486,34 +475,6 @@ class bzPanelCityDetails {
         `;
         this.component.slotGroup.appendChild(slot);
     }
-    renderConstructibleSlot() {
-        const slot = document.createElement("fxs-vslot");
-        slot.classList.add("pr-4");
-        slot.setAttribute("data-navrule-right", "stop");
-        slot.id = cityDetailTabID.constructibles;
-        slot.innerHTML = `
-        <fxs-scrollable>
-            <div class="flex flex-col w-full mb-2">
-                <div class="bz-buildings-category flex mt-2">
-                    <fxs-icon class="size-12 ml-3 my-1" data-icon-id="CITY_BUILDINGS_LIST"></fxs-icon>
-                    <div class="self-center font-title text-lg uppercase text-gradient-secondary ml-2" data-l10n-id="LOC_UI_CITY_DETAILS_BUILDINGS"></div>
-                </div>
-                <div class="bz-buildings-list flex-col"></div>
-                <div class="bz-improvements-category flex mt-1">
-                    <fxs-icon class="size-12 ml-3 my-1" data-icon-id="CITY_IMPROVEMENTS_LIST"></fxs-icon>
-                    <div class="self-center font-title text-lg uppercase text-gradient-secondary ml-2" data-l10n-id="LOC_UI_CITY_DETAILS_IMPROVEMENTS"></div>
-                </div>
-                <div class="bz-improvements-list flex-col"></div>
-                <div class="bz-wonders-category flex mt-1">
-                    <fxs-icon class="size-12 ml-3 my-1" data-icon-id="CITY_WONDERS_LIST"></fxs-icon>
-                    <div class="self-center font-title text-lg uppercase text-gradient-secondary ml-2" data-l10n-id="LOC_UI_CITY_DETAILS_WONDERS"></div>
-                </div>
-                <div class="bz-wonders-list flex-col"></div>
-            </div>
-        </fxs-scrollable>
-        `;
-        this.component.slotGroup.appendChild(slot);
-    }
     // fixes a mismatched tag in the base-standard function
     renderYieldsSlot() {
         const slot = document.createElement("fxs-vslot");
@@ -544,7 +505,6 @@ class bzPanelCityDetails {
     }
     // update data model for new tab slot
     updateOverview() {
-        this.updateConstructibles();  // TODO: remove this
         // Flag so we can give the overview back focus after updating
         const overviewHasFocus = this.overviewSlot.contains(FocusManager.getFocus());
         this.renderGrowth(this.growthContainer);
@@ -726,45 +686,6 @@ class bzPanelCityDetails {
         ttText.setAttribute("data-l10n-id", text);
         layout.appendChild(ttText);
         container.appendChild(layout);
-    }
-    // update data model for alternate Constructibles tab slot
-    updateConstructibles() {
-        // Flag so we can give the constructibles back focus after updating
-        const constructiblesHaveFocus = this.constructibleSlot.contains(FocusManager.getFocus());
-        // sort the data from CityDetails
-        const buildings = CityDetails.buildings;
-        const improvements = CityDetails.improvements;
-        const wonders = CityDetails.wonders;
-        bzCityDetails.sortConstructibles(buildings, improvements, wonders);
-        // Buildings
-        const shouldShowBuildings = buildings.length > 0;
-        this.buildingsCategory.classList.toggle("hidden", !shouldShowBuildings);
-        this.buildingsList.innerHTML = "";
-        for (const building of buildings) {
-            this.buildingsList.appendChild(this.addDistrictData(building));
-            this.buildingsList.appendChild(this.component.createDivider());
-        }
-        // Improvements
-        const shouldShowImprovements = improvements.length > 0;
-        this.improvementsCategory.classList.toggle("hidden", !shouldShowImprovements);
-        this.improvementsList.innerHTML = "";
-        for (const improvement of improvements) {
-            this.improvementsList.appendChild(this.addConstructibleData(improvement));
-        }
-        // Wonders
-        const shouldShowWonders = wonders.length > 0;
-        this.wondersCategory.classList.toggle("hidden", !shouldShowWonders);
-        this.wondersList.innerHTML = "";
-        for (const wonder of wonders) {
-            this.wondersList.appendChild(this.addConstructibleData(wonder));
-        }
-        // separate improvements & wonders if we have both
-        if (shouldShowImprovements && shouldShowWonders) {
-            this.improvementsList.appendChild(this.component.createDivider());
-        }
-        if (constructiblesHaveFocus) {
-            FocusManager.setFocus(this.constructibleSlot);
-        }
     }
     addDistrictData(districtData) {
         const mainDiv = document.createElement("div");
