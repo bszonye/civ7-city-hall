@@ -520,11 +520,13 @@ class bzProductionChooserItem {
         const dataCategory = e.getAttribute("data-category");
         const dataType = e.getAttribute("data-type");
         const type = Game.getHash(dataType);
-        const progress = city.BuildQueue?.getProgress(type) ?? 0;
-        const percent = city.BuildQueue?.getPercentComplete(type) ?? 0;
-        this.pCostIconElement.classList.toggle("invisible", 0 < progress);
-        c.costIconElement.classList.toggle("invisible", 0 < progress);
-        this.progressBar.classList.toggle("hidden", progress <= 0);
+        const queue = city.BuildQueue.getQueue();
+        const progress = city.BuildQueue.getProgress(type) ?? 0;
+        const percent = city.BuildQueue.getPercentComplete(type) ?? 0;
+        const inProgress = 0 < progress || queue[0]?.type == type;
+        this.pCostIconElement.classList.toggle("invisible", inProgress);
+        c.costIconElement.classList.toggle("invisible", inProgress);
+        this.progressBar.classList.toggle("hidden", !inProgress);
         this.progressBarFill.style.heightPERCENT = percent;
         const update = (base) => {
             if (isNaN(base) || base <= 0) {

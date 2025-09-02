@@ -77,15 +77,9 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const queue = city.BuildQueue.getQueue();
     const qslot = queue?.find(i => i.type == hash);
     const qitem = qslot && Constructibles.getByComponentID(qslot.instance);
-    // if (qslot) console.warn(`TRIX QSLOT ${type} ${JSON.stringify(qslot)}`);
-    // if (qitem) console.warn(`TRIX QITEM ${type} ${JSON.stringify(qitem)}`);
-    // if (qslot) console.warn(`TRIX RESULT ${type} ${JSON.stringify(result)}`);
+    const inProgress = !!(result.InProgress || qitem);  // includes repairs
     // repairs
-    const repairDamaged =
-        result.RepairDamaged ??
-        qitem?.damaged ??
-        (qslot && !result.InQueue) ??
-        false;
+    const repairDamaged = result.RepairDamaged ?? (qslot && !result.InQueue) ?? false;
     const altName =
         repairDamaged && info.Repairable ? "LOC_UI_PRODUCTION_REPAIR_NAME" :
         result.MoveToNewLocation? "LOC_UI_PRODUCTION_MOVE_NAME" : null;
@@ -98,12 +92,13 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const lockType = result.NeededUnlock ?? -1;  // research type
     const unlockable = isUnlockable(city.owner, lockType);
     if (locked && !unlockable && !unique) return null;
-    if (result.Success || result.InProgress || insufficientFunds || viewHidden) {
+    if (result.Success || inProgress || insufficientFunds || viewHidden) {
         const plots = [];
+        if (inProgress) console.warn(`TRIX RESULT ${hash} ${type} ${JSON.stringify(result)}`);
         if (result.InQueue) {
             // get placement from the build queue
+            console.warn(`TRIX QUEUE ${hash} ${type} ${JSON.stringify(queue)}`);
             plots.push(GameplayMap.getIndexFromLocation(qslot.location));
-            console.warn(`TRIX QUEUE ${type} ${JSON.stringify(plots)}`);
         } else {
             if (qslot) console.warn(`TRIX QMISS ${type} ${JSON.stringify(result)}`);
             if (result.Plots) plots.push(...result.Plots);
@@ -119,11 +114,10 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const turns = city.BuildQueue.getTurnsLeft(hash);
         // error handling
         const disableQueued =
-            result.InQueue && !isPurchase && !multiple ||
+            result.InQueue && !(inProgress && isPurchase) && !multiple ||
             repairDamaged && qslot && !plots.length;
         const disabled = !result.Success || !plots.length || disableQueued;
-        const showError = disableQueued ||
-            insufficientFunds && (plots.length || repairDamaged);
+        const showError = insufficientFunds && (plots.length || repairDamaged);
         if (disabled && !viewHidden && !showError) return null;
         const error =
             result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
@@ -131,13 +125,13 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             insufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
             disableQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
             !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
-        // if (error) console.warn(`TRIX ERROR ${type} ${error}`);
+        if (error) console.warn(`TRIX ERROR ${type} ${error} ${JSON.stringify(result)}`);
         // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ? BPM.bzYieldScore(yieldChanges) : 0;
         const sortTier =
             building && unique ? 10 :
-            city.BuildQueue.getProgress(hash) ? 9 :
+            inProgress ? 9 :
             repairDamaged ? 7 :
             !yieldChanges.length ? -10 :
             buildingTier;
@@ -306,7 +300,7 @@ const GetProductionItems = (city, recs, goldBalance, isPurchase, viewHidden, uqI
         );
         if (!uq1status.AlreadyExists || !uq2status.AlreadyExists) {
             if (!uq1result) results.push({ index: uq1index, result: uq1status });
-            if (!uq2result) results.push({ index: uq2index, result: uq1status });
+            if (!uq2result) results.push({ index: uq2index, result: uq2status });
         }
         shouldShowUniqueQuarter = ShouldShowUniqueQuarter(uq1status, uq2status);
     }
