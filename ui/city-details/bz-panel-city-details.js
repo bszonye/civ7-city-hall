@@ -32,7 +32,7 @@ const BZ_TAB_OVERVIEW = {
     headerText: "LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB"
 };
 const BZ_TAB_BUILDINGS = {
-    id: "city-details-tab-buildings",
+    id: cityDetailTabID.buildings,
     icon: {
         default: UI.getIconBLP("CITY_SETTLEMENT"),
         hover: UI.getIconBLP("CITY_SETTLEMENT_HI"),
@@ -334,7 +334,7 @@ class bzPanelCityDetails {
             const c_rv = c_update.apply(this, args);
             return c_rv ?? before_rv;
         }
-        // also replace listener with patched version
+        // also replace initial listener with patched version
         component.updateCityDetailersListener = component.update.bind(component);
         // replace vanilla methods for city-details-tab-buildings
         bzPanelCityDetails.c_renderBuildingSlot = proto.renderBuildingSlot;
@@ -445,7 +445,7 @@ class bzPanelCityDetails {
         const slot = document.createElement("fxs-vslot");
         slot.classList.add("pr-4");
         slot.setAttribute("data-navrule-right", "stop");
-        slot.id = "city-details-tab-buildings" /* buildings */;
+        slot.id = cityDetailTabID.buildings /* buildings */;
         slot.innerHTML = `
         <fxs-scrollable>
             <div class="flex flex-col w-full mb-2">
