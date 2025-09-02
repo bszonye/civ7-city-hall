@@ -84,7 +84,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const repairDamaged =
         result.RepairDamaged ??
         qitem?.damaged ??
-        (qslot && !result.inQueue) ??
+        (qslot && !result.InQueue) ??
         false;
     const altName =
         repairDamaged && info.Repairable ? "LOC_UI_PRODUCTION_REPAIR_NAME" :
@@ -121,7 +121,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const disableQueued =
             result.InQueue && !isPurchase && !multiple ||
             repairDamaged && qslot && !plots.length;
-        const disabled = disableQueued || insufficientFunds || !plots.length;
+        const disabled = !result.Success || !plots.length || disableQueued;
         const showError = disableQueued ||
             insufficientFunds && (plots.length || repairDamaged);
         if (disabled && !viewHidden && !showError) return null;
@@ -137,7 +137,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const yieldScore = building || improvement ? BPM.bzYieldScore(yieldChanges) : 0;
         const sortTier =
             building && unique ? 10 :
-            result.InProgress ? 9 :
+            city.BuildQueue.getProgress(hash) ? 9 :
             repairDamaged ? 7 :
             !yieldChanges.length ? -10 :
             buildingTier;
@@ -430,12 +430,11 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         if (result.FailureReasons) errors.push(...result.FailureReasons);
         const error = errors.join("[n]");
         // sorting
-        const progress = city.BuildQueue?.getProgress(hash) ?? 0;
         const stats = GameInfo.Unit_Stats.lookup(hash);
         const cv = info.CanEarnExperience ? Number.MAX_VALUE :
             stats?.RangedCombat || stats?.Combat || 0;
         const sortTier =
-            progress ? 9 :
+            city.BuildQueue.getProgress(hash) ? 9 :
             info.FoundCity ? 2 :  // settlers
             info.CoreClass == "CORE_CLASS_RECON" ? 1 :  // scouts
             cv <= 0 ? 0 :  // civilians

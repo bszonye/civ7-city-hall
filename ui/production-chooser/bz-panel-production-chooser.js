@@ -444,35 +444,19 @@ class bzProductionChooserItem {
         c.secondaryDetailsElement.classList.value = "bz-pci-details hidden flex font-body-xs -mt-1";
         infoColumn.appendChild(c.secondaryDetailsElement);
         c.container.appendChild(infoColumn);
-        // progress bar
-        this.progressBar.classList.add(
-            "build-queue__item-progress-bar",
-            "relative",
-            "p-0\\.5",
-            "flex",
-            "flex-col-reverse",
-            "h-10",
-            "w-4",
-            "mr-2",
-            "hidden",
-        );
-        this.progressBarFill.classList.add("build-queue__progress-bar-fill", "relative", "bg-contain", "w-3");
-        this.progressBar.appendChild(this.progressBarFill);
-        this.progressBarFill.style.heightPERCENT = 100;
-        c.container.appendChild(this.progressBar);
         // production and purchase costs
         const costColumn = document.createElement("div");
         costColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
         this.pCostContainer.classList.value = "flex items-center";
         this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
         this.pCostContainer.appendChild(this.pCostAmountElement);
-        this.pCostIconElement.classList.value = "size-6 bg-contain bg-center bg-no-repeat";
+        this.pCostIconElement.classList.value = "size-6 bg-contain bg-center bg-no-repeat mx-0\\.5";
         this.pCostIconElement.style
             .setProperty("background-image", "url(Yield_Production)");
-        this.pCostIconElement.ariaLabel = Locale.compose("LOC_YIELD_GOLD");
+        this.pCostIconElement.ariaLabel = Locale.compose("LOC_YIELD_PRODUCTION");
         this.pCostContainer.appendChild(this.pCostIconElement);
         costColumn.appendChild(this.pCostContainer);
-        c.costContainer.classList.value = "bz-pci-cost flex items-center";
+        c.costContainer.classList.value = "bz-pci-cost flex justify-end items-center";
         c.costAmountElement.classList.value = "font-title-sm mr-1";
         c.costContainer.appendChild(c.costAmountElement);
         c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat -m-1";
@@ -480,6 +464,22 @@ class bzProductionChooserItem {
         costColumn.appendChild(this.pCostContainer);
         costColumn.appendChild(c.costContainer);
         c.container.appendChild(costColumn);
+        // progress bar
+        this.progressBar.classList.add(
+            "build-queue__item-progress-bar",
+            "absolute",
+            "p-0\\.5",
+            "flex",
+            "flex-col-reverse",
+            "h-10",
+            "w-4",
+            "right-2",
+            "hidden",
+        );
+        this.progressBarFill.classList.add("build-queue__progress-bar-fill", "relative", "bg-contain", "w-3");
+        this.progressBar.appendChild(this.progressBarFill);
+        this.progressBarFill.style.heightPERCENT = 100;
+        c.container.appendChild(this.progressBar);
     }
     updateInfo() {
         // styling for repairs, ageless items, and secondary details
@@ -522,6 +522,8 @@ class bzProductionChooserItem {
         const type = Game.getHash(dataType);
         const progress = city.BuildQueue?.getProgress(type) ?? 0;
         const percent = city.BuildQueue?.getPercentComplete(type) ?? 0;
+        this.pCostIconElement.classList.toggle("invisible", 0 < progress);
+        c.costIconElement.classList.toggle("invisible", 0 < progress);
         this.progressBar.classList.toggle("hidden", progress <= 0);
         this.progressBarFill.style.heightPERCENT = percent;
         const update = (base) => {
