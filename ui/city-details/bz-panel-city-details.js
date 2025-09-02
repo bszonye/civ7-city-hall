@@ -263,6 +263,8 @@ function preloadIcon(icon, context) {
 // PanelCityDetails decorator
 class bzPanelCityDetails {
     static c_prototype;
+    static c_addConstructibleData;
+    static c_addDistrictData;
     static c_renderYieldsSlot;
     static lastTab = 0;
     static tableWidth = 0;
@@ -307,6 +309,13 @@ class bzPanelCityDetails {
             const c_rv = c_render.apply(this, args);
             const after_rv = after_render.apply(this.bzComponent, args);
             return after_rv ?? c_rv;
+        }
+        // disable vanilla building elements to avoid double work
+        bzPanelCityDetails.c_addConstructibleData = proto.addDistrictData;
+        bzPanelCityDetails.c_addDistrictData = proto.addDistrictData;
+        proto.addConstructibleData = proto.addDistrictData = function() {
+            console.warn(`TRIX OVERRIDE`);
+            return document.createElement("div");
         }
         // replace component.renderYieldsSlot to fix a bug
         bzPanelCityDetails.c_renderYieldsSlot = proto.renderYieldsSlot;
@@ -388,7 +397,7 @@ class bzPanelCityDetails {
     afterRender() {
         this.patchTabSlots();
         this.renderOverviewSlot();
-        this.renderConstructiblesSlot();
+        this.renderConstructibleSlot();
         // adjust arrow buttons
         const c = this.component;
         c.prevCityButton.classList.add("bz-prev-city", "bz-cycle-city");
@@ -410,7 +419,7 @@ class bzPanelCityDetails {
         `;
         this.component.slotGroup.appendChild(slot);
     }
-    renderConstructiblesSlot() {
+    renderConstructibleSlot() {
         const slot = document.createElement("fxs-vslot");
         slot.classList.add("pr-4");
         slot.setAttribute("data-navrule-right", "stop");
