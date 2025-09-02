@@ -1,3 +1,4 @@
+// TODO: fix nav-help lost when cycling cities from Details panel
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
 import FocusManager from '/core/ui/input/focus-manager.js';
 import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';

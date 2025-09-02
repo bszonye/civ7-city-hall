@@ -1,3 +1,4 @@
+// TODO: fix nav-help lost when cycling cities from Details panel
 import bzCityDetails, { bzUpdateCityDetailsEventName } from "/bz-city-hall/ui/city-details/bz-model-city-details.js";
 import { C as CityDetails, U as UpdateCityDetailsEventName } from "/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js";
 import { N as NavTray } from "/core/ui/navigation-tray/model-navigation-tray.chunk.js";
@@ -121,6 +122,18 @@ const BZ_DOT_JOINER = metrics.isIdeographic ?
 // additional CSS definitions
 const BZ_HEAD_STYLE = [
 `
+.bz-city-hall .buildings-list .city-details-half-divider,
+.bz-city-hall .bz-buildings-list .city-details-half-divider {
+    margin: -0.2222222222rem 0;
+}
+.bz-city-hall .improvements-category .city-details-half-divider {
+    margin-top: -0.2222222222rem;
+}
+.bz-city-hall .buildings-list .flex:last-child .city-details-half-divider,
+.bz-city-hall .improvements-list .city-details-half-divider,
+.bz-city-hall .wonders-list .city-details-half-divider {
+    display: none;
+}
 .bz-city-hall .text-gradient-secondary {
     fxs-font-gradient-color: ${BZ_COLOR.bronze1};
     color: ${BZ_COLOR.bronze2};
@@ -263,6 +276,7 @@ function preloadIcon(icon, context) {
 // PanelCityDetails decorator
 class bzPanelCityDetails {
     static c_prototype;
+    static c_renderBuildingSlot;
     static c_addConstructibleData;
     static c_addDistrictData;
     static c_renderYieldsSlot;
@@ -274,7 +288,7 @@ class bzPanelCityDetails {
     panelProductionSlot;
     focusRoot;
     focusInListener = this.onFocusIn.bind(this);
-    updateListener = this.update.bind(this);
+    updateListener = this.updateOverview.bind(this);
     onCityLinkListener = this.onCityLink.bind(this);
     constructor(component) {
         this.component = component;
@@ -310,12 +324,28 @@ class bzPanelCityDetails {
             const after_rv = after_render.apply(this.bzComponent, args);
             return after_rv ?? c_rv;
         }
-        // disable vanilla building elements to avoid double work
-        bzPanelCityDetails.c_addConstructibleData = proto.addDistrictData;
+        // wrap update method to extend it
+        const c_update = proto.update;
+        const before_update = this.beforeUpdate;
+        proto.update = function(...args) {
+            const before_rv = before_update.apply(this.bzComponent, args);
+            const c_rv = c_update.apply(this, args);
+            return c_rv ?? before_rv;
+        }
+        // also replace listener with patched version
+        component.updateCityDetailersListener = component.update.bind(component);
+        // replace vanilla methods for city-details-tab-buildings
+        bzPanelCityDetails.c_renderBuildingSlot = proto.renderBuildingSlot;
+        proto.renderBuildingSlot = function(...args) {
+            return this.bzComponent.renderBuildingSlot(...args);
+        }
+        bzPanelCityDetails.c_addConstructibleData = proto.addConstructibleData;
+        proto.addConstructibleData = function(...args) {
+            return this.bzComponent.addConstructibleData(...args);
+        }
         bzPanelCityDetails.c_addDistrictData = proto.addDistrictData;
-        proto.addConstructibleData = proto.addDistrictData = function() {
-            console.warn(`TRIX OVERRIDE`);
-            return document.createElement("div");
+        proto.addDistrictData = function(...args) {
+            return this.bzComponent.addDistrictData(...args);
         }
         // replace component.renderYieldsSlot to fix a bug
         bzPanelCityDetails.c_renderYieldsSlot = proto.renderYieldsSlot;
@@ -329,7 +359,7 @@ class bzPanelCityDetails {
         // replace city-detail-tabs-buildings
         tabs.forEach((tab, index) => {
             if (tab.id == cityDetailTabID.buildings) {
-                tabs[index] = BZ_TAB_CONSTRUCTIBLES;
+                tabs.splice(index + 1, 0, BZ_TAB_CONSTRUCTIBLES);
             }
         });
         // add Overview tab
@@ -419,6 +449,40 @@ class bzPanelCityDetails {
         `;
         this.component.slotGroup.appendChild(slot);
     }
+    renderBuildingSlot() {
+        const slot = document.createElement("fxs-vslot");
+        slot.classList.add("pr-4");
+        slot.setAttribute("data-navrule-right", "stop");
+        slot.id = "city-details-tab-buildings" /* buildings */;
+        slot.innerHTML = `
+        <fxs-scrollable>
+            <div class="flex flex-col w-full mb-2">
+                <div class="buildings-category flex mt-2">
+                    <fxs-icon class="size-12 ml-3 my-1" data-icon-id="CITY_BUILDINGS_LIST"></fxs-icon>
+                    <div class="self-center font-title text-lg uppercase text-gradient-secondary ml-2" data-l10n-id="LOC_UI_CITY_DETAILS_BUILDINGS"></div>
+                </div>
+                <div class="buildings-list flex-col"></div>
+                <div class="improvements-category flex-col mt-1">
+                    ${BZ_DIVIDER}
+                    <div class="flex">
+                        <fxs-icon class="size-12 ml-3 my-1" data-icon-id="CITY_IMPROVEMENTS_LIST"></fxs-icon>
+                        <div class="self-center font-title text-lg uppercase text-gradient-secondary ml-2" data-l10n-id="LOC_UI_CITY_DETAILS_IMPROVEMENTS"></div>
+                    </div>
+                </div>
+                <div class="improvements-list flex-col"></div>
+                <div class="wonders-category flex-col mt-1">
+                    ${BZ_DIVIDER}
+                    <div class="flex">
+                        <fxs-icon class="size-12 ml-3 my-1" data-icon-id="CITY_WONDERS_LIST"></fxs-icon>
+                        <div class="self-center font-title text-lg uppercase text-gradient-secondary ml-2" data-l10n-id="LOC_UI_CITY_DETAILS_WONDERS"></div>
+                    </div>
+                </div>
+                <div class="wonders-list flex-col"></div>
+            </div>
+        </fxs-scrollable>
+        `;
+        this.component.slotGroup.appendChild(slot);
+    }
     renderConstructibleSlot() {
         const slot = document.createElement("fxs-vslot");
         slot.classList.add("pr-4");
@@ -462,11 +526,14 @@ class bzPanelCityDetails {
         `;
         this.component.slotGroup.appendChild(slot);
     }
-    // update data model from both sources
-    update() {
+    beforeUpdate() {
+        // sort constructibles before rendering
+        const buildings = CityDetails.buildings;
+        const improvements = CityDetails.improvements;
+        const wonders = CityDetails.wonders;
+        bzCityDetails.sortConstructibles(buildings, improvements, wonders);
+        // fix controller focus
         const c = this.component;
-        this.updateOverview();
-        this.updateConstructibles();
         const hasFocus = this.component.Root.contains(FocusManager.getFocus());
         c.Root.classList.toggle("trigger-nav-help", hasFocus);
         Databind.classToggle(c.Root, "bz-no-help", "!{{g_NavTray.isTrayRequired}}");
@@ -474,6 +541,7 @@ class bzPanelCityDetails {
     }
     // update data model for new tab slot
     updateOverview() {
+        this.updateConstructibles();  // TODO: remove this
         // Flag so we can give the overview back focus after updating
         const overviewHasFocus = this.overviewSlot.contains(FocusManager.getFocus());
         this.renderGrowth(this.growthContainer);
@@ -671,7 +739,7 @@ class bzPanelCityDetails {
         this.buildingsList.innerHTML = "";
         for (const building of buildings) {
             this.buildingsList.appendChild(this.addDistrictData(building));
-            this.buildingsList.appendChild(this.createDivider("-my-1"));
+            this.buildingsList.appendChild(this.component.createDivider());
         }
         // Improvements
         const shouldShowImprovements = improvements.length > 0;
@@ -689,7 +757,7 @@ class bzPanelCityDetails {
         }
         // separate improvements & wonders if we have both
         if (shouldShowImprovements && shouldShowWonders) {
-            this.improvementsList.appendChild(this.createDivider());
+            this.improvementsList.appendChild(this.component.createDivider());
         }
         if (constructiblesHaveFocus) {
             FocusManager.setFocus(this.constructibleSlot);
@@ -815,13 +883,6 @@ class bzPanelCityDetails {
         topDiv.appendChild(rightContainer);
         mainDiv.appendChild(topDiv);
         return mainDiv;
-    }
-    createDivider(...style) {
-        const dividerDiv = document.createElement("div");
-        dividerDiv.classList.value = BZ_DIVIDER_STYLE;
-        if (style.length) dividerDiv.classList.add(...style);
-        dividerDiv.innerHTML = BZ_DIVIDER_LINE;
-        return dividerDiv;
     }
     syncFocus(focus) {
         this.component.Root.classList.toggle("trigger-nav-help", focus);
