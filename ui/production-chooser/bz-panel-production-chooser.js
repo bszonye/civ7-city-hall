@@ -235,9 +235,7 @@ class bzProductionChooserScreen {
     beforeAttach() {
         // replace event handlers to fix nav-help glitches
         this.component.onCityDetailsClosedListener = this.onCityDetailsClosed.bind(this);
-        engine.on("input-source-changed", (deviceType, _deviceLayout) => {
-            this.onActiveDeviceTypeChanged(deviceType);
-        });
+        engine.on("input-source-changed", this.onActiveDeviceTypeChanged, this);
     }
     afterAttach() {
         engine.on("ConstructibleChanged", this.component.onConstructibleAddedToMap, this.component);
@@ -261,6 +259,7 @@ class bzProductionChooserScreen {
         // but that has its own means of restoring the Purchase tab.
         bzProductionChooserScreen.isPurchase = false;
         engine.off("ConstructibleChanged", this.component.onConstructibleAddedToMap, this.component);
+        engine.off("input-source-changed", this.onActiveDeviceTypeChanged, this);
     }
     afterRender() {
         const c = this.component;
