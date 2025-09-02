@@ -73,7 +73,19 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const multiple = building?.MultiplePerCity ||
         improvement && !improvement.OnePerSettlement;
     const category = wonder ? "wonders" : "buildings";
-    const repairDamaged = result.RepairDamaged ?? false;
+    // queue entry, if any
+    const queue = city.BuildQueue.getQueue();
+    const qslot = queue?.find(i => i.type == hash);
+    const qitem = qslot && Constructibles.getByComponentID(qslot.instance);
+    // if (qslot) console.warn(`TRIX QSLOT ${type} ${JSON.stringify(qslot)}`);
+    // if (qitem) console.warn(`TRIX QITEM ${type} ${JSON.stringify(qitem)}`);
+    // if (qslot) console.warn(`TRIX RESULT ${type} ${JSON.stringify(result)}`);
+    // repairs
+    const repairDamaged =
+        result.RepairDamaged ??
+        qitem?.damaged ??
+        (qslot && !result.inQueue) ??
+        false;
     const altName =
         repairDamaged && info.Repairable ? "LOC_UI_PRODUCTION_REPAIR_NAME" :
         result.MoveToNewLocation? "LOC_UI_PRODUCTION_MOVE_NAME" : null;
@@ -85,17 +97,15 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const locked = result.Locked ?? false;
     const lockType = result.NeededUnlock ?? -1;  // research type
     const unlockable = isUnlockable(city.owner, lockType);
-    const viewable = !locked || unlockable || unique;
-    if (result.Success || result.InProgress || viewable && (insufficientFunds || viewHidden)) {
+    if (locked && !unlockable && !unique) return null;
+    if (result.Success || result.InProgress || insufficientFunds || viewHidden) {
         const plots = [];
-        if (result.InProgress || repairDamaged) {
-            if (result.Plots) plots.push(...result.Plots);
-        } else if (result.InQueue) {
-            // TODO: limit this to the queued location
-            const queue = city.BuildQueue?.getQueue();
-            const loc = queue?.find(i => i.type == hash)?.location;
-            plots.push(GameplayMap.getIndexFromLocation(loc));
+        if (result.InQueue) {
+            // get placement from the build queue
+            plots.push(GameplayMap.getIndexFromLocation(qslot.location));
+            console.warn(`TRIX QUEUE ${type} ${JSON.stringify(plots)}`);
         } else {
+            if (qslot) console.warn(`TRIX QMISS ${type} ${JSON.stringify(result)}`);
             if (result.Plots) plots.push(...result.Plots);
             if (result.ExpandUrbanPlots) plots.push(...result.ExpandUrbanPlots);
         }
@@ -108,9 +118,10 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
         // error handling
-        const disableQueued = result.InQueue && !isPurchase && !multiple;
-        const repairQueued = repairDamaged && !plots.length;
-        const disabled = !plots.length || disableQueued || insufficientFunds;
+        const disableQueued =
+            result.InQueue && !isPurchase && !multiple ||
+            repairDamaged && qslot && !plots.length;
+        const disabled = disableQueued || insufficientFunds || !plots.length;
         const showError = disableQueued ||
             insufficientFunds && (plots.length || repairDamaged);
         if (disabled && !viewHidden && !showError) return null;
@@ -118,8 +129,9 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
             locked && lockType != -1 ? unlockName(city.owner, lockType) :
             insufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
-            disableQueued || repairQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
+            disableQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
             !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
+        // if (error) console.warn(`TRIX ERROR ${type} ${error}`);
         // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ? BPM.bzYieldScore(yieldChanges) : 0;
@@ -187,12 +199,12 @@ const getProjectItems = (city, isPurchase) => {
         const turns = city.BuildQueue.getTurnsLeft(hash);
         const cost = city.Production.getProjectProductionCost(hash);
         // limit queuing to MaxPlayerInstances
-        const queue = city.BuildQueue;
-        const inQueue = queue?.getQueue()?.filter(i => i.type == hash)?.length ?? 0;
+        const queue = city.BuildQueue.getQueue();
+        const inQueue = queue.filter(i => i.type == hash)?.length ?? 0;
         const limited = (info.MaxPlayerInstances ?? 999) <= inQueue;
         const error = limited ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : void 0;
         // sort projects
-        const sortTier = queue?.getProgress(hash) ? 9 : 0;
+        const sortTier = city.BuildQueue.getProgress(hash) ? 9 : 0;
         const sortValue = cost;
         const projectItem = {
             sortTier,
@@ -406,6 +418,17 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         const unitDetails = GetUnitStatsFromDefinition(info);
         const secondaryDetails = GetSecondaryDetailsHTML(unitDetails);
         const recommendations = AdvisorUtilities.getBuildRecommendationIcons(recs, type);
+        // error handling
+        const errors = [];
+        if (locked) errors.push(unlockName(city.owner, lockType));
+        if (result.Requirements?.NeededPopulation) {
+            errors.push(Locale.compose(
+                "LOC_UI_PRODUCTION_REQUIRES_POPULATION",
+                result.Requirements.NeededPopulation
+            ));
+        }
+        if (result.FailureReasons) errors.push(...result.FailureReasons);
+        const error = errors.join("[n]");
         // sorting
         const progress = city.BuildQueue?.getProgress(hash) ?? 0;
         const stats = GameInfo.Unit_Stats.lookup(hash);
@@ -439,6 +462,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
             showCost: cost > 0,
             // data-error
             insufficientFunds: cost > goldBalance,
+            error,
             // data-is-ageless
             ageless: false,
             // data-secondary-details
@@ -446,15 +470,6 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
             // data-recommendations
             recommendations,
         };
-        if (locked) {
-            data.error = unlockName(city.owner, lockType);
-        }
-        if (result.Requirements?.NeededPopulation) {
-            data.error = Locale.compose("LOC_UI_PRODUCTION_REQUIRES_POPULATION", result.Requirements.NeededPopulation);
-        }
-        if (result.FailureReasons) {
-            data.error = result.FailureReasons.join("\n");
-        }
         units.push(data);
     }
     return units;

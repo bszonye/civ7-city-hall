@@ -438,7 +438,7 @@ class bzProductionChooserItem {
         nameContainer.appendChild(c.recommendationsContainer);
         infoColumn.appendChild(nameContainer);
         // error messages
-        c.errorTextElement.classList.value = "bz-pci-error hidden font-body-xs text-negative-light mx-1 -mt-1 mb-1 z-1 pointer-events-none";
+        c.errorTextElement.classList.value = "bz-pci-error flex-col hidden font-body-xs text-negative-light mx-1 -mt-1 mb-1 z-1 pointer-events-none";
         infoColumn.appendChild(c.errorTextElement);
         // yields and unit stats
         c.secondaryDetailsElement.classList.value = "bz-pci-details hidden flex font-body-xs -mt-1";
