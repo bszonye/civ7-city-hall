@@ -127,7 +127,7 @@ const BZ_HEAD_STYLE = [
     margin: -0.2222222222rem 0;
 }
 .bz-city-hall .improvements-category .city-details-half-divider {
-    margin-top: -0.2222222222rem;
+    margin-top: -0.4444444444rem;
 }
 .bz-city-hall .buildings-list .flex:last-child .city-details-half-divider,
 .bz-city-hall .improvements-list .city-details-half-divider,
