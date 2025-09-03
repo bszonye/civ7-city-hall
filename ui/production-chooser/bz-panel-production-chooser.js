@@ -112,6 +112,9 @@ const BZ_HEAD_STYLE = [
     width: 1.3333333333rem;
     height: 1.3333333333rem;
 }
+.bz-city-hall .bz-is-purchase .build-queue__progress-bar-fill {
+    filter: saturate(0) fxs-color-tint(${BZ_COLOR.gold}) brightness(2.5) contrast(1.25);
+}
 `,  // improve panel header layout
 `
 .bz-city-hall .panel-production-chooser .fxs-editable-header .fxs-edit-button {
@@ -393,7 +396,8 @@ class bzProductionChooserItem {
     afterAttach() { }
     beforeDetach() { }
     afterDetach() { }
-    onAttributeChanged(name, _oldValue, _newValue) {
+    onAttributeChanged(name, _oldValue, newValue) {
+        const c = this.component;
         switch (name) {
             // case "disabled":
             // case "data-category":
@@ -408,7 +412,9 @@ class bzProductionChooserItem {
             // case "data-prereq":
             // case "data-description":
             // case "data-error":
-            // case "data-is-purchase":
+            case "data-is-purchase":
+                c.Root.classList.toggle("bz-is-purchase", newValue === "true");
+                break;
             case "data-is-ageless":
             case "data-secondary-details":
                 // toggle .hidden instead of .invisible
