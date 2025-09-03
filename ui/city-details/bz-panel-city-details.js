@@ -154,9 +154,6 @@ const BZ_HEAD_STYLE = [
     top: 0.6111111111rem;
     left: 1rem;
 }
-.bz-overview-entry, .bz-city-hall .growth-entry {
-    border-radius: 2rem;
-}
 .bz-city-hall .bz-overview-entry.bz-odd-row {
     background-color: ${BZ_COLOR.bronze6}99;
 }
@@ -547,6 +544,7 @@ class bzPanelCityDetails {
             row.classList.value = "bz-overview-entry self-start flex px-1 -mx-1";
             row.style.backgroundColor = `${BZ_COLOR.food}55`;
             row.style.minHeight = size;
+            row.style.borderRadius = `${size} / 100%`;
             row.style.marginTop = metrics.body.leading.half.px;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
@@ -565,8 +563,9 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-56 px-1";
+            row.classList.value = "bz-overview-entry flex min-w-60 px-1";
             row.style.minHeight = size;
+            row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
             row.appendChild(docIcon(item.icon, size, small, "-mx-1"));
@@ -605,6 +604,7 @@ class bzPanelCityDetails {
             const row = document.createElement("fxs-activatable");
             row.classList.value = "bz-overview-entry bz-city-link relative flex justify-start items-center pr-1";
             row.style.minHeight = size;
+            row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
             row.setAttribute("bz-city-id", JSON.stringify(conn.id));
@@ -628,7 +628,7 @@ class bzPanelCityDetails {
         for (const [i, column] of columns.entries()) {
             const col = document.createElement("div");
             col.classList.value = "flex-col justify-start";
-            if (i) col.classList.add("ml-3");  // aligns well in Chinese
+            if (i) col.classList.add("ml-2");
             for (const row of column) col.appendChild(row);
             table.appendChild(col);
         }
@@ -652,9 +652,10 @@ class bzPanelCityDetails {
         table.style.minWidth = bzPanelCityDetails.tableWidth;
         for (const [i, item] of bzCityDetails.improvements.entries()) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-56 px-1";
+            row.classList.value = "bz-overview-entry flex min-w-60 px-1";
             if (!(i % 2)) row.classList.add("bz-odd-row");
             row.style.minHeight = size;
+            row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
             row.appendChild(docIcon(item.icon, size, small, "-mx-1"));
