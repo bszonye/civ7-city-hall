@@ -603,7 +603,7 @@ class bzPanelCityDetails {
         ];
         for (const conn of connections) {
             const row = document.createElement("fxs-activatable");
-            row.classList.value = "bz-overview-entry bz-city-link relative flex justify-start pr-1";
+            row.classList.value = "bz-overview-entry bz-city-link relative flex justify-start items-center pr-1";
             row.style.minHeight = size;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
@@ -616,7 +616,7 @@ class bzPanelCityDetails {
                 row.appendChild(docIcon(BZ_ICON_CITY, size, small));
             }
             const name = document.createElement("div");
-            name.classList.value = "mx-1 text-left";
+            name.classList.value = "mx-1 text-left w-40 font-fit-shrink";
             name.setAttribute("data-l10n-id", conn.name);
             row.appendChild(name);
             rows.push(row);
