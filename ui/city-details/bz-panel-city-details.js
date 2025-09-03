@@ -1,4 +1,3 @@
-// TODO: fix nav-help lost when cycling cities from Details panel
 import bzCityDetails, { bzUpdateCityDetailsEventName } from "/bz-city-hall/ui/city-details/bz-model-city-details.js";
 import { C as CityDetails, U as UpdateCityDetailsEventName } from "/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js";
 import { N as NavTray } from "/core/ui/navigation-tray/model-navigation-tray.chunk.js";
@@ -288,6 +287,7 @@ class bzPanelCityDetails {
     slots;
     cityDetailsSlot;
     panelProductionSlot;
+    lastSync = [];
     focusRoot;
     focusInListener = this.onFocusIn.bind(this);
     updateListener = this.updateOverview.bind(this);
@@ -814,8 +814,12 @@ class bzPanelCityDetails {
         NavTray.addOrUpdateGenericBack();
         if (focus) {
             // clear production-chooser focus
-            this.panelProductionSlot.querySelectorAll(".trigger-nav-help")
-                .forEach((e) => e.classList.remove("trigger-nav-help"));
+            this.lastSync = this.panelProductionSlot
+                .querySelectorAll(".trigger-nav-help");
+            this.lastSync.forEach((e) => e.classList.remove("trigger-nav-help"));
+        } else {
+            this.lastSync.forEach((e) => e.classList.add("trigger-nav-help"));
+            this.lastSync = [];
         }
     }
     onFocusIn(event) {
