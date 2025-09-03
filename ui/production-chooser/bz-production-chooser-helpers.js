@@ -70,14 +70,12 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const improvement = GameInfo.Improvements.lookup(info.ConstructibleType);
     const wonder = GameInfo.Wonders.lookup(info.ConstructibleType);
     const unique = (building ?? improvement ?? wonder)?.TraitType;
-    const multiple = building?.MultiplePerCity ||
-        improvement && !improvement.OnePerSettlement;
+    const multiple = Boolean(improvement && !improvement.OnePerSettlement);
     const category = wonder ? "wonders" : "buildings";
     // queue entry, if any
     const queue = city.BuildQueue.getQueue();
     const qslot = queue?.find(i => i.type == hash);
-    const qitem = qslot && Constructibles.getByComponentID(qslot.instance);
-    const inProgress = !!(result.InProgress || qitem);  // includes repairs
+    const inProgress = Boolean(result.InProgress || qslot && qslot === queue[0]);
     // repairs
     const repairDamaged = result.RepairDamaged ?? (qslot && !result.InQueue) ?? false;
     const altName =
@@ -100,7 +98,6 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             console.warn(`TRIX QUEUE ${hash} ${type} ${JSON.stringify(queue)}`);
             plots.push(GameplayMap.getIndexFromLocation(qslot.location));
         } else {
-            if (qslot) console.warn(`TRIX QMISS ${type} ${JSON.stringify(result)}`);
             if (result.Plots) plots.push(...result.Plots);
             if (result.ExpandUrbanPlots) plots.push(...result.ExpandUrbanPlots);
         }
@@ -113,17 +110,17 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
         // error handling
-        const disableQueued =
-            result.InQueue && !(inProgress && isPurchase) && !multiple ||
-            repairDamaged && qslot && !plots.length;
+        const buyout = isPurchase && inProgress;  // potential buyout
+        const repairQueued = repairDamaged && !plots.length;
+        const disableQueued = qslot && !(result.Success && (buyout || multiple));
         const disabled = !result.Success || !plots.length || disableQueued;
-        const showError = insufficientFunds && (plots.length || repairDamaged);
+        const showError = buyout || insufficientFunds && (plots.length || repairDamaged);
         if (disabled && !viewHidden && !showError) return null;
         const error =
             result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
             locked && lockType != -1 ? unlockName(city.owner, lockType) :
             insufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
-            disableQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
+            disableQueued || repairQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
             !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
         if (error) console.warn(`TRIX ERROR ${type} ${error} ${JSON.stringify(result)}`);
         // sort items
@@ -506,6 +503,5 @@ function bzSortProductionItems(list) {
     });
 }
 
-// export { CityDetails as C, GetPrevCityID as G, ProductionPanelCategory as P, RepairConstruct as R, SetTownFocus as S, UpdateCityDetailsEventName as U, GetNextCityID as a, GetTownFocusItems as b, GetTownFocusBlp as c, GetLastProductionData as d, GetCityBuildReccomendations as e, GetUniqueQuarterForPlayer as f, GetProductionItems as g, Construct as h, CreateProductionChooserItem as i, GetNumUniqueQuarterBuildingsCompleted as j, GetCurrentTownFocus as k };
 export { GetProductionItems as g };
 //# sourceMappingURL=production-chooser-helpers.chunk.js.map
