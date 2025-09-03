@@ -112,6 +112,16 @@ const BZ_HEAD_STYLE = [
     width: 1.3333333333rem;
     height: 1.3333333333rem;
 }
+.bz-city-hall .bz-in-progress .bz-pci-pcost-icon,
+.bz-city-hall .bz-in-progress .bz-pci-cost-icon {
+    visibility: hidden;
+}
+.bz-city-hall .bz-in-progress.bz-is-purchase .bz-pci-name,
+.bz-city-hall .bz-in-progress.bz-is-purchase .bz-pci-pcost,
+.bz-city-hall .bz-in-progress.bz-is-purchase .bz-pci-cost,
+.bz-city-hall .bz-in-progress.bz-is-purchase .bz-pci-progress {
+    z-index: 1;
+}
 .bz-city-hall .bz-is-purchase .build-queue__progress-bar-fill {
     filter: saturate(0) fxs-color-tint(${BZ_COLOR.gold}) brightness(2.5) contrast(1.25);
 }
@@ -453,10 +463,10 @@ class bzProductionChooserItem {
         // production and purchase costs
         const costColumn = document.createElement("div");
         costColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
-        this.pCostContainer.classList.value = "flex items-center";
+        this.pCostContainer.classList.value = "bz-pci-pcost flex items-center";
         this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
         this.pCostContainer.appendChild(this.pCostAmountElement);
-        this.pCostIconElement.classList.value = "size-6 bg-contain bg-center bg-no-repeat mx-0\\.5";
+        this.pCostIconElement.classList.value = "bz-pci-pcost-icon size-6 bg-contain bg-center bg-no-repeat mx-0\\.5";
         this.pCostIconElement.style
             .setProperty("background-image", "url(Yield_Production)");
         this.pCostIconElement.ariaLabel = Locale.compose("LOC_YIELD_PRODUCTION");
@@ -465,13 +475,14 @@ class bzProductionChooserItem {
         c.costContainer.classList.value = "bz-pci-cost flex justify-end items-center";
         c.costAmountElement.classList.value = "font-title-sm mr-1";
         c.costContainer.appendChild(c.costAmountElement);
-        c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat -m-1";
+        c.costIconElement.classList.value = "bz-pci-cost-icon size-8 bg-contain bg-center bg-no-repeat -m-1";
         c.costContainer.appendChild(c.costIconElement);
         costColumn.appendChild(this.pCostContainer);
         costColumn.appendChild(c.costContainer);
         c.container.appendChild(costColumn);
         // progress bar
         this.progressBar.classList.add(
+            "bz-pci-progress",
             "build-queue__item-progress-bar",
             "absolute",
             "p-0\\.5",
@@ -530,8 +541,7 @@ class bzProductionChooserItem {
         const progress = city.BuildQueue.getProgress(type) ?? 0;
         const percent = city.BuildQueue.getPercentComplete(type) ?? 0;
         const inProgress = 0 < progress || queue[0]?.type == type;
-        this.pCostIconElement.classList.toggle("invisible", inProgress);
-        c.costIconElement.classList.toggle("invisible", inProgress);
+        c.Root.classList.toggle("bz-in-progress", inProgress);
         this.progressBar.classList.toggle("hidden", !inProgress);
         this.progressBarFill.style.heightPERCENT = percent;
         const update = (base) => {

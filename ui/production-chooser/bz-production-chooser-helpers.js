@@ -114,7 +114,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const buyout = isPurchase && inProgress && plots.length;  // potential buyout
         const fundsError = insufficientFunds && (plots.length || repairDamaged);
         const repairQueued = repairDamaged && !plots.length;
-        const disableQueued = inQueue && !(result.Success && (buyout || multiple));
+        const disableQueued = inQueue && !multiple;
         const disabled = !result.Success || !plots.length || disableQueued;
         if (disabled && !buyout && !fundsError && !viewHidden) return null;
         const error =
