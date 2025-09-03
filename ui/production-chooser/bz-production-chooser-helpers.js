@@ -74,10 +74,11 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const category = wonder ? "wonders" : "buildings";
     // queue entry, if any
     const queue = city.BuildQueue.getQueue();
-    const qslot = queue?.find(i => i.type == hash);
-    const inProgress = Boolean(result.InProgress || qslot && qslot === queue[0]);
+    const qslot = queue?.findIndex(i => i.type == hash);
+    const inProgress = Boolean(result.InProgress || qslot == 0);
+    const inQueue = qslot != -1;
     // repairs
-    const repairDamaged = result.RepairDamaged ?? (qslot && !result.InQueue) ?? false;
+    const repairDamaged = result.RepairDamaged ?? (inQueue && !result.InQueue) ?? false;
     const altName =
         repairDamaged && info.Repairable ? "LOC_UI_PRODUCTION_REPAIR_NAME" :
         result.MoveToNewLocation? "LOC_UI_PRODUCTION_MOVE_NAME" : null;
@@ -96,7 +97,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         if (result.InQueue) {
             // get placement from the build queue
             console.warn(`TRIX QUEUE ${hash} ${type} ${JSON.stringify(queue)}`);
-            plots.push(GameplayMap.getIndexFromLocation(qslot.location));
+            plots.push(GameplayMap.getIndexFromLocation(queue[qslot].location));
         } else {
             if (result.Plots) plots.push(...result.Plots);
             if (result.ExpandUrbanPlots) plots.push(...result.ExpandUrbanPlots);
@@ -110,16 +111,16 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
         // error handling
-        const buyout = isPurchase && inProgress;  // potential buyout
+        const buyout = isPurchase && inProgress && plots.length;  // potential buyout
+        const fundsError = insufficientFunds && (plots.length || repairDamaged);
         const repairQueued = repairDamaged && !plots.length;
-        const disableQueued = qslot && !(result.Success && (buyout || multiple));
+        const disableQueued = inQueue && !(result.Success && (buyout || multiple));
         const disabled = !result.Success || !plots.length || disableQueued;
-        const showError = buyout || insufficientFunds && (plots.length || repairDamaged);
-        if (disabled && !viewHidden && !showError) return null;
+        if (disabled && !buyout && !fundsError && !viewHidden) return null;
         const error =
             result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
             locked && lockType != -1 ? unlockName(city.owner, lockType) :
-            insufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
+            fundsError ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
             disableQueued || repairQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
             !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
         if (error) console.warn(`TRIX ERROR ${type} ${error} ${JSON.stringify(result)}`);
@@ -128,8 +129,8 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const yieldScore = building || improvement ? BPM.bzYieldScore(yieldChanges) : 0;
         const sortTier =
             building && unique ? 10 :
-            inProgress ? 9 :
-            repairDamaged ? 7 :
+            repairDamaged ? 9 :
+            inProgress ? 8 :
             !yieldChanges.length ? -10 :
             buildingTier;
         const sortValue = sortTier == buildingTier ? yieldScore : buildingTier;
@@ -195,7 +196,7 @@ const getProjectItems = (city, isPurchase) => {
         const limited = (info.MaxPlayerInstances ?? 999) <= inQueue;
         const error = limited ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : void 0;
         // sort projects
-        const sortTier = city.BuildQueue.getProgress(hash) ? 9 : 0;
+        const sortTier = city.BuildQueue.getProgress(hash) ? 8 : 0;
         const sortValue = cost;
         const projectItem = {
             sortTier,
@@ -360,8 +361,8 @@ const createRepairAllProductionChooserItemData = (cost, turns) => {
     }
     const isInsufficientFunds = cost > (localPlayer.Treasury?.goldBalance || 0);
     return {
-        sortTier: 8,
-        sortValue: 0,
+        sortTier: 9,
+        sortValue: 9,
         disabled: isInsufficientFunds,
         category: "buildings" /* BUILDINGS */,
         name: "LOC_UI_PRODUCTION_REPAIR_ALL",
@@ -425,7 +426,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         const cv = info.CanEarnExperience ? Number.MAX_VALUE :
             stats?.RangedCombat || stats?.Combat || 0;
         const sortTier =
-            city.BuildQueue.getProgress(hash) ? 9 :
+            city.BuildQueue.getProgress(hash) ? 8 :
             info.FoundCity ? 2 :  // settlers
             info.CoreClass == "CORE_CLASS_RECON" ? 1 :  // scouts
             cv <= 0 ? 0 :  // civilians
