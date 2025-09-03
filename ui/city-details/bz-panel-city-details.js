@@ -565,7 +565,7 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex px-1";
+            row.classList.value = "bz-overview-entry flex min-w-56 px-1";
             row.style.minHeight = size;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
@@ -652,7 +652,7 @@ class bzPanelCityDetails {
         table.style.minWidth = bzPanelCityDetails.tableWidth;
         for (const [i, item] of bzCityDetails.improvements.entries()) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex px-1";
+            row.classList.value = "bz-overview-entry flex min-w-56 px-1";
             if (!(i % 2)) row.classList.add("bz-odd-row");
             row.style.minHeight = size;
             row.setAttribute("tabindex", "-1");
@@ -664,12 +664,6 @@ class bzPanelCityDetails {
             row.appendChild(value);
             table.appendChild(row);
         }
-        requestAnimationFrame(() => {
-            const gcol = this.growthContainer.querySelector(".flex-col");
-            const gwidth = gcol?.clientWidth;
-            if (!gwidth) return;
-            table.style.minWidth = bzPanelCityDetails.tableWidth = `${gwidth}px`;
-        });
         // wrap table to keep it from expanding to full width
         const wrap = document.createElement("div");
         wrap.classList.value = "flex justify-start";
