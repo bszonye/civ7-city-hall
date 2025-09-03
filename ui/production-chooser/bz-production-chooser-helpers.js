@@ -93,10 +93,8 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     if (locked && !unlockable && !unique) return null;
     if (result.Success || inProgress || insufficientFunds || viewHidden) {
         const plots = [];
-        if (inProgress) console.warn(`TRIX RESULT ${hash} ${type} ${JSON.stringify(result)}`);
         if (result.InQueue) {
             // get placement from the build queue
-            console.warn(`TRIX QUEUE ${hash} ${type} ${JSON.stringify(queue)}`);
             plots.push(GameplayMap.getIndexFromLocation(queue[qslot].location));
         } else {
             if (result.Plots) plots.push(...result.Plots);
@@ -123,7 +121,6 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             fundsError ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
             disableQueued || repairQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
             !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
-        if (error) console.warn(`TRIX ERROR ${type} ${error} ${JSON.stringify(result)}`);
         // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ? BPM.bzYieldScore(yieldChanges) : 0;
