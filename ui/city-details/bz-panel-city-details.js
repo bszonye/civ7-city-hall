@@ -331,7 +331,6 @@ class bzPanelCityDetails {
             const c_rv = c_update.apply(this, args);
             return c_rv ?? before_rv;
         }
-        // also replace initial listener with patched version
         component.updateCityDetailersListener = component.update.bind(component);
         // replace vanilla methods for city-details-tab-buildings
         bzPanelCityDetails.c_renderBuildingSlot = proto.renderBuildingSlot;
