@@ -1,9 +1,11 @@
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
-import FocusManager from '/core/ui/input/focus-manager.js';
+import FocusManager, { A as Audio } from '/core/ui/input/focus-manager.js';
+import { InterfaceMode } from '../../../core/ui/interface-modes/interface-modes.js';
 import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
+import { BuildQueue } from '/base-standard/ui/build-queue/model-build-queue.js';
 import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
-import { g as GetProductionItems } from './bz-production-chooser-helpers.js';
+import { g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
 
 // color palette
 const BZ_COLOR = {
@@ -111,18 +113,13 @@ const BZ_HEAD_STYLE = [
     width: 1.3333333333rem;
     height: 1.3333333333rem;
 }
-.bz-city-hall .bz-in-progress .bz-pci-pcost-icon,
-.bz-city-hall .bz-in-progress .bz-pci-cost-icon {
+.bz-city-hall .bz-show-progress .bz-pci-pcost-icon,
+.bz-city-hall .bz-show-progress .bz-pci-cost-icon {
     visibility: hidden;
 }
-.bz-city-hall .bz-in-progress.bz-is-purchase .bz-pci-name,
-.bz-city-hall .bz-in-progress.bz-is-purchase .bz-pci-pcost,
-.bz-city-hall .bz-in-progress.bz-is-purchase .bz-pci-cost,
-.bz-city-hall .bz-in-progress.bz-is-purchase .bz-pci-progress {
-    z-index: 1;
-}
 .bz-city-hall .bz-is-purchase .build-queue__progress-bar-fill {
-    filter: saturate(0) fxs-color-tint(${BZ_COLOR.gold}) brightness(2.5) contrast(1.25);
+    filter: saturate(0) fxs-color-tint(${BZ_COLOR.gold}) brightness(2.0) contrast(1.8) saturate(0.7);
+  background-position: center;
 }
 `,  // improve panel header layout
 `
@@ -185,6 +182,7 @@ document.body.classList.toggle("bz-city-compact", bzCityHallOptions.compact);
 
 class bzProductionChooserScreen {
     static c_prototype;
+    static c_doOrConfirmConstruction;
     static isPurchase = false;
     static isCDPanelOpen = true;
     isGamepadActive = Input.getActiveDeviceType() == InputDeviceType.Controller;
@@ -214,6 +212,12 @@ class bzProductionChooserScreen {
             const c_rv = c_updateCategories.apply(this, args);
             const after_rv = after_updateCategories.apply(this.bzComponent, args);
             return after_rv ?? c_rv;
+        }
+        // override doOrConfirmConstruction method to patch Construct
+        bzProductionChooserScreen.c_doOrConfirmConstruction =
+            proto.doOrConfirmConstruction;
+        proto.doOrConfirmConstruction = function(...args) {
+            return this.bzComponent.doOrConfirmConstruction(...args);
         }
         // override isPurchase property
         const c_isPurchase =
@@ -345,6 +349,36 @@ class bzProductionChooserScreen {
         if (resetFocus ||
             c.Root.contains(currentFocus) && !c.buildQueue.contains(currentFocus)) {
             FocusManager.setFocus(c.productionAccordion);
+        }
+    }
+    doOrConfirmConstruction(category, type, animationConfirmCallback) {
+        const c = this.component;
+        console.warn(`TRIX DORCC`);
+        const city = c.city;
+        if (!city) {
+            console.error(`panel-production-chooser: confirmSelection: Failed to get a valid city!`);
+            return;
+        }
+        const item = c.items[category].find((item2) => item2.type === type);
+        if (!item) {
+            console.error(`panel-production-chooser: confirmSelection: Failed to get a valid item!`);
+            return;
+        }
+        const queueLengthBeforeAdd = BuildQueue.items.length;
+        const bSuccess = Construct(city, item, c.isPurchase);
+        if (bSuccess) {
+            if (queueLengthBeforeAdd > 0) {
+                Audio.playSound("data-audio-queue-item", "audio-production-chooser");
+            }
+            animationConfirmCallback?.();
+            if (c.wasQueueInitiallyEmpty && !c.isPurchase && !Configuration.getUser().isProductionPanelStayOpen) {
+                UI.Player.deselectAllCities();
+                InterfaceMode.switchToDefault();
+                c.requestPlaceBuildingClose();
+            }
+        }
+        if (queueLengthBeforeAdd == 0) {
+            Audio.playSound("data-audio-city-production-activate", "city-actions");
         }
     }
     onActiveDeviceTypeChanged(deviceType) {
@@ -536,12 +570,11 @@ class bzProductionChooserItem {
         const dataCategory = e.getAttribute("data-category");
         const dataType = e.getAttribute("data-type");
         const type = Game.getHash(dataType);
-        const queue = city.BuildQueue.getQueue();
         const progress = city.BuildQueue.getProgress(type) ?? 0;
         const percent = city.BuildQueue.getPercentComplete(type) ?? 0;
-        const inProgress = 0 < progress || queue[0]?.type == type;
-        c.Root.classList.toggle("bz-in-progress", inProgress);
-        this.progressBar.classList.toggle("hidden", !inProgress);
+        const showProgress = 0 < progress || city.BuildQueue.isQueued(type);
+        c.Root.classList.toggle("bz-show-progress", showProgress);
+        this.progressBar.classList.toggle("hidden", !showProgress);
         this.progressBarFill.style.heightPERCENT = percent;
         const update = (base) => {
             if (isNaN(base) || base <= 0) {

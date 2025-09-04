@@ -44,7 +44,6 @@ export default [
                 InputActionStatuses: "readonly",
                 InputContext: "readonly",
                 InputDeviceType: "readonly",
-                InterfaceMode: "readonly",
                 Loading: "readonly",
                 Locale: "readonly",
                 MapCities: "readonly",

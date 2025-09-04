@@ -1,3 +1,4 @@
+import { InterfaceMode } from '../../../core/ui/interface-modes/interface-modes.js';
 import { Icon } from '/core/ui/utilities/utilities-image.chunk.js';
 import { BuildingPlacementManager as BPM } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
@@ -74,8 +75,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const category = wonder ? "wonders" : "buildings";
     // queue entry, if any
     const queue = city.BuildQueue.getQueue();
-    const qslot = queue?.findIndex(i => i.type == hash);
-    const inProgress = Boolean(result.InProgress || qslot == 0);
+    const qslot = city.BuildQueue.getQueuedPositionOfType(hash);
     const inQueue = qslot != -1;
     // repairs
     const repairDamaged = result.RepairDamaged ?? (inQueue && !result.InQueue) ?? false;
@@ -91,7 +91,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const lockType = result.NeededUnlock ?? -1;  // research type
     const unlockable = isUnlockable(city.owner, lockType);
     if (locked && !unlockable && !unique) return null;
-    if (result.Success || inProgress || insufficientFunds || viewHidden) {
+    if (result.Success || result.InProgress || insufficientFunds || viewHidden) {
         const plots = [];
         if (result.InQueue) {
             // get placement from the build queue
@@ -109,12 +109,11 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
         // error handling
-        const buyout = isPurchase && inProgress && plots.length;  // potential buyout
         const fundsError = insufficientFunds && (plots.length || repairDamaged);
         const repairQueued = repairDamaged && !plots.length;
-        const disableQueued = inQueue && !multiple;
+        const disableQueued = inQueue && !isPurchase && !multiple;
         const disabled = !result.Success || !plots.length || disableQueued;
-        if (disabled && !buyout && !fundsError && !viewHidden) return null;
+        if (disabled && !fundsError && !viewHidden) return null;
         const error =
             result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
             locked && lockType != -1 ? unlockName(city.owner, lockType) :
@@ -127,7 +126,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const sortTier =
             building && unique ? 10 :
             repairDamaged ? 9 :
-            inProgress ? 8 :
+            result.InProgress ? 8 :
             !yieldChanges.length ? -10 :
             buildingTier;
         const sortValue = sortTier == buildingTier ? yieldScore : buildingTier;
@@ -462,6 +461,82 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
     }
     return units;
 };
+const Construct = (city, item, isPurchase) => {
+    console.warn(`TRIX CONSTRUCT`);
+    const typeInfo = GameInfo.Types.lookup(item.type);
+    if (typeInfo) {
+        let args;
+        switch (typeInfo.Kind) {
+            case "KIND_CONSTRUCTIBLE":
+                args = {
+                    ConstructibleType: typeInfo.Hash
+                };
+                break;
+            case "KIND_UNIT":
+                args = {
+                    UnitType: typeInfo.Hash
+                };
+                break;
+            case "KIND_PROJECT":
+                args = {
+                    ProjectType: typeInfo.Hash
+                };
+                break;
+            default:
+                console.error(`Construct: Constructing unsupported kind ${typeInfo.Kind}.`);
+                return false;
+        }
+        let result;
+        if (isPurchase && typeInfo.Kind != "KIND_PROJECT") {
+            result = Game.CityCommands.canStart(city.id, CityCommandTypes.PURCHASE, args, false);
+        } else {
+            result = Game.CityOperations.canStart(city.id, CityOperationTypes.BUILD, args, false);
+        }
+        if (result.Success) {
+            const qslot = city.BuildQueue.getQueuedPositionOfType(typeInfo.Hash);
+            if (result.InProgress && result.Plots) {
+                const loc = GameplayMap.getLocationFromIndex(result.Plots[0]);
+                args.X = loc.x;
+                args.Y = loc.y;
+            } else if (qslot != -1) {
+                const queue = city.BuildQueue.getQueue();
+                const loc = queue[qslot].location;
+                args.X = loc.x;
+                args.Y = loc.y;
+            } else if (item.interfaceMode && !result.InProgress) {
+                InterfaceMode.switchTo(item.interfaceMode, {
+                    CityID: city.id,
+                    OperationArguments: args,
+                    IsPurchasing: isPurchase
+                });
+                return false;
+            }
+            if (isPurchase && typeInfo.Kind != "KIND_PROJECT") {
+                if (qslot != -1) {
+                    // remove from queue before purchasing
+                    const cancel = {
+                        InsertMode: CityOperationsParametersValues.RemoveAt,
+                        QueueLocation: qslot,
+                    };
+                    Game.CityOperations.sendRequest(city.id, CityOperationTypes.BUILD, cancel);
+                }
+                Game.CityCommands.sendRequest(city.id, CityCommandTypes.PURCHASE, args);
+            } else {
+                if (typeInfo.Kind == "KIND_PROJECT" && city.isTown) {
+                    args.InsertMode = CityOperationsParametersValues.Exclusive;
+                }
+                Game.CityOperations.sendRequest(city.id, CityOperationTypes.BUILD, args);
+            }
+            return true;
+        }
+    } else {
+        if (InterfaceMode.isInInterfaceMode("INTERFACEMODE_PLACE_BUILDING")) {
+            InterfaceMode.switchToDefault();
+        }
+        return false;
+    }
+    return false;
+};
 
 function bzGetYieldChanges(city, constructibleDef, plotIndex=-1) {
     const changes = plotIndex != -1 ?
@@ -501,5 +576,5 @@ function bzSortProductionItems(list) {
     });
 }
 
-export { GetProductionItems as g };
+export { GetProductionItems as g, Construct as h };
 //# sourceMappingURL=production-chooser-helpers.chunk.js.map
