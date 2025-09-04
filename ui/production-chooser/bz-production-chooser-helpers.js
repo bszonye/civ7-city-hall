@@ -75,8 +75,8 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const category = wonder ? "wonders" : "buildings";
     // queue entry, if any
     const queue = city.BuildQueue.getQueue();
-    const qslot = city.BuildQueue.getQueuedPositionOfType(hash);
-    const inQueue = qslot != -1;
+    const qindex = city.BuildQueue.getQueuedPositionOfType(hash);
+    const inQueue = qindex != -1;
     // repairs
     const repairDamaged = result.RepairDamaged ?? (inQueue && !result.InQueue) ?? false;
     const altName =
@@ -95,7 +95,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const plots = [];
         if (result.InQueue) {
             // get placement from the build queue
-            plots.push(GameplayMap.getIndexFromLocation(queue[qslot].location));
+            plots.push(GameplayMap.getIndexFromLocation(queue[qindex].location));
         } else {
             if (result.Plots) plots.push(...result.Plots);
             if (result.ExpandUrbanPlots) plots.push(...result.ExpandUrbanPlots);
@@ -462,7 +462,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
     return units;
 };
 const Construct = (city, item, isPurchase) => {
-    console.warn(`TRIX CONSTRUCT`);
+    console.warn(`TRIX CONSTRUCT ${JSON.stringify(item)}`);
     const typeInfo = GameInfo.Types.lookup(item.type);
     if (typeInfo) {
         let args;
@@ -493,14 +493,15 @@ const Construct = (city, item, isPurchase) => {
             result = Game.CityOperations.canStart(city.id, CityOperationTypes.BUILD, args, false);
         }
         if (result.Success) {
-            const qslot = city.BuildQueue.getQueuedPositionOfType(typeInfo.Hash);
+            const qindex = city.BuildQueue.getQueuedPositionOfType(typeInfo.Hash);
             if (result.InProgress && result.Plots) {
                 const loc = GameplayMap.getLocationFromIndex(result.Plots[0]);
                 args.X = loc.x;
                 args.Y = loc.y;
-            } else if (qslot != -1) {
+            } else if (isPurchase && qindex != -1 && item.repairDamaged) {
+                // purchase from queue (excluding repairs)
                 const queue = city.BuildQueue.getQueue();
-                const loc = queue[qslot].location;
+                const loc = queue[qindex].location;
                 args.X = loc.x;
                 args.Y = loc.y;
             } else if (item.interfaceMode && !result.InProgress) {
@@ -512,11 +513,11 @@ const Construct = (city, item, isPurchase) => {
                 return false;
             }
             if (isPurchase && typeInfo.Kind != "KIND_PROJECT") {
-                if (qslot != -1) {
+                if (qindex != -1) {
                     // remove from queue before purchasing
                     const cancel = {
                         InsertMode: CityOperationsParametersValues.RemoveAt,
-                        QueueLocation: qslot,
+                        QueueLocation: qindex,
                     };
                     Game.CityOperations.sendRequest(city.id, CityOperationTypes.BUILD, cancel);
                 }
@@ -538,6 +539,29 @@ const Construct = (city, item, isPurchase) => {
     return false;
 };
 
+function bzGetConstructibleProgress(city, type) {
+    const info = { progress: city.BuildQueue.getProgress(type) ?? 0 };
+    const qindex = city.BuildQueue.getQueuedPositionOfType(type);
+    if (info.progress || qindex != -1) {
+        // item is in progress or queued
+        const qitem = bzGetQueueInstance(city, qindex);
+        // show percent progress, unless the item is a repair
+        if (!qitem?.damaged) info.percent = city.BuildQueue.getPercentComplete(type);
+    }
+    return info;
+}
+function bzGetQueueInstance(city, qindex) {
+    if (qindex == null || qindex == -1) return null;
+    const queue = city.BuildQueue.getQueue();
+    const qslot = queue[qindex];
+    const loc = qslot?.location;
+    if (!loc) return null;
+    for (const id of MapConstructibles.getConstructibles(loc.x, loc.y)) {
+        const instance = Constructibles.getByComponentID(id);
+        if (instance.type == qslot.type) return instance;
+    }
+    return null;
+}
 function bzGetYieldChanges(city, constructibleDef, plotIndex=-1) {
     const changes = plotIndex != -1 ?
         BPM.bzGetPlotYieldForConstructible(city.id, constructibleDef, plotIndex) :
@@ -576,5 +600,5 @@ function bzSortProductionItems(list) {
     });
 }
 
-export { GetProductionItems as g, Construct as h };
+export { bzGetConstructibleProgress, GetProductionItems as g, Construct as h };
 //# sourceMappingURL=production-chooser-helpers.chunk.js.map

@@ -5,7 +5,7 @@ import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chu
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
 import { BuildQueue } from '/base-standard/ui/build-queue/model-build-queue.js';
 import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
-import { g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
+import { bzGetConstructibleProgress, g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
 
 // color palette
 const BZ_COLOR = {
@@ -570,9 +570,8 @@ class bzProductionChooserItem {
         const dataCategory = e.getAttribute("data-category");
         const dataType = e.getAttribute("data-type");
         const type = Game.getHash(dataType);
-        const progress = city.BuildQueue.getProgress(type) ?? 0;
-        const percent = city.BuildQueue.getPercentComplete(type) ?? 0;
-        const showProgress = 0 < progress || city.BuildQueue.isQueued(type);
+        const { progress, percent } = bzGetConstructibleProgress(city, type);
+        const showProgress = percent != null;
         c.Root.classList.toggle("bz-show-progress", showProgress);
         this.progressBar.classList.toggle("hidden", !showProgress);
         this.progressBarFill.style.heightPERCENT = percent;
