@@ -461,8 +461,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
     }
     return units;
 };
-const Construct = (city, item, isPurchase) => {
-    console.warn(`TRIX CONSTRUCT ${JSON.stringify(item)}`);
+const bzConstruct = (city, item, isPurchase) => {
     const typeInfo = GameInfo.Types.lookup(item.type);
     if (typeInfo) {
         let args;
@@ -483,7 +482,7 @@ const Construct = (city, item, isPurchase) => {
                 };
                 break;
             default:
-                console.error(`Construct: Constructing unsupported kind ${typeInfo.Kind}.`);
+                console.error(`bzConstruct: Constructing unsupported kind ${typeInfo.Kind}.`);
                 return false;
         }
         let result;
@@ -577,5 +576,5 @@ function bzSortProductionItems(list) {
     });
 }
 
-export { GetProductionItems as g, Construct as h };
+export { GetProductionItems as g, bzConstruct as h };
 //# sourceMappingURL=production-chooser-helpers.chunk.js.map

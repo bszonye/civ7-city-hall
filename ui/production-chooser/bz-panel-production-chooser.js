@@ -5,7 +5,7 @@ import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chu
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
 import { BuildQueue } from '/base-standard/ui/build-queue/model-build-queue.js';
 import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
-import { g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
+import { g as GetProductionItems, h as bzConstruct } from './bz-production-chooser-helpers.js';
 
 // color palette
 const BZ_COLOR = {
@@ -353,7 +353,6 @@ class bzProductionChooserScreen {
     }
     doOrConfirmConstruction(category, type, animationConfirmCallback) {
         const c = this.component;
-        console.warn(`TRIX DORCC`);
         const city = c.city;
         if (!city) {
             console.error(`panel-production-chooser: confirmSelection: Failed to get a valid city!`);
@@ -365,7 +364,7 @@ class bzProductionChooserScreen {
             return;
         }
         const queueLengthBeforeAdd = BuildQueue.items.length;
-        const bSuccess = Construct(city, item, c.isPurchase);
+        const bSuccess = bzConstruct(city, item, c.isPurchase);
         if (bSuccess) {
             if (queueLengthBeforeAdd > 0) {
                 Audio.playSound("data-audio-queue-item", "audio-production-chooser");
