@@ -5,7 +5,7 @@ import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chu
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
 import { BuildQueue } from '/base-standard/ui/build-queue/model-build-queue.js';
 import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
-import { bzGetConstructibleProgress, g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
+import { g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
 
 // color palette
 const BZ_COLOR = {
@@ -407,6 +407,7 @@ Controls.decorate("panel-production-chooser", (val) => new bzProductionChooserSc
 class bzProductionChooserItem {
     static c_prototype;
     static c_render;
+    isRepair = false;
     pCostContainer = document.createElement("div");
     pCostIconElement = document.createElement("span");
     pCostAmountElement = document.createElement("span");
@@ -542,7 +543,7 @@ class bzProductionChooserItem {
         const dataIsAgeless = e.getAttribute("data-is-ageless") === "true";
         const dataSecondaryDetails = e.getAttribute("data-secondary-details");
         // interpret attributes
-        const isRepair = (() => {
+        const isRepair = this.isRepair = (() => {
             if (dataCategory != "buildings") return false;
             if (e.getAttribute("data-repair-all") === "true") return true;
             const type = Game.getHash(dataType);
@@ -570,8 +571,10 @@ class bzProductionChooserItem {
         const dataCategory = e.getAttribute("data-category");
         const dataType = e.getAttribute("data-type");
         const type = Game.getHash(dataType);
-        const { progress, percent } = bzGetConstructibleProgress(city, type);
-        const showProgress = percent != null;
+        const qindex = city.BuildQueue.getQueuedPositionOfType(type);
+        const progress = city.BuildQueue.getProgress(type) ?? 0;
+        const percent = city.BuildQueue.getPercentComplete(type) ?? 0;
+        const showProgress = (progress || qindex != -1) && !this.isRepair;
         c.Root.classList.toggle("bz-show-progress", showProgress);
         this.progressBar.classList.toggle("hidden", !showProgress);
         this.progressBarFill.style.heightPERCENT = percent;

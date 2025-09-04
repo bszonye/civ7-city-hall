@@ -498,7 +498,7 @@ const Construct = (city, item, isPurchase) => {
                 const loc = GameplayMap.getLocationFromIndex(result.Plots[0]);
                 args.X = loc.x;
                 args.Y = loc.y;
-            } else if (isPurchase && qindex != -1 && item.repairDamaged) {
+            } else if (isPurchase && qindex != -1 && !item.repairDamaged) {
                 // purchase from queue (excluding repairs)
                 const queue = city.BuildQueue.getQueue();
                 const loc = queue[qindex].location;
@@ -539,29 +539,6 @@ const Construct = (city, item, isPurchase) => {
     return false;
 };
 
-function bzGetConstructibleProgress(city, type) {
-    const info = { progress: city.BuildQueue.getProgress(type) ?? 0 };
-    const qindex = city.BuildQueue.getQueuedPositionOfType(type);
-    if (info.progress || qindex != -1) {
-        // item is in progress or queued
-        const qitem = bzGetQueueInstance(city, qindex);
-        // show percent progress, unless the item is a repair
-        if (!qitem?.damaged) info.percent = city.BuildQueue.getPercentComplete(type);
-    }
-    return info;
-}
-function bzGetQueueInstance(city, qindex) {
-    if (qindex == null || qindex == -1) return null;
-    const queue = city.BuildQueue.getQueue();
-    const qslot = queue[qindex];
-    const loc = qslot?.location;
-    if (!loc) return null;
-    for (const id of MapConstructibles.getConstructibles(loc.x, loc.y)) {
-        const instance = Constructibles.getByComponentID(id);
-        if (instance.type == qslot.type) return instance;
-    }
-    return null;
-}
 function bzGetYieldChanges(city, constructibleDef, plotIndex=-1) {
     const changes = plotIndex != -1 ?
         BPM.bzGetPlotYieldForConstructible(city.id, constructibleDef, plotIndex) :
@@ -600,5 +577,5 @@ function bzSortProductionItems(list) {
     });
 }
 
-export { bzGetConstructibleProgress, GetProductionItems as g, Construct as h };
+export { GetProductionItems as g, Construct as h };
 //# sourceMappingURL=production-chooser-helpers.chunk.js.map
