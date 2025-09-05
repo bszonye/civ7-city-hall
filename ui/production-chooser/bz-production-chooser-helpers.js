@@ -110,15 +110,14 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const turns = city.BuildQueue.getTurnsLeft(hash);
         // error handling
         const fundsError = insufficientFunds && (plots.length || repairDamaged);
-        const repairQueued = repairDamaged && !plots.length;
-        const disableQueued = inQueue && !(isPurchase && multiple);
+        const disableQueued = inQueue && !isPurchase && !multiple;
         const disabled = !result.Success || !plots.length || disableQueued;
         if (disabled && !fundsError && !viewHidden) return null;
         const error =
             result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
             locked && lockType != -1 ? unlockName(city.owner, lockType) :
             fundsError ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
-            disableQueued || repairQueued ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
+            inQueue && disabled ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
             !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
         // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
@@ -492,18 +491,29 @@ const bzConstruct = (city, item, isPurchase) => {
             result = Game.CityOperations.canStart(city.id, CityOperationTypes.BUILD, args, false);
         }
         if (result.Success) {
+            // get queue index and chosen location
             const qindex = city.BuildQueue.getQueuedPositionOfType(typeInfo.Hash);
-            if (result.InProgress && result.Plots) {
+            const qloc = (() => {
+                if (qindex == -1) return void 0;
+                const queue = city.BuildQueue.getQueue();
+                return queue[qindex].location;
+            })();
+            if (result.InProgress && result.Plots.length == 1) {
+                // finish constructible in progress
+                const loc = GameplayMap.getLocationFromIndex(result.Plots[0]);
+                args.X = loc.x;
+                args.Y = loc.y;
+            } else if (item.repairDamaged && result.Plots.length == 1) {
+                // one-click repairs
                 const loc = GameplayMap.getLocationFromIndex(result.Plots[0]);
                 args.X = loc.x;
                 args.Y = loc.y;
             } else if (isPurchase && qindex != -1 && !item.repairDamaged) {
                 // purchase from queue (excluding repairs)
-                const queue = city.BuildQueue.getQueue();
-                const loc = queue[qindex].location;
-                args.X = loc.x;
-                args.Y = loc.y;
+                args.X = qloc.x;
+                args.Y = qloc.y;
             } else if (item.interfaceMode && !result.InProgress) {
+                // choose constructible location
                 InterfaceMode.switchTo(item.interfaceMode, {
                     CityID: city.id,
                     OperationArguments: args,
@@ -512,7 +522,7 @@ const bzConstruct = (city, item, isPurchase) => {
                 return false;
             }
             if (isPurchase && typeInfo.Kind != "KIND_PROJECT") {
-                if (qindex != -1) {
+                if (qloc && qloc.x == args.X && qloc.y == args.Y) {
                     // remove from queue before purchasing
                     const cancel = {
                         InsertMode: CityOperationsParametersValues.RemoveAt,
