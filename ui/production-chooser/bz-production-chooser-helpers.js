@@ -111,7 +111,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         // error handling
         const fundsError = insufficientFunds && (plots.length || repairDamaged);
         const repairQueued = repairDamaged && !plots.length;
-        const disableQueued = inQueue && !isPurchase && !multiple;
+        const disableQueued = inQueue && !(isPurchase && multiple);
         const disabled = !result.Success || !plots.length || disableQueued;
         if (disabled && !fundsError && !viewHidden) return null;
         const error =
