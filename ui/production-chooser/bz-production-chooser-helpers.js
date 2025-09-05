@@ -123,13 +123,16 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ? BPM.bzYieldScore(yieldChanges) : 0;
+        const topTier = Boolean(result.InProgress || inQueue || building && unique);
         const sortTier =
-            building && unique ? 9 :
+            topTier ? 9 :
             repairDamaged ? 8 :
-            result.InProgress ? 7 :
             !yieldChanges.length ? -9 :
             buildingTier;
-        const sortValue = sortTier == buildingTier ? yieldScore : buildingTier;
+        const sortValue =
+            topTier ? -qindex :
+            sortTier == buildingTier ? yieldScore :
+            buildingTier;
         // assemble item
         const item = {
             sortTier,
@@ -192,7 +195,7 @@ const getProjectItems = (city, isPurchase) => {
         const limited = (info.MaxPlayerInstances ?? 999) <= inQueue;
         const error = limited ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : void 0;
         // sort projects
-        const sortTier = city.BuildQueue.getProgress(hash) ? 7 : 0;
+        const sortTier = city.BuildQueue.getProgress(hash) ? 9 : 0;
         const sortValue = cost;
         const projectItem = {
             sortTier,
@@ -422,7 +425,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         const cv = info.CanEarnExperience ? Number.MAX_VALUE :
             stats?.RangedCombat || stats?.Combat || 0;
         const sortTier =
-            city.BuildQueue.getProgress(hash) ? 7 :
+            city.BuildQueue.getProgress(hash) ? 9 :
             info.FoundCity ? 2 :  // settlers
             info.CoreClass == "CORE_CLASS_RECON" ? 1 :  // scouts
             cv <= 0 ? 0 :  // civilians
