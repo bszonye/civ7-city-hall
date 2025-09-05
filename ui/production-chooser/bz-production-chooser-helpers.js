@@ -109,7 +109,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const turns = city.BuildQueue.getTurnsLeft(hash);
         // error handling
         const fundsError = insufficientFunds && (plots.length || repairDamaged);
-        const disableQueued = inQueue && !isPurchase;
+        const disableQueued = result.InQueue && !isPurchase;
         const disabled = !result.Success || !plots.length || disableQueued;
         if (disabled && !fundsError && !viewHidden) return null;
         const error =
