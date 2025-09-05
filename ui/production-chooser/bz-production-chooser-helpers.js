@@ -498,13 +498,8 @@ const bzConstruct = (city, item, isPurchase) => {
                 const queue = city.BuildQueue.getQueue();
                 return queue[qindex].location;
             })();
-            if (result.InProgress && result.Plots.length == 1) {
-                // finish constructible in progress
-                const loc = GameplayMap.getLocationFromIndex(result.Plots[0]);
-                args.X = loc.x;
-                args.Y = loc.y;
-            } else if (item.repairDamaged && result.Plots.length == 1) {
-                // one-click repairs
+            if ((result.InProgress || item.repairDamaged) && result.Plots?.length == 1) {
+                // finish constructible in progress / one-click repairs
                 const loc = GameplayMap.getLocationFromIndex(result.Plots[0]);
                 args.X = loc.x;
                 args.Y = loc.y;
