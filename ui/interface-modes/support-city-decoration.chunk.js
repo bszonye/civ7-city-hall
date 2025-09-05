@@ -36,7 +36,9 @@ var CityDecorationSupport;
         cityID = null;
         filtered = false;
         initializeOverlay() {
-            this.cityOverlayGroup = WorldUI.createOverlayGroup("CityOverlayGroup", OVERLAY_PRIORITY.PLOT_HIGHLIGHT);
+            // don't cover urban & landmark layers (== PLOT_HIGHLIGHT)
+            const op = OVERLAY_PRIORITY.PLOT_HIGHLIGHT - 1;
+            this.cityOverlayGroup = WorldUI.createOverlayGroup("CityOverlayGroup", op);
             this.cityOverlay = this.cityOverlayGroup.addPlotOverlay();
             this.citySpriteGrid = WorldUI.createSpriteGrid("CityOverlaySpriteGroup", true);
             this.citySpriteGrid.setVisible(false);

@@ -1,11 +1,11 @@
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
-import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
+import FocusManager, { A as Audio } from '/core/ui/input/focus-manager.js';
+import { InterfaceMode } from '../../../core/ui/interface-modes/interface-modes.js';
 import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
-import FocusManager from '/core/ui/input/focus-manager.js';
-
-const BZ_REPAIR_ALL = "IMPROVEMENT_REPAIR_ALL";
-const BZ_REPAIR_ALL_ID = Game.getHash(BZ_REPAIR_ALL);
-const BZ_INSUFFICIENT_FUNDS = "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS";
+import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
+import { BuildQueue } from '/base-standard/ui/build-queue/model-build-queue.js';
+import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
+import { g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
 
 // color palette
 const BZ_COLOR = {
@@ -113,6 +113,14 @@ const BZ_HEAD_STYLE = [
     width: 1.3333333333rem;
     height: 1.3333333333rem;
 }
+.bz-city-hall .bz-show-progress .bz-pci-pcost-icon,
+.bz-city-hall .bz-show-progress .bz-pci-cost-icon {
+    opacity: 0;
+}
+.bz-city-hall .bz-is-purchase.bz-has-progress .build-queue__progress-bar-fill {
+    filter: saturate(0) fxs-color-tint(${BZ_COLOR.gold}) brightness(2.0) contrast(1.8) saturate(0.7);
+  background-position: center;
+}
 `,  // improve panel header layout
 `
 .bz-city-hall .panel-production-chooser .fxs-editable-header .fxs-edit-button {
@@ -171,14 +179,17 @@ BZ_HEAD_STYLE.map(style => {
 });
 document.body.classList.add("bz-city-hall");
 document.body.classList.toggle("bz-city-compact", bzCityHallOptions.compact);
+
 class bzProductionChooserScreen {
     static c_prototype;
+    static c_doOrConfirmConstruction;
     static isPurchase = false;
     static isCDPanelOpen = true;
     isGamepadActive = Input.getActiveDeviceType() == InputDeviceType.Controller;
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
+        component.updateItems = new UpdateGate(() => this.updateItems());
         this.patchPrototypes(this.component);
     }
     patchPrototypes(component) {
@@ -193,6 +204,20 @@ class bzProductionChooserScreen {
             const c_rv = c_render.apply(this, args);
             const after_rv = after_render.apply(this.bzComponent, args);
             return after_rv ?? c_rv;
+        }
+        // wrap updateCategories method to extend it
+        const c_updateCategories = proto.updateCategories;
+        const after_updateCategories = this.afterUpdateCategories;
+        proto.updateCategories = function(...args) {
+            const c_rv = c_updateCategories.apply(this, args);
+            const after_rv = after_updateCategories.apply(this.bzComponent, args);
+            return after_rv ?? c_rv;
+        }
+        // override doOrConfirmConstruction method to patch Construct
+        bzProductionChooserScreen.c_doOrConfirmConstruction =
+            proto.doOrConfirmConstruction;
+        proto.doOrConfirmConstruction = function(...args) {
+            return this.bzComponent.doOrConfirmConstruction(...args);
         }
         // override isPurchase property
         const c_isPurchase =
@@ -223,101 +248,11 @@ class bzProductionChooserScreen {
             },
         };
         Object.defineProperty(proto, "cityID", cityID);
-        // override items property
-        const c_items =
-            Object.getOwnPropertyDescriptor(proto, "items");
-        const items = {
-            configurable: c_items.configurable,
-            enumerable: c_items.enumerable,
-            get: c_items.get,
-            set(value) {
-                // sort items
-                for (const list of Object.values(value)) {
-                    this.bzComponent.sortItems(list);
-                }
-                // call vanilla property
-                c_items.set.apply(this, [value]);
-                // adjust UQ formatting
-                if (this.uniqueQuarter) this.bzComponent.afterUniqueQuarter();
-            },
-        };
-        Object.defineProperty(proto, "items", items);
-    }
-    sortItems(list) {
-        const cityID = UI.Player.getHeadSelectedCity();
-        const city = cityID && Cities.get(cityID);
-        if (!city) return;
-        const buildingTier = (item, info) =>
-            info?.ConstructibleClass == "IMPROVEMENT" ? 1 : item.ageless ? -1 : 0;
-        for (const item of list) {
-            const type = Game.getHash(item.type);
-            const progress = city.BuildQueue?.getProgress(type) ?? 0;
-            const consInfo = GameInfo.Constructibles.lookup(type);
-            if (progress) {
-                // show in-progress items first
-                item.sortTier = 9;
-                item.sortValue = city.BuildQueue.getPercentComplete(type);
-            } else if (item.category == "units") {
-                const unitInfo = GameInfo.Units.lookup(type);
-                const unitStats = GameInfo.Unit_Stats.lookup(type);
-                const cv = unitInfo.CanEarnExperience ? Number.MAX_VALUE :
-                    unitStats?.RangedCombat || unitStats?.Combat || 0;
-                item.sortTier =
-                    unitInfo.FoundCity ? 2 :  // settlers
-                    unitInfo.CoreClass == "CORE_CLASS_RECON" ? 1 :  // scouts
-                    cv <= 0 ? 0 :  // civilians
-                    unitInfo.Domain == "DOMAIN_LAND" ? -1 :
-                    unitInfo.Domain == "DOMAIN_SEA" ? -2 :
-                    unitInfo.Domain == "DOMAIN_AIR" ? -3 :
-                    9;  // unknown (list first for investigation)
-                item.sortValue = cv;
-            } else if (type == BZ_REPAIR_ALL_ID) {
-                item.sortTier = 8;
-                item.sortValue = 0;
-            } else if (item.repairDamaged) {
-                item.sortTier = 7;
-                item.sortValue = buildingTier(item, consInfo);
-            } else if (item.category == "buildings") {
-                item.sortTier = buildingTier(item, consInfo);
-                const info = GameInfo.Constructibles.lookup(type);
-                const yields = BuildingPlacementManager
-                    .getBestYieldForConstructible(city.id, info);
-                item.sortValue = BuildingPlacementManager.bzYieldScore(yields);
-            } else if (item.category == "projects") {
-                item.sortTier = 0;
-                item.sortValue = city.Production?.getProjectProductionCost(type) ?? 0;
-            } else {
-                item.sortTier = 0;
-                item.sortValue = 0;
-            }
-        }
-        list.sort((a, b) => {
-            // TODO: assign sort tiers and values
-            if (a.sortTier != b.sortTier) return b.sortTier - a.sortTier;
-            if (a.sortValue != b.sortValue) return b.sortValue - a.sortValue;
-            // sort by name
-            const aName = Locale.compose(a.name).toUpperCase();
-            const bName = Locale.compose(b.name).toUpperCase();
-            return aName.localeCompare(bName);
-        });
-    }
-    afterUniqueQuarter() {
-        const uq = this.component.uniqueQuarter;
-        uq.uqInfoCols.className = "production-chooser-item flex items-center mx-2 mb-2 hover\\:text-secondary-1 focus\\:text-secondary-1";
-        const uqCol1 = uq.uqInfoCols.firstChild;
-        uqCol1.className = "size-10 ml-2\\.5 mr-3";
-        uq.nameElement.className = "font-title-sm leading-tight uppercase text-gradient-secondary transition-color";
-        const labelElement = uq.nameElement.nextSibling;
-        labelElement.className = "font-body-xs leading-tight transition-color";
-        uq.completionStatusText.className = "font-body text-xs leading-tight transition-color";
-        uq.buildingContainer.className = "flex flex-col pl-2\\.5";
     }
     beforeAttach() {
         // replace event handlers to fix nav-help glitches
         this.component.onCityDetailsClosedListener = this.onCityDetailsClosed.bind(this);
-        engine.on("input-source-changed", (deviceType, _deviceLayout) => {
-            this.onActiveDeviceTypeChanged(deviceType);
-        });
+        engine.on("input-source-changed", this.onActiveDeviceTypeChanged, this);
     }
     afterAttach() {
         engine.on("ConstructibleChanged", this.component.onConstructibleAddedToMap, this.component);
@@ -341,6 +276,7 @@ class bzProductionChooserScreen {
         // but that has its own means of restoring the Purchase tab.
         bzProductionChooserScreen.isPurchase = false;
         engine.off("ConstructibleChanged", this.component.onConstructibleAddedToMap, this.component);
+        engine.off("input-source-changed", this.onActiveDeviceTypeChanged, this);
     }
     afterRender() {
         const c = this.component;
@@ -371,6 +307,79 @@ class bzProductionChooserScreen {
         c.townPurchaseLabel.innerHTML = c.townPurchaseLabel.innerHTML
             .replaceAll("text-xs", "text-sm tracking-100 mt-1");
     }
+    afterUpdateCategories() {
+        const uq = this.component.uniqueQuarter;
+        if (uq) {
+            uq.uqInfoCols.className = "production-chooser-item flex items-center mx-2 mb-2 hover\\:text-secondary-1 focus\\:text-secondary-1";
+            const uqCol1 = uq.uqInfoCols.firstChild;
+            uqCol1.className = "size-10 ml-2\\.5 mr-3";
+            uq.nameElement.className = "font-title-sm leading-tight uppercase text-gradient-secondary transition-color";
+            const labelElement = uq.nameElement.nextSibling;
+            labelElement.className = "font-body-xs leading-tight transition-color";
+            uq.completionStatusText.className = "font-body text-xs leading-tight transition-color";
+            uq.buildingContainer.className = "flex flex-col pl-2\\.5";
+        }
+    }
+    updateItems() {
+        const c = this.component;
+        if (!c.isInitialLoadComplete) return;
+        const city = c.city;
+        const items = GetProductionItems(
+            city,
+            c.recommendations,
+            c.playerGoldBalance,
+            c.isPurchase,
+            c.viewHidden,
+            c.uqInfo
+        );
+        const newItems = Object.values(ProductionPanelCategory).flatMap(
+            (category) => items[category].map((item) => item.type)
+        );
+        const newItemsSet = new Set(newItems);
+        let resetFocus = false;
+        const currentFocus = FocusManager.getFocus();
+        for (const [type, item] of c.itemElementMap) {
+            if (!newItemsSet.has(type)) {
+                resetFocus ||= currentFocus === item;
+                item.remove();
+                c.itemElementMap.delete(type);
+            }
+        }
+        c.items = items;
+        if (resetFocus ||
+            c.Root.contains(currentFocus) && !c.buildQueue.contains(currentFocus)) {
+            FocusManager.setFocus(c.productionAccordion);
+        }
+    }
+    doOrConfirmConstruction(category, type, animationConfirmCallback) {
+        const c = this.component;
+        const city = c.city;
+        if (!city) {
+            console.error(`panel-production-chooser: confirmSelection: Failed to get a valid city!`);
+            return;
+        }
+        const item = c.items[category].find((item2) => item2.type === type);
+        if (!item) {
+            console.error(`panel-production-chooser: confirmSelection: Failed to get a valid item!`);
+            return;
+        }
+        const queueLengthBeforeAdd = BuildQueue.items.length;
+        const bSuccess = Construct(city, item, c.isPurchase);
+        if (bSuccess) {
+            if (queueLengthBeforeAdd > 0) {
+                Audio.playSound("data-audio-queue-item", "audio-production-chooser");
+            }
+            animationConfirmCallback?.();
+            if (c.wasQueueInitiallyEmpty && !c.isPurchase && !Configuration.getUser().isProductionPanelStayOpen) {
+                UI.Player.deselectAllCities();
+                InterfaceMode.switchToDefault();
+                c.requestPlaceBuildingClose();
+            }
+        }
+        if (queueLengthBeforeAdd == 0) {
+            Audio.playSound("data-audio-city-production-activate", "city-actions");
+        }
+    }
     onActiveDeviceTypeChanged(deviceType) {
         this.isGamepadActive = deviceType == InputDeviceType.Controller;
         if (this.isGamepadActive) {
@@ -397,7 +406,7 @@ Controls.decorate("panel-production-chooser", (val) => new bzProductionChooserSc
 class bzProductionChooserItem {
     static c_prototype;
     static c_render;
-    comma = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL_COMMA", 0).at(2);
+    isRepair = false;
     pCostContainer = document.createElement("div");
     pCostIconElement = document.createElement("span");
     pCostAmountElement = document.createElement("span");
@@ -427,21 +436,13 @@ class bzProductionChooserItem {
         }
     }
     beforeAttach() { }
-    afterAttach() {
-        const c = this.component;
-        // remove commas from yield and unit icons
-        if (this.comma) {
-            c.secondaryDetailsElement.innerHTML = c.secondaryDetailsElement.innerHTML
-                .replaceAll(`${this.comma}</div>`, "</div>");
-        }
-    }
+    afterAttach() { }
     beforeDetach() { }
     afterDetach() { }
     onAttributeChanged(name, _oldValue, newValue) {
+        const c = this.component;
         switch (name) {
-            case "disabled":
-                if (newValue === "true") return this.fixRepairAll();
-                break;
+            // case "disabled":
             // case "data-category":
             case "data-name":
                 this.updateInfo();
@@ -453,10 +454,10 @@ class bzProductionChooserItem {
             // case "data-cost":
             // case "data-prereq":
             // case "data-description":
-            case "data-error":
-                if (newValue) return this.fixRepairAll();
+            // case "data-error":
+            case "data-is-purchase":
+                c.Root.classList.toggle("bz-is-purchase", newValue === "true");
                 break;
-            // case "data-is-purchase":
             case "data-is-ageless":
             case "data-secondary-details":
                 // toggle .hidden instead of .invisible
@@ -486,63 +487,52 @@ class bzProductionChooserItem {
         nameContainer.appendChild(c.recommendationsContainer);
         infoColumn.appendChild(nameContainer);
         // error messages
-        c.errorTextElement.classList.value = "bz-pci-error hidden font-body-xs text-negative-light mx-1 -mt-1 mb-1 z-1 pointer-events-none";
+        c.errorTextElement.classList.value = "bz-pci-error flex-col hidden font-body-xs text-negative-light mx-1 -mt-1 mb-1 z-1 pointer-events-none";
         infoColumn.appendChild(c.errorTextElement);
         // yields and unit stats
         c.secondaryDetailsElement.classList.value = "bz-pci-details hidden flex font-body-xs -mt-1";
         infoColumn.appendChild(c.secondaryDetailsElement);
         c.container.appendChild(infoColumn);
+        // production and purchase costs
+        const costColumn = document.createElement("div");
+        costColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
+        this.pCostContainer.classList.value = "bz-pci-pcost flex items-center";
+        this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
+        this.pCostContainer.appendChild(this.pCostAmountElement);
+        this.pCostIconElement.classList.value = "bz-pci-pcost-icon size-6 bg-contain bg-center bg-no-repeat mx-0\\.5";
+        this.pCostIconElement.style
+            .setProperty("background-image", "url(Yield_Production)");
+        this.pCostIconElement.ariaLabel = Locale.compose("LOC_YIELD_PRODUCTION");
+        this.pCostContainer.appendChild(this.pCostIconElement);
+        costColumn.appendChild(this.pCostContainer);
+        c.costContainer.classList.value = "bz-pci-cost flex justify-end items-center";
+        c.costAmountElement.classList.value = "font-title-sm mr-1";
+        c.costContainer.appendChild(c.costAmountElement);
+        c.costIconElement.classList.value = "bz-pci-cost-icon size-8 bg-contain bg-center bg-no-repeat -m-1";
+        c.costContainer.appendChild(c.costIconElement);
+        costColumn.appendChild(this.pCostContainer);
+        costColumn.appendChild(c.costContainer);
+        c.container.appendChild(costColumn);
         // progress bar
         this.progressBar.classList.add(
+            "bz-pci-progress",
             "build-queue__item-progress-bar",
-            "relative",
+            "absolute",
             "p-0\\.5",
             "flex",
             "flex-col-reverse",
             "h-10",
             "w-4",
-            "mr-2",
+            "right-2",
             "hidden",
         );
         this.progressBarFill.classList.add("build-queue__progress-bar-fill", "relative", "bg-contain", "w-3");
         this.progressBar.appendChild(this.progressBarFill);
         this.progressBarFill.style.heightPERCENT = 100;
         c.container.appendChild(this.progressBar);
-        // production and purchase costs
-        const costColumn = document.createElement("div");
-        costColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
-        this.pCostContainer.classList.value = "flex items-center";
-        this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
-        this.pCostContainer.appendChild(this.pCostAmountElement);
-        this.pCostIconElement.classList.value = "size-6 bg-contain bg-center bg-no-repeat";
-        this.pCostIconElement.style
-            .setProperty("background-image", "url(Yield_Production)");
-        this.pCostIconElement.ariaLabel = Locale.compose("LOC_YIELD_GOLD");
-        this.pCostContainer.appendChild(this.pCostIconElement);
-        costColumn.appendChild(this.pCostContainer);
-        c.costContainer.classList.value = "bz-pci-cost flex items-center";
-        c.costAmountElement.classList.value = "font-title-sm mr-1";
-        c.costContainer.appendChild(c.costAmountElement);
-        c.costIconElement.classList.value = "size-8 bg-contain bg-center bg-no-repeat -m-1";
-        c.costContainer.appendChild(c.costIconElement);
-        costColumn.appendChild(this.pCostContainer);
-        costColumn.appendChild(c.costContainer);
-        c.container.appendChild(costColumn);
-    }
-    fixRepairAll() {
-        // fix insufficient funds error on the Production tab
-        const e = this.component.Root;
-        if (e.getAttribute("disabled") !== "true" ||
-            e.getAttribute("data-is-purchase") === "true" ||
-            e.getAttribute("data-type") != BZ_REPAIR_ALL ||
-            e.getAttribute("data-error") != BZ_INSUFFICIENT_FUNDS) {
-            return true;  // continue onAttributeChanged chain
-        }
-        e.setAttribute("disabled", "false");
-        e.removeAttribute("data-error");
-        return false;  // block incorrect attribute updates
     }
     updateInfo() {
+        // styling for repairs, ageless items, and secondary details
         const c = this.component;
         // get attributes
         const e = c.Root;
@@ -552,11 +542,12 @@ class bzProductionChooserItem {
         const dataIsAgeless = e.getAttribute("data-is-ageless") === "true";
         const dataSecondaryDetails = e.getAttribute("data-secondary-details");
         // interpret attributes
-        const isRepair = (() => {
+        const isRepair = this.isRepair = (() => {
             if (dataCategory != "buildings") return false;
+            if (e.getAttribute("data-repair-all") === "true") return true;
             const type = Game.getHash(dataType);
             const info = GameInfo.Constructibles.lookup(type);
-            return type == BZ_REPAIR_ALL_ID || dataName != info.Name;
+            return dataName != info.Name;
         })();
         const isAgeless = dataIsAgeless && !isRepair;
         const details = !isRepair && dataSecondaryDetails || "";
@@ -569,18 +560,24 @@ class bzProductionChooserItem {
         c.secondaryDetailsElement.classList.toggle("hidden", !details);
     }
     updateProductionCost() {
+        // styling for production costs and progress bars
         const cityID = UI.Player.getHeadSelectedCity();
         const city = cityID && Cities.get(cityID);
         if (!city) return;
-        const c = this.component;
         // get attributes
+        const c = this.component;
         const e = c.Root;
         const dataCategory = e.getAttribute("data-category");
         const dataType = e.getAttribute("data-type");
         const type = Game.getHash(dataType);
-        const progress = city.BuildQueue?.getProgress(type) ?? 0;
-        const percent = city.BuildQueue?.getPercentComplete(type) ?? 0;
-        this.progressBar.classList.toggle("hidden", progress <= 0);
+        const qindex = city.BuildQueue.getQueuedPositionOfType(type);
+        const progress = city.BuildQueue.getProgress(type) ?? 0;
+        const percent = city.BuildQueue.getPercentComplete(type) ?? 0;
+        const showProgress = (progress || qindex != -1) && !this.isRepair;
+        const hasProgress = progress && dataCategory != "units";
+        c.Root.classList.toggle("bz-has-progress", hasProgress);
+        c.Root.classList.toggle("bz-show-progress", showProgress);
+        this.progressBar.classList.toggle("hidden", !showProgress);
         this.progressBarFill.style.heightPERCENT = percent;
         const update = (base) => {
             if (isNaN(base) || base <= 0) {

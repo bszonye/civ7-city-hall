@@ -16,7 +16,7 @@ const BZ_URBAN_STYLE = {
     secondaryColor: 0
 };
 class bzUrbanLayer {
-    cityOverlayGroup = WorldUI.createOverlayGroup("bzUrbanOverlayGroup", OVERLAY_PRIORITY.PLOT_HIGHLIGHT + 0.5);
+    cityOverlayGroup = WorldUI.createOverlayGroup("bzUrbanOverlayGroup", OVERLAY_PRIORITY.PLOT_HIGHLIGHT);
     urbanOverlay = this.cityOverlayGroup.addBorderOverlay(BZ_URBAN_STYLE);
     centerOverlay = this.cityOverlayGroup.addBorderOverlay(BZ_URBAN_STYLE);
     updateGate = new UpdateGate(this.updateBorders.bind(this));
