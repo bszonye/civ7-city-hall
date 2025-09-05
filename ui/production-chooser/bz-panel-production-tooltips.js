@@ -115,22 +115,17 @@ class ProductionConstructibleTooltipType {
             return;
         }
         this.header.setAttribute("data-l10n-id", definition.Name);
-        const isPurchase = this.target?.dataset.isPurchase === "true";
-        if (isPurchase) {
-            this.productionCost.classList.add("hidden");
-        } else {
-            const productionCost = city.Production?.getConstructibleProductionCost(definition.ConstructibleType);
-            if (productionCost === void 0) {
-                this.productionCost.classList.add("hidden");
-            } else {
-                this.productionCost.innerHTML = Locale.stylize(
-                    "LOC_CARD_COST",
-                    `${productionCost}[icon:YIELD_PRODUCTION]`
-                );
-                // FIX: unhide production cost when displaying it
-                this.productionCost.classList.remove("hidden");
-            }
-        }
+        // FIX: always show production cost
+        const type = definition.$hash;
+        const progress = city.BuildQueue.getProgress(type) ?? 0;
+        const productionCost = city.Production?.getConstructibleProductionCost(type);
+        this.productionCost.classList.toggle("hidden", productionCost === void 0);
+        const amount = progress ?
+            `${productionCost - progress} / ${productionCost}` : productionCost;
+        this.productionCost.innerHTML = Locale.stylize(
+            "LOC_CARD_COST",
+            `${amount ?? 0}[icon:YIELD_PRODUCTION]`
+        );
         const { baseYield, adjacencies, effects } = getConstructibleEffectStrings(definition.ConstructibleType, city);
         if (baseYield) {
             this.baseYield.innerHTML = Locale.stylize(baseYield);
@@ -263,22 +258,13 @@ class ProductionUnitTooltipType {
             return;
         }
         this.header.setAttribute("data-l10n-id", definition.Name);
-        const isPurchase = this.target?.dataset.isPurchase === "true";
-        if (isPurchase) {
-            this.productionCost.classList.add("hidden");
-        } else {
-            const productionCost = city.Production?.getUnitProductionCost(definition.UnitType);
-            if (productionCost === void 0) {
-                this.productionCost.classList.add("hidden");
-            } else {
-                this.productionCost.innerHTML = Locale.stylize(
-                    "LOC_CARD_COST",
-                    `${productionCost}[icon:YIELD_PRODUCTION]`
-                );
-                // FIX: unhide production cost when displaying it
-                this.productionCost.classList.remove("hidden");
-            }
-        }
+        // FIX: always show production cost
+        const productionCost = city.Production?.getConstructibleProductionCost(definition.ConstructibleType);
+        this.productionCost.classList.toggle("hidden", productionCost === void 0);
+        this.productionCost.innerHTML = Locale.stylize(
+            "LOC_CARD_COST",
+            `${productionCost ?? 0}[icon:YIELD_PRODUCTION]`
+        );
         if (this.definition?.Description) {
             this.description.setAttribute("data-l10n-id", this.definition.Description);
             this.description.classList.remove("hidden");

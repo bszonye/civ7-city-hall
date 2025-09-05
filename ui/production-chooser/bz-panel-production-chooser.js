@@ -117,7 +117,7 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-show-progress .bz-pci-cost-icon {
     visibility: hidden;
 }
-.bz-city-hall .bz-is-purchase .build-queue__progress-bar-fill {
+.bz-city-hall .bz-is-purchase.bz-has-progress .build-queue__progress-bar-fill {
     filter: saturate(0) fxs-color-tint(${BZ_COLOR.gold}) brightness(2.0) contrast(1.8) saturate(0.7);
   background-position: center;
 }
@@ -574,6 +574,7 @@ class bzProductionChooserItem {
         const progress = city.BuildQueue.getProgress(type) ?? 0;
         const percent = city.BuildQueue.getPercentComplete(type) ?? 0;
         const showProgress = (progress || qindex != -1) && !this.isRepair;
+        c.Root.classList.toggle("bz-has-progress", progress);
         c.Root.classList.toggle("bz-show-progress", showProgress);
         this.progressBar.classList.toggle("hidden", !showProgress);
         this.progressBarFill.style.heightPERCENT = percent;
