@@ -71,7 +71,6 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const improvement = GameInfo.Improvements.lookup(info.ConstructibleType);
     const wonder = GameInfo.Wonders.lookup(info.ConstructibleType);
     const unique = (building ?? improvement ?? wonder)?.TraitType;
-    const multiple = Boolean(improvement && !improvement.OnePerSettlement);
     const category = wonder ? "wonders" : "buildings";
     // queue entry, if any
     const queue = city.BuildQueue.getQueue();
@@ -110,7 +109,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const turns = city.BuildQueue.getTurnsLeft(hash);
         // error handling
         const fundsError = insufficientFunds && (plots.length || repairDamaged);
-        const disableQueued = inQueue && !isPurchase && !multiple;
+        const disableQueued = inQueue && !isPurchase;
         const disabled = !result.Success || !plots.length || disableQueued;
         if (disabled && !fundsError && !viewHidden) return null;
         const error =
