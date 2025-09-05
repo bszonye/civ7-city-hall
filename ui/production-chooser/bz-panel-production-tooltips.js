@@ -104,17 +104,11 @@ class ProductionConstructibleTooltipType {
     }
     update() {
         const cityID = UI.Player.getHeadSelectedCity();
-        if (!cityID) {
-            return;
-        }
+        if (!cityID) return;
         const city = Cities.get(cityID);
-        if (!city) {
-            return;
-        }
+        if (!city) return;
         const definition = this.definition;
-        if (!definition) {
-            return;
-        }
+        if (!definition) return;
         this.header.setAttribute("data-l10n-id", definition.Name);
         // FIX: always show production cost
         const type = definition.$hash;
@@ -247,17 +241,11 @@ class ProductionUnitTooltipType {
     }
     update() {
         const cityID = UI.Player.getHeadSelectedCity();
-        if (!cityID) {
-            return;
-        }
+        if (!cityID) return;
         const city = Cities.get(cityID);
-        if (!city) {
-            return;
-        }
+        if (!city) return;
         const definition = this.definition;
-        if (!definition) {
-            return;
-        }
+        if (!definition) return;
         this.header.setAttribute("data-l10n-id", definition.Name);
         // FIX: always show production cost
         const type = definition.$hash;
@@ -407,15 +395,12 @@ class ProductionProjectTooltipType {
         this.gemsContainer.classList.toggle("hidden", !recommendations);
         // FIX: show production cost
         const cityID = UI.Player.getHeadSelectedCity();
-        if (!cityID) {
-            return;
-        }
+        if (!cityID) return;
         const city = Cities.get(cityID);
-        if (!city) {
-            return;
-        }
-        const progress = city.BuildQueue.getProgress(projectType) ?? 0;
-        const productionCost = city.Production.getProjectProductionCost(projectType) ?? 0;
+        if (!city) return;
+        const type = projectType;
+        const progress = city.BuildQueue.getProgress(type) ?? 0;
+        const productionCost = city.Production.getProjectProductionCost(type) ?? 0;
         this.productionCost.classList.toggle("hidden", productionCost <= 0);
         const amount = progress ?
             `${productionCost - progress} / ${productionCost}` : productionCost;
