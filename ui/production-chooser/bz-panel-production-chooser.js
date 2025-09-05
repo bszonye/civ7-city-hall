@@ -115,7 +115,7 @@ const BZ_HEAD_STYLE = [
 }
 .bz-city-hall .bz-show-progress .bz-pci-pcost-icon,
 .bz-city-hall .bz-show-progress .bz-pci-cost-icon {
-    visibility: hidden;
+    opacity: 0;
 }
 .bz-city-hall .bz-is-purchase.bz-has-progress .build-queue__progress-bar-fill {
     filter: saturate(0) fxs-color-tint(${BZ_COLOR.gold}) brightness(2.0) contrast(1.8) saturate(0.7);
