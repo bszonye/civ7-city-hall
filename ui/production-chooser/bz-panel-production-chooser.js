@@ -574,7 +574,8 @@ class bzProductionChooserItem {
         const progress = city.BuildQueue.getProgress(type) ?? 0;
         const percent = city.BuildQueue.getPercentComplete(type) ?? 0;
         const showProgress = (progress || qindex != -1) && !this.isRepair;
-        c.Root.classList.toggle("bz-has-progress", progress);
+        const hasProgress = progress && dataCategory != "units";
+        c.Root.classList.toggle("bz-has-progress", hasProgress);
         c.Root.classList.toggle("bz-show-progress", showProgress);
         this.progressBar.classList.toggle("hidden", !showProgress);
         this.progressBarFill.style.heightPERCENT = percent;
