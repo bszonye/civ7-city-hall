@@ -90,7 +90,9 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     const lockType = result.NeededUnlock ?? -1;  // research type
     const unlockable = isUnlockable(city.owner, lockType);
     if (locked && !unlockable && !unique) return null;
-    if (result.Success || result.InProgress || insufficientFunds || viewHidden) {
+    const buyout = isPurchase &&
+        (result.InProgress || result.InQueue || repairDamaged || insufficientFunds);
+    if (result.Success || result.InProgress || buyout || viewHidden) {
         const plots = [];
         if (result.InQueue) {
             // get placement from the build queue
@@ -108,14 +110,13 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
         // error handling
-        const fundsError = insufficientFunds && (plots.length || repairDamaged);
-        const disableQueued = result.InQueue && !isPurchase;
+        const disableQueued = result.InQueue && !buyout;
         const disabled = !result.Success || !plots.length || disableQueued;
-        if (disabled && !fundsError && !viewHidden) return null;
+        if (disabled && !buyout && !viewHidden) return null;
         const error =
             result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
             locked && lockType != -1 ? unlockName(city.owner, lockType) :
-            fundsError ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
+            insufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
             inQueue && disabled ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
             !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
         // sort items
