@@ -61,6 +61,7 @@ class ProductionConstructibleTooltipType {
         this.gemsContainer.className = "mt-10";
         this.maintenanceEntriesContainer.className = "flex text-negative-light";
         this.maintenanceContainer.append(maintenanceLabel, this.maintenanceEntriesContainer);
+        this.productionCost.className = "my-1";
         this.container.append(
             this.header,
             this.constructibleName,
@@ -118,8 +119,8 @@ class ProductionConstructibleTooltipType {
         // FIX: always show production cost
         const type = definition.$hash;
         const progress = city.BuildQueue.getProgress(type) ?? 0;
-        const productionCost = city.Production?.getConstructibleProductionCost(type);
-        this.productionCost.classList.toggle("hidden", productionCost === void 0);
+        const productionCost = city.Production?.getConstructibleProductionCost(type) ?? 0;
+        this.productionCost.classList.toggle("hidden", productionCost <= 0);
         const amount = progress ?
             `${productionCost - progress} / ${productionCost}` : productionCost;
         this.productionCost.innerHTML = Locale.stylize(
@@ -201,7 +202,7 @@ class ProductionUnitTooltipType {
         this.container.dataset.showBorder = "false";
         this.header.className = "font-title text-secondary text-center uppercase tracking-100";
         this.itemName.className = "font-title uppercase";
-        this.productionCost.className = "mb-1";
+        this.productionCost.className = "my-1";
         this.gemsContainer.className = "mt-10";
         this.maintenanceContainer.className = "flex items-center mt-0\\.5 p-2 production-chooser-tooltip__subtext-bg";
         const maintenanceLabel = document.createElement("div");
@@ -259,11 +260,15 @@ class ProductionUnitTooltipType {
         }
         this.header.setAttribute("data-l10n-id", definition.Name);
         // FIX: always show production cost
-        const productionCost = city.Production?.getConstructibleProductionCost(definition.ConstructibleType);
-        this.productionCost.classList.toggle("hidden", productionCost === void 0);
+        const type = definition.$hash;
+        const progress = city.BuildQueue.getProgress(type) ?? 0;
+        const productionCost = city.Production?.getUnitProductionCost(type) ?? 0;
+        this.productionCost.classList.toggle("hidden", productionCost <= 0);
+        const amount = progress ?
+            `${productionCost - progress} / ${productionCost}` : productionCost;
         this.productionCost.innerHTML = Locale.stylize(
             "LOC_CARD_COST",
-            `${productionCost ?? 0}[icon:YIELD_PRODUCTION]`
+            `${amount ?? 0}[icon:YIELD_PRODUCTION]`
         );
         if (this.definition?.Description) {
             this.description.setAttribute("data-l10n-id", this.definition.Description);
@@ -295,15 +300,17 @@ class ProductionUnitTooltipType {
 }
 TooltipManager.registerType("production-unit-tooltip", new ProductionUnitTooltipType());
 class ProductionProjectTooltipType {
-  target = null;
-  // #region Element References
-  tooltip = document.createElement("fxs-tooltip");
-  icon = document.createElement("fxs-icon");
-  itemName = document.createElement("div");
-  description = document.createElement("p");
-  requirementsContainer = document.createElement("div");
-  requirementsText = document.createElement("div");
-  gemsContainer = document.createElement("div");
+    target = null;
+    definition = null;
+    // #region Element References
+    tooltip = document.createElement("fxs-tooltip");
+    icon = document.createElement("fxs-icon");
+    itemName = document.createElement("div");
+    description = document.createElement("p");
+    requirementsContainer = document.createElement("div");
+    requirementsText = document.createElement("div");
+    gemsContainer = document.createElement("div");
+    productionCost = document.createElement("div");
     // #endregion
     constructor() {
         this.tooltip.className = "flex w-96 text-accent-2 font-body text-sm";
@@ -325,7 +332,13 @@ class ProductionProjectTooltipType {
         this.requirementsContainer.className = "flex mt-0\\.5 p-2 production-chooser-tooltip__subtext-bg";
         this.requirementsContainer.append(this.requirementsText);
         this.gemsContainer.className = "mt-10";
-        this.tooltip.append(container, this.requirementsContainer, this.gemsContainer);
+        this.productionCost.className = "ml-2 mb-1";
+        this.tooltip.append(
+            container,
+            this.requirementsContainer,
+            this.gemsContainer,
+            this.productionCost
+        );
     }
     getHTML() {
         return this.tooltip;
@@ -392,6 +405,24 @@ class ProductionProjectTooltipType {
             this.gemsContainer.appendChild(recommendationTooltipContent);
         }
         this.gemsContainer.classList.toggle("hidden", !recommendations);
+        // FIX: show production cost
+        const cityID = UI.Player.getHeadSelectedCity();
+        if (!cityID) {
+            return;
+        }
+        const city = Cities.get(cityID);
+        if (!city) {
+            return;
+        }
+        const progress = city.BuildQueue.getProgress(projectType) ?? 0;
+        const productionCost = city.Production.getProjectProductionCost(projectType) ?? 0;
+        this.productionCost.classList.toggle("hidden", productionCost <= 0);
+        const amount = progress ?
+            `${productionCost - progress} / ${productionCost}` : productionCost;
+        this.productionCost.innerHTML = Locale.stylize(
+            "LOC_CARD_COST",
+            `${amount ?? 0}[icon:YIELD_PRODUCTION]`
+        );
     }
     getRequirementsText() {
         const projectType = Number(this.target?.dataset.projectType);

@@ -92,7 +92,8 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
     if (locked && !unlockable && !unique) return null;
     const buyout = isPurchase &&
         (result.InProgress || result.InQueue || repairDamaged || insufficientFunds);
-    if (result.Success || result.InProgress || buyout || viewHidden) {
+    const viewWonder = wonder && (result.InProgress || result.InQueue);
+    if (result.Success || result.InProgress || buyout || viewWonder || viewHidden) {
         const plots = [];
         if (result.InQueue) {
             // get placement from the build queue
@@ -112,7 +113,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         // error handling
         const disableQueued = result.InQueue && !buyout;
         const disabled = !result.Success || !plots.length || disableQueued;
-        if (disabled && !buyout && !viewHidden) return null;
+        if (disabled && !buyout && !viewWonder && !viewHidden) return null;
         const error =
             result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
             locked && lockType != -1 ? unlockName(city.owner, lockType) :
