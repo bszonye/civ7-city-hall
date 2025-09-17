@@ -92,6 +92,9 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-pci-cost {
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
 }
+.bz-city-hall .bz-pci-cost .production-chooser-tooltip__subtext-bg.rounded {
+    display: none;
+}
 .bz-city-hall .bz-city-repair {
     color: black;
     background-color: ${BZ_COLOR.caution};
