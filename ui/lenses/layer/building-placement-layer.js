@@ -84,13 +84,12 @@ class WorkerYieldsLensLayer {
             );
             return;
         }
-        const validPlots = BuildingPlacementManager.expandablePlots.concat(
-            BuildingPlacementManager.developedPlots.concat(BuildingPlacementManager.urbanPlots.concat(BuildingPlacementManager.bzReservedPlots))
-        );
+    const validPlots = BuildingPlacementManager.expandablePlots.concat(
+      BuildingPlacementManager.developedPlots.concat(BuildingPlacementManager.urbanPlots)
+    );
         for (const plotIndex of validPlots) {
             const plotYieldGainPills = [];
             const plotYieldLossPills = [];
-            // Add the yield gain and loss pills
             BuildingPlacementManager.getTotalYieldChanges(plotIndex)?.forEach((yieldChangeInfo) => {
                 if (yieldChangeInfo.yieldChange != 0) {
                     const yieldPillData = {
@@ -140,7 +139,6 @@ class WorkerYieldsLensLayer {
                     { fonts: ["TitleFont"], fontSize: 4, faceCamera: true }
                 );
             });
-            // Add any filled or open building slots
             const district = Districts.getAtLocation(plotIndex);
             if (district) {
                 this.realizeBuildSlots(district);
@@ -155,17 +153,13 @@ class WorkerYieldsLensLayer {
      */
     getXYOffsetForPill(totalPills) {
         const offsets = [];
-        // Determine if we should wrap and if so how many pills in the top and bottom rows
         const shouldWrap = totalPills > this.YIELD_WRAP_AT;
         const numPillsBottomRow = shouldWrap ? Math.trunc(totalPills / 2) : 0;
         const numPillsTopRow = totalPills - numPillsBottomRow;
-        // Group width based on top row which should always be the longest row
         const groupWidth = (numPillsTopRow - 1) * this.YIELD_SPRITE_PADDING;
         for (let i = 0; i < totalPills; i++) {
             const isPillInTopRow = i + 1 <= numPillsTopRow;
-            // If this pill is in the bottom row base the index for positioning off relative index within the bottom row
             const rowPosition = isPillInTopRow ? i : i - numPillsTopRow;
-            // Generate y offset based on if we need to wrap and what row the pill is in
             let yOffset = 0;
             if (shouldWrap) {
                 yOffset = isPillInTopRow ? this.YIELD_WRAPPED_ROW_OFFSET : -this.YIELD_WRAPPED_ROW_OFFSET;

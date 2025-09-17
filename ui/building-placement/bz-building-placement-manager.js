@@ -90,25 +90,18 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     };
     // evaluate existing districts
     operationResult.Plots?.forEach(p => {
-        if (isUQCompatible(p)) {
-            this._urbanPlots.push(p);
-        } else {
-            this._bzReservedPlots.push(p);
-        }
+        if (!isUQCompatible(p)) this._bzReservedPlots.push(p);
+        this._urbanPlots.push(p);
     });
     // evaluate rural and undeveloped tiles
     operationResult.ExpandUrbanPlots?.forEach(p => {
+        if (!isUQCompatible(p)) this._bzReservedPlots.push(p);
         const loc = GameplayMap.getLocationFromIndex(p);
         const city = MapCities.getCity(loc.x, loc.y);
-        // still need to check UQ compatibility outside of districts
-        if (!isUQCompatible(p)) {
-            // placement clashes with a unique quarter in queue
-            this._bzReservedPlots.push(p);
-        } else if (city && MapCities.getDistrict(loc.x, loc.y) != null) {
+        if (city && MapCities.getDistrict(loc.x, loc.y) != null) {
             // rural tile: ok, will move citizen
             this._developedPlots.push(p);
-        }
-        else {
+        } else {
             // undeveloped tile: good
             this._expandablePlots.push(p);
         }
@@ -124,29 +117,12 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     }
     window.dispatchEvent(new BuildingPlacementConstructibleChangedEvent());
 }
-// extend BPM.isPlotIndexSelectable method:
-// also accept BPM.bzReservedPlots
-const BPM_isPlotIndexSelectable = proto.isPlotIndexSelectable;
-proto.isPlotIndexSelectable = function(...args) {
-    const [plotIndex] = args;
-    return this.bzReservedPlots.find((index) => {
-        return index == plotIndex;
-    }) != void 0 || BPM_isPlotIndexSelectable.apply(this, args);
-}
 // extend BPM.reset method:
 // also reset BPM._bzReservedPlots
 const BPM_reset = proto.reset;
 proto.reset = function(...args) {
     this._bzReservedPlots = [];
     return BPM_reset.apply(this, args);
-}
-// extend BPM.isValidPlacementPlot method:
-// also accept BPM.bzReservedPlots
-const BPM_isValidPlacementPlot = proto.isValidPlacementPlot;
-proto.isValidPlacementPlot = function(...args) {
-    const [plotIndex] = args;
-    if (this.bzReservedPlots.find((p) => p == plotIndex)) return true;
-    return BPM_isValidPlacementPlot.apply(this, args);
 }
 // replace BPM.findExistingUniqueBuilding method:
 // find in-progress and queued buildings in addition to finished ones
