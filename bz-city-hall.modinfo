@@ -57,8 +57,10 @@
                     <Item>ui/building-placement/bz-building-placement-manager.js</Item>
                     <Item>ui/city-details/bz-model-city-details.js</Item>
                     <Item>ui/city-details/bz-panel-city-details.js</Item>
+                    <Item>ui/interface-modes/bz-interface-mode-acquire-tile.js</Item>
                     <Item>ui/interface-modes/bz-interface-mode-place-building.js</Item>
                     <Item>ui/lenses/layer/bz-urban-layer.js</Item>
+                    <Item>ui/lenses/layer/bz-worker-yields-layer.js</Item>
                     <Item>ui/options/bz-city-hall-options.js</Item>
                     <Item>ui/options/mod-options-decorator.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
