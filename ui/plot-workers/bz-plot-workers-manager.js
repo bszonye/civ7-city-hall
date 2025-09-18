@@ -3,6 +3,7 @@ import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-mana
 const proto = Object.getPrototypeOf(PlotWorkersManager);
 
 // patch PWM.reset() to also reset the city ID
+// (fixes migrant resettling UI)
 const PWM_reset = proto.reset;
 proto.reset = function(...args) {
     PWM_reset.apply(this, args);

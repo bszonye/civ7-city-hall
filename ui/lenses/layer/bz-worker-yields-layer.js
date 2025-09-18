@@ -1,9 +1,10 @@
 import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
 import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-manager.js';
+// make sure the vanilla layer loads first
 import '/base-standard/ui/lenses/layer/worker-yields-layer.js';
 
 // get registered lens layer
-const WYLL = LensManager.layers.get('fxs-worker-yields-layer');
+const WYLL = LensManager.layers.get("fxs-worker-yields-layer");
 
 // patch WYLL.updatePlot() to fix fractional yields under 5
 WYLL.updatePlot = function(location) {

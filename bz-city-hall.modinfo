@@ -51,13 +51,13 @@
             <Actions>
                 <ImportFiles>
                     <Item>ui/interface-modes/support-city-decoration.chunk.js</Item>
-                    <Item>ui/lenses/layer/building-placement-layer.js</Item>
                 </ImportFiles>
                 <UIScripts>
                     <Item>ui/building-placement/bz-building-placement-manager.js</Item>
                     <Item>ui/city-details/bz-model-city-details.js</Item>
                     <Item>ui/city-details/bz-panel-city-details.js</Item>
                     <Item>ui/interface-modes/bz-interface-mode-place-building.js</Item>
+                    <Item>ui/lenses/layer/bz-building-placement-layer.js</Item>
                     <Item>ui/lenses/layer/bz-urban-layer.js</Item>
                     <Item>ui/lenses/layer/bz-worker-yields-layer.js</Item>
                     <Item>ui/options/bz-city-hall-options.js</Item>
