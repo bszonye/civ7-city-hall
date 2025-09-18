@@ -47,3 +47,114 @@ WYLL.updatePlot = function(location) {
         }
     });
 }
+// patch WYLL.updateWorkablePlot()
+// TODO: yield to Concise Specialist Lens
+WYLL.updateWorkablePlot = updateWorkablePlot;
+function updateWorkablePlot(info) {
+    if (info.IsBlocked) {
+        const location = GameplayMap.getLocationFromIndex(info.PlotIndex);
+        this.yieldSpriteGrid.addSprite(location, "city_special_base", this.blockedSpecialistSpriteOffset, {
+            scale: this.plotSpriteScale
+        });
+        this.yieldSpriteGrid.addText(location, info.NumWorkers.toString(), this.blockedSpecialistSpriteOffset, {
+            fonts: ["TitleFont"],
+            fontSize: this.specialistFontSize,
+            faceCamera: true
+        });
+    } else {
+        const changes = PlotWorkersManager.bzGetWorkerChanges(info.PlotIndex);
+        // const totalIcon = "hud_diplo_hex";  // TODO
+        // const totalIcon = "hud_mini_box";  // TODO
+        const yieldsToAdd = [];
+        const maintenancesToAdd = [];
+        changes.extraYields.forEach((yieldNum, i) => {
+            const netYieldChange = Math.round(yieldNum * 10) / 10;
+            if (netYieldChange) {
+                const iconURL = PlotWorkersManager.getYieldPillIcon(
+                    GameInfo.Yields[i].YieldType,
+                    netYieldChange
+                );
+                yieldsToAdd.push({ iconURL, yieldDelta: netYieldChange });
+            }
+        });
+        changes.extraMaintenance.forEach((yieldNum, i) => {
+            const netYieldChange = Math.round(-yieldNum * 10) / 10;
+            if (netYieldChange) {
+                const iconURL = PlotWorkersManager.getYieldPillIcon(
+                    GameInfo.Yields[i].YieldType,
+                    netYieldChange
+                );
+                maintenancesToAdd.push({ iconURL, yieldDelta: netYieldChange });
+            }
+        });
+        const location = GameplayMap.getLocationFromIndex(info.PlotIndex);
+        if (info.NumWorkers) {
+            this.yieldSpriteGrid.addSprite(
+                location,
+                "city_special_base",
+                { x: -this.specialistIconXOffset, y: this.specialistIconHeight, z: this.iconZOffset },
+                { scale: this.plotSpriteScale }
+            );
+            this.yieldSpriteGrid.addText(
+                location,
+                info.NumWorkers.toString(),
+                { x: -this.specialistIconXOffset, y: this.specialistIconHeight, z: this.iconZOffset },
+                {
+                    fonts: ["TitleFont"],
+                    fontSize: this.specialistFontSize,
+                    faceCamera: true
+                }
+            );
+        }
+        this.yieldSpriteGrid.addSprite(
+            location,
+            "city_special_empty",
+            {
+                x: info.NumWorkers ? this.specialistIconXOffset : 0,
+                y: this.specialistIconHeight,
+                z: this.iconZOffset
+            },
+            { scale: this.plotSpriteScale }
+        );
+        yieldsToAdd.forEach((yieldPillData, i) => {
+            const groupWidth = (yieldsToAdd.length - 1) * this.yieldSpritePadding;
+            const xPos = i * this.yieldSpritePadding + groupWidth / 2 - groupWidth;
+            const yPos = maintenancesToAdd.length > 0 ? 4 : 0;
+            this.yieldSpriteGrid.addSprite(location, yieldPillData.iconURL, {
+                x: xPos,
+                y: yPos,
+                z: this.iconZOffset
+            });
+            this.yieldSpriteGrid.addText(
+                location,
+                "+" + yieldPillData.yieldDelta.toString(),
+                { x: xPos, y: yPos - 3, z: this.iconZOffset },
+                {
+                    fonts: ["TitleFont"],
+                    fontSize: 4,
+                    faceCamera: true
+                }
+            );
+        });
+        maintenancesToAdd.forEach((yieldPillData, i) => {
+            const groupWidth = (maintenancesToAdd.length - 1) * this.yieldSpritePadding;
+            const xPos = i * this.yieldSpritePadding + groupWidth / 2 - groupWidth;
+            const yPos = yieldsToAdd.length > 0 ? -16 : 0;
+            this.yieldSpriteGrid.addSprite(location, yieldPillData.iconURL, {
+                x: xPos,
+                y: yPos,
+                z: this.iconZOffset
+            });
+            this.yieldSpriteGrid.addText(
+                location,
+                yieldPillData.yieldDelta.toString(),
+                { x: xPos, y: yPos - 3, z: this.iconZOffset },
+                {
+                    fonts: ["TitleFont"],
+                    fontSize: 4,
+                    faceCamera: true
+                }
+            );
+        });
+    }
+}

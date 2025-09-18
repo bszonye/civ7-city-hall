@@ -62,6 +62,7 @@
                     <Item>ui/lenses/layer/bz-worker-yields-layer.js</Item>
                     <Item>ui/options/bz-city-hall-options.js</Item>
                     <Item>ui/options/mod-options-decorator.js</Item>
+                    <Item>ui/place-population/bz-place-population.js</Item>
                     <Item>ui/plot-workers/bz-plot-workers-manager.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-tooltips.js</Item>
