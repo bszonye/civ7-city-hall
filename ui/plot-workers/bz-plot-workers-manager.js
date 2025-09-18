@@ -51,7 +51,7 @@ proto.bzUpdateWorkerInfo = function(info) {
     const netYields = info.NextYields
         .map((amount, i) => amount - info.CurrentYields[i]);
     const netMaintenance = info.NextMaintenance
-        .map((amount, i) => amount - info.CurrentMaintenance[i]);
+        .map((amount, i) => info.CurrentMaintenance[i] - amount);
     this._bzWorkerInfo.set(info.PlotIndex, { netYields, netMaintenance });
     this._bzWorkerBase ??= { netYields, netMaintenance };
     const base = this._bzWorkerBase;
@@ -67,9 +67,17 @@ proto.bzGetWorkerChanges = function(plotIndex) {
     const netMaintenance = info.netMaintenance;
     const base = this._bzWorkerBase;
     const baseYields = base.netYields;
-    const extraYields = netYields
+    const baseMaintenance = base.netMaintenance;
+    const plotYields = netYields
         .map((amount, i) => amount - base.netYields[i]);
-    const extraMaintenance = netMaintenance
+    const plotMaintenance = netMaintenance
         .map((amount, i) => amount - base.netMaintenance[i]);
-    return { netYields, netMaintenance, baseYields, extraYields, extraMaintenance };
+    return {
+        netYields,
+        netMaintenance,
+        baseYields,
+        baseMaintenance,
+        plotYields,
+        plotMaintenance,
+    };
 }

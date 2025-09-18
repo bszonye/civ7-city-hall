@@ -105,7 +105,7 @@ function updateWorkablePlot(info) {
         // const totalIcon = "hud_mini_box";  // TODO
         const yieldsToAdd = [];
         const maintenancesToAdd = [];
-        changes.extraYields.forEach((yieldNum, i) => {
+        changes.plotYields.forEach((yieldNum, i) => {
             const netYieldChange = Math.round(yieldNum * 10) / 10;
             if (netYieldChange) {
                 const iconURL = PlotWorkersManager.getYieldPillIcon(
@@ -115,12 +115,12 @@ function updateWorkablePlot(info) {
                 yieldsToAdd.push({ iconURL, yieldDelta: netYieldChange });
             }
         });
-        changes.extraMaintenance.forEach((yieldNum, i) => {
-            const netYieldChange = Math.round(-yieldNum * 10) / 10;
+        changes.plotMaintenance.forEach((yieldNum, i) => {
+            const netYieldChange = Math.round(yieldNum * 10) / 10;
             if (netYieldChange) {
                 const iconURL = PlotWorkersManager.getYieldPillIcon(
                     GameInfo.Yields[i].YieldType,
-                    netYieldChange
+                    -netYieldChange  // use the negative background
                 );
                 maintenancesToAdd.push({ iconURL, yieldDelta: netYieldChange });
             }
@@ -166,7 +166,7 @@ function updateWorkablePlot(info) {
             this.yieldSpriteGrid.addText(
                 location,
                 "+" + yieldPillData.yieldDelta.toString(),
-                { x: xPos, y: yPos - 3, z: this.iconZOffset },
+                { x: xPos - 1, y: yPos - 3, z: this.iconZOffset },
                 {
                     fonts: ["TitleFont"],
                     fontSize: 4,
@@ -177,7 +177,7 @@ function updateWorkablePlot(info) {
         maintenancesToAdd.forEach((yieldPillData, i) => {
             const groupWidth = (maintenancesToAdd.length - 1) * this.yieldSpritePadding;
             const xPos = i * this.yieldSpritePadding + groupWidth / 2 - groupWidth;
-            const yPos = yieldsToAdd.length > 0 ? -16 : 0;
+            const yPos = yieldsToAdd.length > 0 ? -12 : 0;
             this.yieldSpriteGrid.addSprite(location, yieldPillData.iconURL, {
                 x: xPos,
                 y: yPos,
@@ -185,8 +185,8 @@ function updateWorkablePlot(info) {
             });
             this.yieldSpriteGrid.addText(
                 location,
-                yieldPillData.yieldDelta.toString(),
-                { x: xPos, y: yPos - 3, z: this.iconZOffset },
+                "+" + yieldPillData.yieldDelta.toString(),
+                { x: xPos - 1, y: yPos - 3, z: this.iconZOffset },
                 {
                     fonts: ["TitleFont"],
                     fontSize: 4,
