@@ -3,6 +3,8 @@ import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-mana
 // make sure the vanilla layer loads first
 import '/base-standard/ui/lenses/layer/worker-yields-layer.js';
 
+const ACTIVE_MODS = new Set(Modding.getActiveMods().map(m => Modding.getModInfo(m).id));
+
 // get registered lens layer
 const WYLL = LensManager.layers.get("fxs-worker-yields-layer");
 
@@ -48,8 +50,10 @@ WYLL.updatePlot = function(location) {
     });
 }
 // patch WYLL.updateWorkablePlot()
-// TODO: yield to Concise Specialist Lens
-WYLL.updateWorkablePlot = updateWorkablePlot;
+if (!ACTIVE_MODS.has("jnr-concise-specialists-lens")) {
+    // yield to Concise Specialist Lens
+    WYLL.updateWorkablePlot = updateWorkablePlot;
+}
 function updateWorkablePlot(info) {
     if (info.IsBlocked) {
         const location = GameplayMap.getLocationFromIndex(info.PlotIndex);

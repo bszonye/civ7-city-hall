@@ -13,6 +13,9 @@
     <Dependencies>
         <Mod id="base-standard" title="LOC_MODULE_BASE_STANDARD_NAME" />
     </Dependencies>
+    <References>
+        <Mod id="jnr-concise-specialists-lens" title="Concise Specialists Lens" />
+    </References>
     <ActionCriteria>
         <Criteria id="always">
             <AlwaysMet/>
