@@ -1,3 +1,4 @@
+import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
 import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
 import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-manager.js';
 // make sure the vanilla layer loads first
@@ -8,8 +9,40 @@ const ACTIVE_MODS = new Set(Modding.getActiveMods().map(m => Modding.getModInfo(
 // get registered lens layer
 const WYLL = LensManager.layers.get("fxs-worker-yields-layer");
 
+// patch WYLL.realizeGrowthPlots() to limit yield area
+WYLL.realizeGrowthPlots = function() {
+    let plotsToCheck = null;
+    const mode = InterfaceMode.getCurrent();
+    const cityID = InterfaceMode.getInterfaceModeHandler(mode)?.cityID;
+    if (cityID) {
+        const city = Cities.get(cityID);
+        if (city) {
+            const excludeHidden = true;
+            plotsToCheck = city.Growth?.getGrowthDomain(excludeHidden);
+        }
+    }
+    if (plotsToCheck == null) {
+        const width = GameplayMap.getGridWidth();
+        const height = GameplayMap.getGridHeight();
+        plotsToCheck = [];
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < height; y++) {
+                const revealedState = GameplayMap.getRevealedState(GameContext.localPlayerID, x, y);
+                if (revealedState != RevealedStates.HIDDEN) {
+                    plotsToCheck.push(GameplayMap.getIndexFromXY(x, y));
+                }
+            }
+        }
+    }
+    this.yieldSpriteGrid.clear();
+    for (const plotIndex of plotsToCheck) {
+        if (plotIndex !== null) {
+            this.updatePlot(plotIndex, cityID);
+        }
+    }
+}
 // patch WYLL.updatePlot() to fix fractional yields under 5
-WYLL.updatePlot = function(location) {
+WYLL.updatePlot = function(location, cityID) {
     const yieldsToAdd = [];
     for (const workablePlotIndex of PlotWorkersManager.allWorkerPlotIndexes) {
         if (workablePlotIndex == location) {
@@ -17,7 +50,8 @@ WYLL.updatePlot = function(location) {
         }
     }
     this.yieldSpriteGrid.clearPlot(location);
-    const yields = PlotWorkersManager.cityID ? GameplayMap.getYieldsWithCity(location, PlotWorkersManager.cityID) : GameplayMap.getYields(location, GameContext.localPlayerID);
+    const yields = cityID ? GameplayMap.getYieldsWithCity(location, cityID) :
+        GameplayMap.getYields(location, GameContext.localPlayerID);
     for (const [yieldType, amount] of yields) {
         const yieldDef = GameInfo.Yields.lookup(yieldType);
         if (yieldDef) {

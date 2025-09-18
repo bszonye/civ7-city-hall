@@ -99,16 +99,13 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
         const loc = GameplayMap.getLocationFromIndex(p);
         const city = MapCities.getCity(loc.x, loc.y);
         if (city && MapCities.getDistrict(loc.x, loc.y) != null) {
-            // rural tile: ok, will move citizen
             this._developedPlots.push(p);
         } else {
-            // undeveloped tile: good
             this._expandablePlots.push(p);
         }
     });
-    this.selectedPlacementData = this.allPlacementData.buildings.find((buildingData) => {
-        return buildingData.constructibleType == constructible.$hash;
-    });
+    this.selectedPlacementData = this.allPlacementData.buildings
+        .find((buildingData) => buildingData.constructibleType == constructible.$hash);
     if (!this.selectedPlacementData) {
         // This can be an expected case. Example: Repairing a constructible.
         console.warn(

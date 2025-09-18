@@ -48,6 +48,9 @@ proto.update = function(...args) {
     if (!this.hasHoveredWorkerPlot) return;
     const plotIndex = this.hoveredPlotWorkerIndex;
     const changes = PlotWorkersManager.bzGetWorkerChanges(plotIndex);
+    // TODO: why is this crashing after city growth?
+    console.warn(`TRIX PLOT ${plotIndex}`);
+    console.warn(`TRIX CHANGES ${JSON.stringify(changes)}`);
     this.bzBaseWorkerYields = getYieldHTML(BASE_ICON, changes.baseYields);
     this.bzHoveredWorkerYields = getYieldHTML(EXTRA_ICON, changes.extraYields);
     this.bzHoveredWorkerMaintenance = getYieldHTML(BASE_ICON, changes.netMaintenance, -1);
