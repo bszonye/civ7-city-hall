@@ -39,7 +39,7 @@ function getTotalHTML(changes) {
 PlacePopulation.bzBaseWorkerYields = "";
 PlacePopulation.bzHoveredWorkerYields = "";
 PlacePopulation.bzHoveredWorkerMaintenance = "";
-PlacePopulation.bzHoveredWorkerTotals = "";
+PlacePopulation.bzHoveredWorkerTotal = "";
 
 const proto = Object.getPrototypeOf(PlacePopulation);
 const PP_update = proto.update;
@@ -48,13 +48,11 @@ proto.update = function(...args) {
     if (!this.hasHoveredWorkerPlot) return;
     const plotIndex = this.hoveredPlotWorkerIndex;
     const changes = PlotWorkersManager.bzGetWorkerChanges(plotIndex);
-    // TODO: why is this crashing after city growth?
-    console.warn(`TRIX PLOT ${plotIndex}`);
-    console.warn(`TRIX CHANGES ${JSON.stringify(changes)}`);
+    if (!changes) return;
     this.bzBaseWorkerYields = getYieldHTML(BASE_ICON, changes.baseYields);
     this.bzHoveredWorkerYields = getYieldHTML(EXTRA_ICON, changes.extraYields);
     this.bzHoveredWorkerMaintenance = getYieldHTML(BASE_ICON, changes.netMaintenance, -1);
-    this.bzHoveredWorkerTotals = getTotalHTML(changes);
+    this.bzHoveredWorkerTotal = getTotalHTML(changes);
 }
 
 class bzPlacePopulationPanel {
@@ -119,7 +117,7 @@ class bzPlacePopulationPanel {
         // totals
         const workerTotals = document.createElement("div");
         workerTotals.className = "text-secondary mt-2";
-        Databind.html(workerTotals, "{{g_PlacePopulation.bzHoveredWorkerTotals}}");
+        Databind.html(workerTotals, "{{g_PlacePopulation.bzHoveredWorkerTotal}}");
         changesContainer.appendChild(workerTotals);
         textContainer.appendChild(changesContainer);
         return specialistInfoFrame;
