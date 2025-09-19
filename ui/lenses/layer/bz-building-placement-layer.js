@@ -77,7 +77,6 @@ function realizeBuildSlots(district, grid) {
         const iconURL = UI.getIconBLP(building.ConstructibleType) || "";
         // building yield type flag
         const yields = adjacencyYield(building)
-        // .map(y => UI.getIconBLP(y + "_5", "YIELD"));
             .map(y => BuildingPlacementManager.getYieldPillIcon(y, 1, true));
         buildingSlots.push({ iconURL, yields, });
     }
