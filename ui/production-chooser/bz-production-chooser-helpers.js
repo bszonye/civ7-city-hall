@@ -553,7 +553,7 @@ function bzGetYieldChanges(city, constructibleDef, plotIndex=-1) {
         BPM.getBestYieldForConstructible(city.id, constructibleDef);
     return changes;
 }
-function bzGetYieldDetails(yieldChanges) {
+function bzGetYieldDetails(yieldChanges, sorted=true) {
     const details = [];
     for (const [i, dy] of yieldChanges.entries()) {
         if (dy <= 0) continue;
@@ -568,6 +568,7 @@ function bzGetYieldDetails(yieldChanges) {
             isMainYield: true
         });
     }
+    if (sorted) details.sort((a, b) => b.value - a.value);
     return details;
 }
 function bzSortProductionItems(list) {

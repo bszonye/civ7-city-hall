@@ -2,7 +2,7 @@ import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chun
 import { O as OVERLAY_PRIORITY } from '/base-standard/ui/utilities/utilities-overlay.chunk.js';
 import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
-import { WorkerYieldsLensLayer } from '/bz-city-hall/ui/lenses/layer/building-placement-layer.js';
+import { realizeBuildSlots } from '/bz-city-hall/ui/lenses/layer/bz-building-placement-layer.js';
 // make sure the urban layer loads first
 import '/bz-city-hall/ui/lenses/layer/bz-urban-layer.js';
 
@@ -40,16 +40,13 @@ var CityDecorationSupport;
             const op = OVERLAY_PRIORITY.PLOT_HIGHLIGHT - 1;
             this.cityOverlayGroup = WorldUI.createOverlayGroup("CityOverlayGroup", op);
             this.cityOverlay = this.cityOverlayGroup.addPlotOverlay();
-            this.citySpriteGrid = WorldUI.createSpriteGrid("CityOverlaySpriteGroup", true);
+            this.citySpriteGrid = WorldUI.createSpriteGrid("bzCity_SpriteGroup", true);
             this.citySpriteGrid.setVisible(false);
             this.urbanLayer = LensManager.layers.get('bz-urban-layer');
             engine.on("BeforeUnload", this.beforeUnloadListener);
         }
-        realizeBuildSlots(district, grid) {
-            if (!district || !grid) return;
-            // borrow the realizeBuildSlots method
-            WorkerYieldsLensLayer.prototype.realizeBuildSlots.apply(this, [district, grid]);
-        }
+        // borrow the realizeBuildSlots method
+        realizeBuildSlots = realizeBuildSlots;
         decoratePlots(cityID) {
             this.cityID = cityID;  // remember cityID for update handler
             this.updatePlots(cityID);

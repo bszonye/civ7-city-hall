@@ -70,6 +70,16 @@ const BZ_HEAD_STYLE = [
     min-width: 28.4444444444rem;
     max-width: 28.4444444444rem;
 }
+.bz-city-hall .last-production-frame .ml-8 {
+    margin-left: 0.8888888889rem;
+}
+.bz-city-compact .last-production-frame .size-8 {
+    width: 1.3333333333rem;
+    height: 1.3333333333rem;
+}
+.bz-city-compact .last-production-frame .pr-4 {
+    padding-right: 0.4444444444rem;
+}
 .bz-city-hall .panel-production-chooser .subsystem-frame__content {
     padding-right: 0.2222222222rem;
     margin-bottom: -0.3333333333rem;
@@ -91,6 +101,9 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-pci-name,
 .bz-city-hall .bz-pci-cost {
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
+}
+.bz-city-hall .bz-pci-cost .production-chooser-tooltip__subtext-bg.rounded {
+    display: none;
 }
 .bz-city-hall .bz-city-repair {
     color: black;
@@ -605,3 +618,20 @@ class bzProductionChooserItem {
     }
 }
 Controls.decorate("production-chooser-item", (val) => new bzProductionChooserItem(val));
+
+class bzLastProductionSection {
+    constructor(component) {
+        this.component = component;
+        component.bzComponent = this;
+    }
+    beforeAttach() {
+        this.component.Root.classList.toggle("text-sm", bzCityHallOptions.compact);
+        this.component.yieldDiv.classList.toggle("flex-wrap", bzCityHallOptions.compact);
+        this.component.yieldDiv.classList.toggle("max-w-72", bzCityHallOptions.compact);
+        this.component.yieldDiv.classList.add("mr-2");
+    }
+    afterAttach() { }
+    beforeDetach() { }
+    afterDetach() { }
+}
+Controls.decorate("last-production-section", (val) => new bzLastProductionSection(val));

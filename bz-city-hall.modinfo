@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Mod id="bz-city-hall" version="20100"
+<Mod id="bz-city-hall" version="20200"
     xmlns="ModInfo">
     <Properties>
         <Name>LOC_MOD_BZ_CITY_HALL_NAME</Name>
-        <Version>2.1.0</Version>
+        <Version>2.2.0</Version>
         <Description>LOC_MOD_BZ_CITY_HALL_DESCRIPTION</Description>
         <Authors>beezany</Authors>
         <URL>https://forums.civfanatics.com/resources/city-hall.31946/</URL>
@@ -13,6 +13,9 @@
     <Dependencies>
         <Mod id="base-standard" title="LOC_MODULE_BASE_STANDARD_NAME" />
     </Dependencies>
+    <References>
+        <Mod id="jnr-concise-specialists-lens" title="Concise Specialists Lens" />
+    </References>
     <ActionCriteria>
         <Criteria id="always">
             <AlwaysMet/>
@@ -50,17 +53,20 @@
             </Properties>
             <Actions>
                 <ImportFiles>
-                    <Item>ui/interface-modes/interface-mode-place-building.js</Item>
                     <Item>ui/interface-modes/support-city-decoration.chunk.js</Item>
-                    <Item>ui/lenses/layer/building-placement-layer.js</Item>
                 </ImportFiles>
                 <UIScripts>
                     <Item>ui/building-placement/bz-building-placement-manager.js</Item>
                     <Item>ui/city-details/bz-model-city-details.js</Item>
                     <Item>ui/city-details/bz-panel-city-details.js</Item>
+                    <Item>ui/interface-modes/bz-interface-mode-place-building.js</Item>
+                    <Item>ui/lenses/layer/bz-building-placement-layer.js</Item>
                     <Item>ui/lenses/layer/bz-urban-layer.js</Item>
+                    <Item>ui/lenses/layer/bz-worker-yields-layer.js</Item>
                     <Item>ui/options/bz-city-hall-options.js</Item>
                     <Item>ui/options/mod-options-decorator.js</Item>
+                    <Item>ui/place-population/bz-place-population.js</Item>
+                    <Item>ui/plot-workers/bz-plot-workers-manager.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-tooltips.js</Item>
                     <Item>ui/production-chooser/bz-production-chooser-helpers.js</Item>
