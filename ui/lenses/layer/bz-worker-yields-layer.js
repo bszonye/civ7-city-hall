@@ -101,8 +101,6 @@ function updateWorkablePlot(info) {
         });
     } else {
         const changes = PlotWorkersManager.bzGetWorkerChanges(info.PlotIndex);
-        // const totalIcon = "hud_diplo_hex";  // TODO
-        // const totalIcon = "hud_mini_box";  // TODO
         const yieldsToAdd = [];
         const maintenancesToAdd = [];
         changes.plotYields.forEach((yieldNum, i) => {
