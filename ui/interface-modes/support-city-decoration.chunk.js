@@ -2,7 +2,7 @@ import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chun
 import { O as OVERLAY_PRIORITY } from '/base-standard/ui/utilities/utilities-overlay.chunk.js';
 import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
-import { realizeBuildSlots } from '/bz-city-hall/ui/lenses/layer/bz-building-placement-layer.js';
+import { realizeBuildSlots } from '/bz-city-hall/ui/lenses/layer/bz-building-slots.js';
 // make sure the urban layer loads first
 import '/bz-city-hall/ui/lenses/layer/bz-urban-layer.js';
 
