@@ -58,7 +58,7 @@ var CityDecorationSupport;
             this.cityOverlayGroup?.clearAll();
             this.citySpriteGrid?.clear();
             this.citySpriteGrid?.setVisible(true);
-            const city = Cities.get(cityID);
+            const city = cityID && Cities.get(cityID);
             if (!city) {
                 console.error(`City Decoration support: Failed to find city (${ComponentID.toLogString(cityID)})!`);
                 return;
