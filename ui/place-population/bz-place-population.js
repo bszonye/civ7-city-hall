@@ -68,7 +68,8 @@ class bzPlacePopulationPanel {
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
-        this.patchPrototypes(this.component);
+        // TODO: update this if necessary
+        // this.patchPrototypes(this.component);
     }
     patchPrototypes(component) {
         const c_prototype = Object.getPrototypeOf(component);

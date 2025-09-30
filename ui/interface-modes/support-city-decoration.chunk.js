@@ -55,6 +55,7 @@ var CityDecorationSupport;
             engine.on('ConstructibleRemovedFromMap', this.onPlotChange);
         }
         updatePlots(cityID=this.cityID) {
+            if (!cityID) return;  // not initialized yet
             this.cityOverlayGroup?.clearAll();
             this.citySpriteGrid?.clear();
             this.citySpriteGrid?.setVisible(true);

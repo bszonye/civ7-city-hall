@@ -6,12 +6,11 @@ const proto = Object.getPrototypeOf(PlotWorkersManager);
 PlotWorkersManager._bzWorkerBase = null;
 PlotWorkersManager._bzWorkerInfo = new Map();
 
-// patch PWM.reset() to reset base worker info and city ID
+// patch PWM.reset() to reset base worker info
 const PWM_reset = proto.reset;
 proto.reset = function(...args) {
     this._bzWorkerBase = null;
     this._bzWorkerInfo = new Map();
-    this._cityID = null;  // fix migrant resettling UI
     PWM_reset.apply(this, args);
 }
 // patch PWM.initializeWorkersData() to reset base worker info
@@ -45,6 +44,7 @@ proto.update = function() {
         }
         this.bzUpdateWorkerInfo(info);
     });
+    this._cityWorkerCap = city.Workers.getCityWorkerCap();
 }
 // add PWM.bzUpdateWorkerInfo() to calculate base changes
 proto.bzUpdateWorkerInfo = function(info) {

@@ -7,7 +7,9 @@ import '/base-standard/ui/lenses/layer/worker-yields-layer.js';
 const ACTIVE_MODS = new Set(Modding.getActiveMods().map(m => Modding.getModInfo(m).id));
 
 // get registered lens layer
-const WYLL = LensManager.layers.get("fxs-worker-yields-layer");
+// TODO: reimplement this to work with the new growth UI
+const _WYLL = LensManager.layers.get("fxs-worker-yields-layer");
+const WYLL = {};
 
 // patch WYLL.realizeGrowthPlots() to limit yield area
 WYLL.realizeGrowthPlots = function() {
