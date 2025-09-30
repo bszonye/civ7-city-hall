@@ -1,5 +1,4 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
-import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
 
 function adjacencyYield(building) {
     if (!building) return [];
@@ -54,7 +53,7 @@ function realizeBuildSlots(district, grid) {
         const iconURL = UI.getIconBLP(building.ConstructibleType) || "";
         // building yield type flag
         const yields = adjacencyYield(building)
-            .map(y => BuildingPlacementManager.getYieldPillIcon(y, 1, true));
+            .map(y => getYieldFlag(y));
         buildingSlots.push({ iconURL, yields, });
     }
     for (let i = 0; i < maxSlots; i++) {
@@ -75,6 +74,11 @@ function realizeBuildSlots(district, grid) {
             grid.addSprite(district.location, slot.iconURL, p, { scale: 0.7 });
         }
     }
+}
+
+function getYieldFlag(yieldType) {
+    if (yieldType == "YIELD_DIPLOMACY") yieldType = "yield_influence";
+    return `${yieldType.toLowerCase()}_pos-lrg`;
 }
 
 export { realizeBuildSlots };
