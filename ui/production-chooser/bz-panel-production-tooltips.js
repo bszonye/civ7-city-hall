@@ -1,5 +1,4 @@
 import TooltipManager from '/core/ui/tooltips/tooltip-manager.js';
-import { d as getConstructibleEffectStrings } from '/core/ui/utilities/utilities-core-textprovider.chunk.js';
 import { IsElement } from '/core/ui/utilities/utilities-dom.chunk.js';
 import { c as GetTownFocusBlp } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
 import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
@@ -7,9 +6,11 @@ import '/core/ui/input/action-handler.js';
 import '/core/ui/framework.chunk.js';
 import '/core/ui/input/cursor.js';
 import '/core/ui/input/focus-manager.js';
+import '/core/ui/audio-base/audio-support.chunk.js';
 import '/core/ui/views/view-manager.chunk.js';
 import '/core/ui/panel-support.chunk.js';
 import '/core/ui/input/input-support.chunk.js';
+import '/core/ui/utilities/utilities-update-gate.chunk.js';
 import '/core/ui/input/plot-cursor.js';
 import '/core/ui/context-manager/context-manager.js';
 import '/core/ui/context-manager/display-queue-manager.js';
@@ -20,7 +21,8 @@ import '/core/ui/interface-modes/interface-modes.js';
 import '/core/ui/utilities/utilities-component-id.chunk.js';
 import '/core/ui/utilities/utilities-image.chunk.js';
 import '/base-standard/ui/building-placement/building-placement-manager.js';
-import '/core/ui/utilities/utilities-update-gate.chunk.js';
+import '/core/ui/utilities/utilities-core-textprovider.chunk.js';
+import '/base-standard/ui/utilities/utilities-tags.chunk.js';
 import '/core/ui/components/fxs-nav-help.chunk.js';
 import '/core/ui/utilities/utilities-core-databinding.chunk.js';
 import '/base-standard/ui/quest-tracker/quest-item.js';
@@ -34,49 +36,33 @@ import '/base-standard/ui/production-chooser/panel-production-tooltips.js';
 
 class ProductionConstructibleTooltipType {
     definition;
-    maintenance = null;
-    target = null;
+    _target = null;
+    get target() {
+        return this._target?.deref() ?? null;
+    }
+    set target(value) {
+        this._target = value ? new WeakRef(value) : null;
+    }
     // #region Element References
     container = document.createElement("fxs-tooltip");
-    description = document.createElement("p");
-    header = document.createElement("div");
-    productionCost = document.createElement("div");
-    baseYield = document.createElement("div");
-    constructibleName = document.createElement("div");
-    constructibleBonusContainer = document.createElement("div");
-    maintenanceContainer = document.createElement("div");
-    maintenanceEntriesContainer = document.createElement("div");
+    header = document.createElement("fxs-header");
     gemsContainer = document.createElement("div");
+    constructibleDetails = document.createElement("constructible-details");
     // #endregion
+    data = {};
     constructor() {
         this.container.className = "flex flex-col w-96 font-body text-sm text-accent-2";
-        this.container.dataset.showBorder = "false";
-        this.header.className = "font-title text-secondary text-center uppercase tracking-100";
-        this.constructibleName.className = "font-title text-sm uppercase";
-        this.baseYield.className = "mb-1";
-        this.constructibleBonusContainer.className = "mb-1";
-        this.maintenanceContainer.className = "flex p-2 mt-0\\.5 production-chooser-tooltip__subtext-bg";
-        const maintenanceLabel = document.createElement("div");
-        maintenanceLabel.setAttribute("data-l10n-id", "LOC_UI_PRODUCTION_BUILDING_MAINTENANCE");
-        this.gemsContainer.className = "mt-10";
-        this.maintenanceEntriesContainer.className = "flex text-negative-light";
-        this.maintenanceContainer.append(maintenanceLabel, this.maintenanceEntriesContainer);
-        this.productionCost.className = "my-1";
-        this.container.append(
-            this.header,
-            this.constructibleName,
-            this.baseYield,
-            this.constructibleBonusContainer,
-            this.description,
-            this.gemsContainer,
-            this.maintenanceContainer,
-            this.productionCost
-        );
+        this.header.setAttribute("filigree-style", "small");
+        this.header.setAttribute("header-bg-glow", "true");
+        this.header.classList.add("mb-1");
+        this.constructibleDetails.classList.add("mb-1");
+        this.container.append(this.header, this.constructibleDetails, this.gemsContainer);
     }
     getHTML() {
         return this.container;
     }
     reset() {
+        return;
     }
     isUpdateNeeded(target) {
         const targetConstructibleItem = target.closest(
@@ -86,82 +72,38 @@ class ProductionConstructibleTooltipType {
             this.target = null;
             return false;
         }
-        if (!targetConstructibleItem.dataset.type || targetConstructibleItem.dataset.type === this.definition?.ConstructibleType) {
+        if (!targetConstructibleItem.dataset.type || targetConstructibleItem.dataset.type === this.definition?.ConstructibleType && targetConstructibleItem === this.target) {
             return false;
         }
         const definition = GameInfo.Constructibles.lookup(targetConstructibleItem.dataset.type);
         if (!definition) {
             return false;
         }
-        this.maintenance = Database.query(
-            "gameplay",
-            "select YieldType, Amount from Constructible_Maintenances where ConstructibleType = ?",
-            definition.ConstructibleType
-        )?.filter((maintenance) => maintenance.Amount > 0) ?? null;
+        this.constructibleDetails.setAttribute("constructible-type", definition.ConstructibleType);
         this.target = targetConstructibleItem;
         this.definition = definition;
         return true;
     }
     update() {
         const cityID = UI.Player.getHeadSelectedCity();
-        if (!cityID) return;
+        if (!cityID) {
+            return;
+        }
         const city = Cities.get(cityID);
-        if (!city) return;
+        if (!city) {
+            return;
+        }
         const definition = this.definition;
-        if (!definition) return;
-        this.header.setAttribute("data-l10n-id", definition.Name);
-        // FIX: always show production cost
-        const type = definition.$hash;
-        const progress = city.BuildQueue.getProgress(type) ?? 0;
-        const productionCost = city.Production?.getConstructibleProductionCost(type) ?? 0;
-        this.productionCost.classList.toggle("hidden", productionCost <= 0);
-        const amount = progress ?
-            `${productionCost - progress} / ${productionCost}` : productionCost;
-        this.productionCost.innerHTML = Locale.stylize(
-            "LOC_CARD_COST",
-            `${amount ?? 0}[icon:YIELD_PRODUCTION]`
-        );
-        const { baseYield, adjacencies, effects } = getConstructibleEffectStrings(definition.ConstructibleType, city);
-        if (baseYield) {
-            this.baseYield.innerHTML = Locale.stylize(baseYield);
-        } else {
-            this.baseYield.innerHTML = "";
+        if (!definition) {
+            return;
         }
-        this.constructibleBonusContainer.innerHTML = "";
-        const bonuses = [...adjacencies, ...effects];
-    for (const bonus of bonuses) {
-            const bonusText = document.createElement("p");
-            this.constructibleBonusContainer.appendChild(bonusText);
-      bonusText.setAttribute("data-l10n-id", bonus);
+        if (!this.target) {
+            console.error("production-constructible-tooltip: target element not found");
+            return;
         }
-        // Update maintenance
-        this.maintenanceEntriesContainer.innerHTML = "";
-        if (this.maintenance && this.maintenance.length > 0) {
-            for (const maintenance of this.maintenance) {
-                const maintenanceEntry = document.createElement("div");
-                maintenanceEntry.className = "flex items-center ml-1";
-                const icon = document.createElement("fxs-icon");
-                icon.setAttribute("data-icon-id", maintenance.YieldType);
-                icon.classList.add("size-5", "mr-1");
-                maintenanceEntry.appendChild(icon);
-                const amount = document.createElement("div");
-                amount.textContent = `-${maintenance.Amount}`;
-                maintenanceEntry.appendChild(amount);
-                const yieldName = GameInfo.Yields.lookup(maintenance.YieldType)?.Name ?? maintenance.YieldType;
-                maintenanceEntry.ariaLabel = `${Locale.toNumber(maintenance.Amount)} ${Locale.compose(yieldName)}`;
-                this.maintenanceEntriesContainer.appendChild(maintenanceEntry);
-            }
-            this.maintenanceContainer.classList.remove("hidden");
-        } else {
-            this.maintenanceContainer.classList.add("hidden");
-        }
-        if (this.definition?.Tooltip) {
-            this.description.setAttribute("data-l10n-id", this.definition.Tooltip);
-            this.description.classList.remove("hidden");
-        } else {
-            this.description.classList.add("hidden");
-        }
-        const recommendations = this.target?.dataset.recommendations;
+        console.log("production-constructible-tooltip: updating tooltip");
+        this.header.setAttribute("title", definition.Name);
+        const recommendations = this.target.dataset.recommendations;
         if (recommendations) {
             const parsedRecommendations = JSON.parse(recommendations);
             const advisorList = parsedRecommendations.map((rec) => rec.class);
@@ -171,34 +113,60 @@ class ProductionConstructibleTooltipType {
             const recommendationTooltipContent = AdvisorUtilities.createAdvisorRecommendationTooltip(advisorList);
             this.gemsContainer.appendChild(recommendationTooltipContent);
         }
+        const canGetWarehouseBonuses = this.target.dataset.canGetWarehouse;
+        const warehouseCount = this.target.dataset.warehouseCount;
+        if (canGetWarehouseBonuses && warehouseCount) {
+            this.constructibleDetails.setAttribute("warehouse-bonus", warehouseCount);
+        } else {
+            this.constructibleDetails.removeAttribute("warehouse-bonus");
+        }
+        const canGetAdjacencyBonuses = this.target.dataset.canGetAdjacency;
+        const highestAdjacency = this.target.dataset.highestAdjacency;
+        if (canGetAdjacencyBonuses && highestAdjacency) {
+            this.constructibleDetails.setAttribute("adjacency-bonus", highestAdjacency);
+        } else {
+            this.constructibleDetails.removeAttribute("adjacency-bonus");
+        }
         this.gemsContainer.classList.toggle("hidden", !recommendations);
     }
     isBlank() {
         return !this.definition;
     }
+    didConstructibleDataChange() {
+        if (!this.target) {
+            console.error("production-constructible-tooltip: target element not found");
+            return true;
+        }
+        return this.data.canGetWarehouseBonuses != this.target.dataset.canGetWarehouse || this.data.warehouseCount != this.target.dataset.warehouseCount || this.data.canGetAdjacencyBonuses != this.target.dataset.canGetAdjacency || this.data.highestAdjacency != this.target.dataset.highestAdjacency;
+    }
 }
 TooltipManager.registerType("production-constructible-tooltip", new ProductionConstructibleTooltipType());
 class ProductionUnitTooltipType {
     definition;
-    target = null;
+    _target = null;
+    get target() {
+        return this._target?.deref() ?? null;
+    }
+    set target(value) {
+        this._target = value ? new WeakRef(value) : null;
+    }
     // #region Element References
     container = document.createElement("fxs-tooltip");
     description = document.createElement("p");
-    header = document.createElement("div");
+    header = document.createElement("fxs-header");
     productionCost = document.createElement("div");
-    itemName = document.createElement("div");
     maintenanceContainer = document.createElement("div");
     maintenanceCostText = document.createElement("div");
     gemsContainer = document.createElement("div");
     // #endregion
     constructor() {
         this.container.className = "flex flex-col w-96 font-body text-accent-2 text-sm";
-        this.container.dataset.showBorder = "false";
-        this.header.className = "font-title text-secondary text-center uppercase tracking-100";
-        this.itemName.className = "font-title uppercase";
-        this.productionCost.className = "my-1";
-        this.gemsContainer.className = "mt-10";
-        this.maintenanceContainer.className = "flex items-center mt-0\\.5 p-2 production-chooser-tooltip__subtext-bg";
+        this.header.setAttribute("filigree-style", "small");
+        this.header.setAttribute("header-bg-glow", "true");
+        // FIX: improve layout
+        this.productionCost.className = "mt-2";
+        this.gemsContainer.className = "mt-1";
+        this.maintenanceContainer.className = "flex items-center";
         const maintenanceLabel = document.createElement("div");
         maintenanceLabel.className = "text-accent-2";
         maintenanceLabel.setAttribute("data-l10n-id", "LOC_UI_PRODUCTION_MAINTENANCE");
@@ -210,17 +178,17 @@ class ProductionUnitTooltipType {
         this.maintenanceContainer.append(maintenanceLabel, goldIcon, this.maintenanceCostText);
         this.container.append(
             this.header,
-            this.itemName,
             this.description,
-            this.gemsContainer,
+            this.productionCost,
             this.maintenanceContainer,
-            this.productionCost
+            this.gemsContainer
         );
     }
     getHTML() {
         return this.container;
     }
     reset() {
+        return;
     }
     isUpdateNeeded(target) {
         const targetUnitItem = target.closest('[data-tooltip-style="production-unit-tooltip"]');
@@ -241,22 +209,25 @@ class ProductionUnitTooltipType {
     }
     update() {
         const cityID = UI.Player.getHeadSelectedCity();
-        if (!cityID) return;
+        if (!cityID) {
+            return;
+        }
         const city = Cities.get(cityID);
-        if (!city) return;
+        if (!city) {
+            return;
+        }
         const definition = this.definition;
-        if (!definition) return;
-        this.header.setAttribute("data-l10n-id", definition.Name);
-        // FIX: always show production cost
-        const type = definition.$hash;
-        const progress = city.BuildQueue.getProgress(type) ?? 0;
-        const productionCost = city.Production?.getUnitProductionCost(type) ?? 0;
-        this.productionCost.classList.toggle("hidden", productionCost <= 0);
-        const amount = progress ?
-            `${productionCost - progress} / ${productionCost}` : productionCost;
+        if (!definition) {
+          return;
+        }
+        this.header.setAttribute("title", definition.Name);
+        // FIX: always show production cost (with progress)
+        const productionCost = city.Production?.getUnitProductionCost(definition.UnitType);
+        this.productionCost.classList.toggle("hidden", productionCost === void 0);
         this.productionCost.innerHTML = Locale.stylize(
-            "LOC_CARD_COST",
-            `${amount ?? 0}[icon:YIELD_PRODUCTION]`
+            "LOC_UI_PRODUCTION_CONSTRUCTIBLE_COST",
+            productionCost,
+            "YIELD_PRODUCTION"
         );
         if (this.definition?.Description) {
             this.description.setAttribute("data-l10n-id", this.definition.Description);
@@ -288,12 +259,17 @@ class ProductionUnitTooltipType {
 }
 TooltipManager.registerType("production-unit-tooltip", new ProductionUnitTooltipType());
 class ProductionProjectTooltipType {
-    target = null;
-    definition = null;
+    _target = null;
+    get target() {
+      return this._target?.deref() ?? null;
+    }
+    set target(value) {
+      this._target = value ? new WeakRef(value) : null;
+    }
     // #region Element References
     tooltip = document.createElement("fxs-tooltip");
     icon = document.createElement("fxs-icon");
-    itemName = document.createElement("div");
+    header = document.createElement("fxs-header");
     description = document.createElement("p");
     requirementsContainer = document.createElement("div");
     requirementsText = document.createElement("div");
@@ -302,36 +278,27 @@ class ProductionProjectTooltipType {
     // #endregion
     constructor() {
         this.tooltip.className = "flex w-96 text-accent-2 font-body text-sm";
-        const container = document.createElement("div");
-        container.className = "flex";
-        const iconColumn = document.createElement("div");
-        iconColumn.className = "flex justify-center";
-        this.icon.className = "size-12 self-start";
-        iconColumn.appendChild(this.icon);
-        container.appendChild(iconColumn);
-        const infoColumn = document.createElement("div");
-        infoColumn.className = "flex flex-col flex-auto";
-        container.appendChild(infoColumn);
-        const nameWrapper = document.createElement("div");
-        nameWrapper.className = "flex h-12 items-center";
-        this.itemName.className = "font-title text-secondary uppercase tracking-100";
-        nameWrapper.appendChild(this.itemName);
-        infoColumn.append(nameWrapper, this.description);
-        this.requirementsContainer.className = "flex mt-0\\.5 p-2 production-chooser-tooltip__subtext-bg";
+        // FIX: better fit
+        this.header.setAttribute("filigree-style", "small");
+        this.header.setAttribute("header-bg-glow", "true");
+        this.header.classList.add("mt-1");
+        this.requirementsContainer.className = "flex justify-center mt-0\\.5 -mx-1\\.5 p-2 production-chooser-tooltip__subtext-bg";
         this.requirementsContainer.append(this.requirementsText);
-        this.gemsContainer.className = "mt-10";
-        this.productionCost.className = "ml-2 mb-1";
+        this.productionCost.className = "mt-1";
+        this.gemsContainer.className = "mt-1";
         this.tooltip.append(
-            container,
+            this.header,
+            this.description,
             this.requirementsContainer,
-            this.gemsContainer,
-            this.productionCost
+            this.productionCost,
+            this.gemsContainer
         );
     }
     getHTML() {
         return this.tooltip;
     }
     reset() {
+        return;
     }
     isUpdateNeeded(target) {
         const newTarget = target.closest("town-focus-chooser-item, production-chooser-item");
@@ -374,7 +341,7 @@ class ProductionProjectTooltipType {
         const description = (this.target.dataset.tooltipDescription || this.target.dataset.description) ?? "";
         const growthType = Number(this.target.dataset.growthType);
         const projectType = this.getProjectType();
-        this.itemName.setAttribute("data-l10n-id", name);
+        this.header.setAttribute("title", name);
         this.description.setAttribute("data-l10n-id", description);
         const iconBlp = GetTownFocusBlp(growthType, projectType);
         this.icon.style.backgroundImage = `url(${iconBlp})`;
@@ -393,20 +360,17 @@ class ProductionProjectTooltipType {
             this.gemsContainer.appendChild(recommendationTooltipContent);
         }
         this.gemsContainer.classList.toggle("hidden", !recommendations);
-        // FIX: show production cost
+        // FIX: show production cost (with progress)
         const cityID = UI.Player.getHeadSelectedCity();
         if (!cityID) return;
         const city = Cities.get(cityID);
         if (!city) return;
-        const type = projectType;
-        const progress = city.BuildQueue.getProgress(type) ?? 0;
-        const productionCost = city.Production.getProjectProductionCost(type) ?? 0;
-        this.productionCost.classList.toggle("hidden", productionCost <= 0);
-        const amount = progress ?
-            `${productionCost - progress} / ${productionCost}` : productionCost;
+        const productionCost = city.Production?.getProjectProductionCost(projectType);
+        this.productionCost.classList.toggle("hidden", !productionCost);
         this.productionCost.innerHTML = Locale.stylize(
-            "LOC_CARD_COST",
-            `${amount ?? 0}[icon:YIELD_PRODUCTION]`
+            "LOC_UI_PRODUCTION_CONSTRUCTIBLE_COST",
+            productionCost,
+            "YIELD_PRODUCTION"
         );
     }
     getRequirementsText() {
