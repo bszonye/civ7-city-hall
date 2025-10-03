@@ -25,7 +25,8 @@ const BZ_TAB_OVERVIEW = {
     icon: {
         default: UI.getIconBLP("CITY_BUILDINGS"),
         hover: UI.getIconBLP("CITY_BUILDINGS_HI"),
-        focus: UI.getIconBLP("CITY_BUILDINGS_HI")
+        focus: UI.getIconBLP("CITY_BUILDINGS_HI"),
+        pressed: UI.getIconBLP("CITY_BUILDINGS_HI")
     },
     iconClass: "size-16",
     headerText: "LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB"
@@ -35,7 +36,8 @@ const BZ_TAB_BUILDINGS = {
     icon: {
         default: UI.getIconBLP("CITY_SETTLEMENT"),
         hover: UI.getIconBLP("CITY_SETTLEMENT_HI"),
-        focus: UI.getIconBLP("CITY_SETTLEMENT_HI")
+        focus: UI.getIconBLP("CITY_SETTLEMENT_HI"),
+        pressed: UI.getIconBLP("CITY_SETTLEMENT_HI")
     },
     iconClass: "size-16",
     headerText: "LOC_UI_CITY_DETAILS_BUILDINGS_TAB"
