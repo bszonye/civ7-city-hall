@@ -1,96 +1,68 @@
-import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
 import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
 import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-manager.js';
+import { realizeBuildSlots } from '/bz-city-hall/ui/lenses/layer/bz-building-slots.js';
 // make sure the vanilla layer loads first
 import '/base-standard/ui/lenses/layer/worker-yields-layer.js';
 
-const ACTIVE_MODS = new Set(Modding.getActiveMods().map(m => Modding.getModInfo(m).id));
-
 // get registered lens layer
-// TODO: reimplement this to work with the new growth UI
-const _WYLL = LensManager.layers.get("fxs-worker-yields-layer");
-const WYLL = {};
+const WYLL = LensManager.layers.get("fxs-worker-yields-layer");
 
-// patch WYLL.realizeGrowthPlots() to limit yield area
-WYLL.realizeGrowthPlots = function() {
-    let plotsToCheck = null;
-    const mode = InterfaceMode.getCurrent();
-    const cityID = InterfaceMode.getInterfaceModeHandler(mode)?.cityID;
-    if (cityID) {
-        const city = Cities.get(cityID);
-        if (city) {
-            const excludeHidden = true;
-            plotsToCheck = city.Growth?.getGrowthDomain(excludeHidden);
-        }
-    }
-    if (plotsToCheck == null) {
-        const width = GameplayMap.getGridWidth();
-        const height = GameplayMap.getGridHeight();
-        plotsToCheck = [];
-        for (let x = 0; x < width; x++) {
-            for (let y = 0; y < height; y++) {
-                const revealedState = GameplayMap.getRevealedState(GameContext.localPlayerID, x, y);
-                if (revealedState != RevealedStates.HIDDEN) {
-                    plotsToCheck.push(GameplayMap.getIndexFromXY(x, y));
-                }
-            }
-        }
-    }
-    this.yieldSpriteGrid.clear();
-    for (const plotIndex of plotsToCheck) {
-        if (plotIndex !== null) {
-            this.updatePlot(plotIndex, cityID);
-        }
-    }
+// modify build slot rendering
+const SPECIALIST_PIP_WRAP_AT = 5;
+const SPECIALIST_PIP_X_OFFSET = 15;
+const SPECIALIST_PIP_Y_INITIAL_OFFSET = 12;
+const SPECIALIST_PIP_Y_OFFSET = 18;
+const SPECIALIST_PIP_SHRINK_COUNT = 4;
+const SPECIALIST_PIP_SHRINK_SCALE = 0.7;
+const ICON_Z_OFFSET = 5;
+WYLL.buildSlotSpritePadding = 15 * 0.7;
+WYLL.buildSlotSpritePosition = {
+    x: 0,
+    y: SPECIALIST_PIP_Y_INITIAL_OFFSET +
+       SPECIALIST_PIP_Y_OFFSET * SPECIALIST_PIP_SHRINK_SCALE,
+    z: ICON_Z_OFFSET,
+};
+WYLL.buildSlotSpriteScale = 0.625;
+WYLL.buildSlotAngle = Math.PI / 6;  // 30°
+WYLL.realizeBuildSlots = function(district) {
+    const args = [
+        district,
+        this.yieldVisualizer.backgroundSpriteGrid,
+        this.yieldVisualizer.foregroundSpriteGrid,
+    ];
+    return realizeBuildSlots.apply(this, args);
 }
-// patch WYLL.updatePlot() to fix fractional yields under 5
-WYLL.updatePlot = function(location, cityID) {
-    const yieldsToAdd = [];
-    for (const workablePlotIndex of PlotWorkersManager.allWorkerPlotIndexes) {
-        if (workablePlotIndex == location) {
-            return;
-        }
-    }
-    this.yieldSpriteGrid.clearPlot(location);
-    const yields = cityID ? GameplayMap.getYieldsWithCity(location, cityID) :
-        GameplayMap.getYields(location, GameContext.localPlayerID);
-    for (const [yieldType, amount] of yields) {
-        const yieldDef = GameInfo.Yields.lookup(yieldType);
-        if (yieldDef) {
-            const icons = this.yieldIcons.get(yieldType);
-            if (icons) {
-                if (amount >= 5 || Math.ceil(amount) != amount) {
-                    yieldsToAdd.push({ icon: icons[4], amount });
-                } else {
-                    yieldsToAdd.push({ icon: icons[amount - 1] });
-                }
-            }
-        }
-    }
-    const groupWidth = (yieldsToAdd.length - 1) * this.yieldSpritePadding;
-    const groupOffset = groupWidth * 0.5 - groupWidth;
-    const iconOffset = {
-        x: 0,
-        y: 0,
-        z: this.iconZOffset
-    };
-    yieldsToAdd.forEach((yieldData, i) => {
-        const xPos = i * this.yieldSpritePadding + groupOffset;
-        iconOffset.x = xPos;
-        if (yieldData.icon) {
-            this.yieldSpriteGrid.addSprite(location, yieldData.icon, iconOffset);
-        }
-        if (yieldData.amount) {
-            this.yieldSpriteGrid.addText(location, yieldData.amount.toString(), iconOffset, this.fontData);
-        }
-    });
+const WYLL_updateSpecialistPlot = WYLL.updateSpecialistPlot;
+WYLL.updateSpecialistPlot = function(...args) {
+    const rv = WYLL_updateSpecialistPlot.apply(this, args);
+    const [info] = args;
+    const loc = GameplayMap.getLocationFromIndex(info.PlotIndex);
+    const districtID = MapCities.getDistrict(loc.x, loc.y);
+    const district = Districts.get(districtID);
+    realizeBuildSlots.apply(this, [
+        district,
+        this.yieldVisualizer.backgroundSpriteGrid,
+        this.yieldVisualizer.foregroundSpriteGrid,
+    ]);
+    return rv;
+}
+WYLL.getSpecialistPipOffsetsAndScale = function(index, maxIndex) {
+    const pips = maxIndex + 1;
+    const scale = maxIndex >= SPECIALIST_PIP_SHRINK_COUNT ? SPECIALIST_PIP_SHRINK_SCALE : 1;
+    const numOfRows = Math.ceil(pips / SPECIALIST_PIP_WRAP_AT);
+    const numOfCols = Math.ceil(pips / numOfRows);
+    const numInFirst = pips % numOfCols || numOfCols;
+    const columnIndex = Math.floor((index - numInFirst) / numOfCols) + 1;
+    const rowIndex = index < numInFirst ? index : (index - numInFirst) % numOfCols;
+    const numInRow = columnIndex? numOfCols : numInFirst;
+    const startingSlotIconsXOffset = -(numInRow - 1) * SPECIALIST_PIP_X_OFFSET / 2;
+    const xOffset = (startingSlotIconsXOffset + rowIndex * SPECIALIST_PIP_X_OFFSET) * scale;
+    const yOffset = (numOfRows - (columnIndex + 1)) * SPECIALIST_PIP_Y_OFFSET * scale + SPECIALIST_PIP_Y_INITIAL_OFFSET;
+    return { xOffset, yOffset, scale };
 }
 // patch WYLL.updateWorkablePlot()
-if (!ACTIVE_MODS.has("jnr-concise-specialists-lens")) {
-    // yield to Concise Specialist Lens
-    WYLL.updateWorkablePlot = updateWorkablePlot;
-}
-function updateWorkablePlot(info) {
+// TODO: rework this and attach it to WYLL.updateSpecialistPlot()
+WYLL.updateWorkablePlot = function(info) {
     if (info.IsBlocked) {
         const location = GameplayMap.getLocationFromIndex(info.PlotIndex);
         this.yieldSpriteGrid.addSprite(location, "city_special_base", this.blockedSpecialistSpriteOffset, {
