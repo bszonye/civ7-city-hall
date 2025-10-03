@@ -7,47 +7,13 @@ import '/base-standard/ui/lenses/layer/building-placement-layer.js';
 // get registered lens layer
 const BPL = LensManager.layers.get("fxs-building-placement-layer");
 
-// remove vanilla sprite grids
-// BPL.yieldVisualizer.release();
-// BPL.adjacenciesSpriteGrid.destroy();
-// create new grids for building slots and yields
-BPL.slotGrid = WorldUI.createSpriteGrid(
-    "bzBPLSlot_SpriteGroup",
-    SpriteMode.Billboard
-);
-BPL.yieldGrid = WorldUI.createSpriteGrid(
-    "bzBPLSlot_SpriteGroup",
-    SpriteMode.Billboard
-);
-// recreate vanilla sprite grids for proper layering
-// BPL.yieldVisualizer = new YieldChangeVisualizer("BuildingPlacement");
-BPL.adjacenciesSpriteGrid = WorldUI.createSpriteGrid(
-    "Adjacencies_SpriteGroup",
-    SpriteMode.Default
-);
 // modify build slot rendering
 BPL.buildSlotAngle = Math.PI / 6;  // 30°
 BPL.realizeBuildSlots = function(district) {
-    const args = [district, this.slotGrid, this.yieldGrid];
+    const args = [
+        district,
+        this.yieldVisualizer.backgroundSpriteGrid,
+        this.yieldVisualizer.foregroundSpriteGrid,
+    ];
     return realizeBuildSlots.apply(this, args);
-}
-const BPL_initLayer = BPL.initLayer;
-BPL.initLayer = function(...args) {
-    BPL.slotGrid.setVisible(false);
-    BPL.yieldGrid.setVisible(false);
-    return BPL_initLayer.apply(this, args);
-}
-const BPL_applyLayer = BPL.applyLayer;
-BPL.applyLayer = function(...args) {
-    BPL.slotGrid.setVisible(true);
-    BPL.yieldGrid.setVisible(true);
-    return BPL_applyLayer.apply(this, args);
-}
-const BPL_removeLayer = BPL.removeLayer;
-BPL.removeLayer = function(...args) {
-    BPL.slotGrid.clear(false);
-    BPL.slotGrid.setVisible(false);
-    BPL.yieldGrid.clear(false);
-    BPL.yieldGrid.setVisible(false);
-    return BPL_removeLayer.apply(this, args);
 }

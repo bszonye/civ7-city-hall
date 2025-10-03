@@ -9,7 +9,7 @@ function getYields(building) {
         .filter(a => a.$hash == type && !a.RequiresActivation)
         .map(a => Game.getHash(a.YieldChangeId));
     const bonus = atypes.map(atype => GameInfo.Adjacency_YieldChanges.lookup(atype));
-    const yieldSet = new Set([...base, ...bonus].map(y => y.YieldType));
+    const yieldSet = new Set([...bonus, ...base].map(y => y.YieldType));
     return [...yieldSet];
 }
 function gatherBuildingsTagged(tag) {
