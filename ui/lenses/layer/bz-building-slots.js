@@ -1,14 +1,19 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 
+const YIELD_ORDER = new Map([...GameInfo.Yields].map(y => [y.YieldType, y.$index]));
+const yieldSort = (a, b) => YIELD_ORDER.get(a.YieldType) - YIELD_ORDER.get(b.YieldType);
+const yieldChangeSort = (a, b) => (b.YieldChange - a.YieldChange) || yieldSort(a, b);
+
 function getYields(building) {
     if (!building) return [];
     const type = Game.getHash(building.ConstructibleType);
     const base = GameInfo.Constructible_YieldChanges.filter(y => y.$hash == type);
-    base.sort((a, b) => b.YieldChange - a.YieldChange);
+    base.sort(yieldChangeSort);
     const atypes = GameInfo.Constructible_Adjacencies
         .filter(a => a.$hash == type && !a.RequiresActivation)
         .map(a => Game.getHash(a.YieldChangeId));
     const bonus = atypes.map(atype => GameInfo.Adjacency_YieldChanges.lookup(atype));
+    bonus.sort(yieldChangeSort);
     const yieldSet = new Set([...bonus, ...base].map(y => y.YieldType));
     return [...yieldSet];
 }
