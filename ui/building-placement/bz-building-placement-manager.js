@@ -11,15 +11,13 @@ const BZ_SLOTLESS = new Set(tagTypes("IGNORE_DISTRICT_PLACEMENT_CAP"));
 // add BPM.bzReservedPlots property:
 // plots that would block a unique quarter
 BuildingPlacementManager._bzReservedPlots = [];
-const BPM_expandablePlots = Object.getOwnPropertyDescriptor(proto, "expandablePlots");
-const bzReservedPlots = {
-    configurable: BPM_expandablePlots.configurable,
-    enumerable: BPM_expandablePlots.enumerable,
+Object.defineProperty(proto, "bzReservedPlots", {
+    configurable: true,
+    enumerable: true,
     get() {
         return this._bzReservedPlots;
     }
-};
-Object.defineProperty(proto, "bzReservedPlots", bzReservedPlots);
+});
 
 // replace BPM.selectPlacementData method:
 // implements unique quarter assistant
@@ -164,6 +162,7 @@ proto.findExistingUniqueBuilding = function(uniqueQuarterDef) {
     // not found
     return -1;
 }
+// TODO: retire this
 // replace getBestYieldForConstructible method:
 // improve yield scoring and refactor it into a new method
 proto.bzYieldScore = function(yields) {
@@ -205,13 +204,11 @@ proto.getBestYieldForConstructible = function(cityID, constructibleDef) {
     }
     let bestYieldChanges = [];
     let bestYieldChangesScore = Number.MIN_SAFE_INTEGER;
-    if (constructiblePlacementData) {
-        for (const placement of constructiblePlacementData.placements) {
-            const score = this.bzYieldScore(placement.yieldChanges);
-            if (bestYieldChangesScore < score) {
-                bestYieldChangesScore = score;
-                bestYieldChanges = placement.yieldChanges;
-            }
+    for (const placement of constructiblePlacementData.placements) {
+        const score = this.bzYieldScore(placement.yieldChanges);
+        if (bestYieldChangesScore < score) {
+            bestYieldChangesScore = score;
+            bestYieldChanges = placement.yieldChanges;
         }
     }
     return bestYieldChanges;
