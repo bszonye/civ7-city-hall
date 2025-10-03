@@ -30,7 +30,7 @@ var CityDecorationSupport;
         onPlotChange = () => this.updateGate.call('onPlotChange');
         updateGate = new UpdateGate(this.updatePlots.bind(this));
         buildSlotSpritePadding = 20;
-        buildSlotSpritePosition = { x: 0, y: 8, z: 5 };
+        buildSlotSpritePosition = { x: 0, y: 0, z: 10 };
         buildSlotSpriteScale = 1.2;
         buildSlotAngle = Math.PI / 4;  // 45°
         yieldSpritePadding = 11;
