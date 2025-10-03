@@ -63,27 +63,28 @@ function realizeBuildSlots(district, slotGrid, yieldGrid) {
     const scale = this.buildSlotSpriteScale ?? 0.9;
     const padding = this.buildSlotSpritePadding;
     for (let i = 0; i < maxSlots; i++) {
+        // get coordinates
         const groupWidth = (maxSlots - 1) * padding;
-        const slot = buildingSlots[i];
-        const icon = slot ? slot.iconURL : UI.getIconBLP("BUILDING_EMPTY");
         const position = { ...origin };
         position.x = origin.x + i * padding - groupWidth / 2;
+        // show constructible icon (or empty slot)
+        const slot = buildingSlots[i];
+        const icon = slot ? slot.iconURL : UI.getIconBLP("BUILDING_EMPTY");
         const params = { scale: slot ? scale : 8/9 * scale };
         slotGrid.addSprite(loc, icon, position, params);
-        if (slot && yieldGrid) {
-            // TODO: move to bottom of icon
-            for (const [j, yieldIcon] of slot.yields.entries()) {
-                const p = { ...position };
-                const w = slot.yields.length - 1;
-                const a = (j - w/2) * 2/7 * Math.PI;
-                const dx = 7 * scale * Math.sin(a);
-                const dy = -7 * scale * Math.cos(a);
-                const params = { scale: scale / 2 };
-                p.x += dx;
-                p.y += dy * Math.cos(this.buildSlotAngle);
-                p.z += dy * Math.sin(this.buildSlotAngle);
-                yieldGrid.addSprite(loc, yieldIcon, p, params);
-            }
+        if (!slot) continue;
+        // show constructible yields
+        for (const [j, yieldIcon] of slot.yields.entries()) {
+            const p = { ...position };
+            const w = slot.yields.length - 1;
+            const a = (j - w/2) * 2/7 * Math.PI;
+            const dx = 7 * scale * Math.sin(a);
+            const dy = -7 * scale * Math.cos(a);
+            const params = { scale: scale / 2 };
+            p.x += dx;
+            p.y += dy * Math.cos(this.buildSlotAngle);
+            p.z += dy * Math.sin(this.buildSlotAngle);
+            yieldGrid.addSprite(loc, yieldIcon, p, params);
         }
     }
 }
