@@ -159,12 +159,12 @@ const BZ_HEAD_STYLE = [
     z-index: 1;
 }
 .bz-city-hall .bz-city-name-wrapper.bz-nav-help .bz-cycle-city {
-    top: 1.8333333333rem;
-    left: 4.2222222222rem;
+    top: 1.3333333333rem;
+    left: 2.3888888889rem;
 }
 .bz-city-hall .bz-city-name-wrapper.bz-no-help .bz-cycle-city {
-    top: 1.3888888889rem;
-    left: 4.2222222222rem;
+    top: 1.2777777778rem;
+    left: 2.6666666667rem;
 }
 `,  // relocate City Details button
 `
