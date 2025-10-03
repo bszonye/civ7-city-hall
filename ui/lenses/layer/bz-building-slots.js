@@ -8,14 +8,13 @@ function getYields(building) {
     if (!building) return [];
     const type = Game.getHash(building.ConstructibleType);
     const base = GameInfo.Constructible_YieldChanges.filter(y => y.$hash == type);
-    base.sort(yieldChangeSort);
     const atypes = GameInfo.Constructible_Adjacencies
         .filter(a => a.$hash == type && !a.RequiresActivation)
         .map(a => Game.getHash(a.YieldChangeId));
     const bonus = atypes.map(atype => GameInfo.Adjacency_YieldChanges.lookup(atype));
-    bonus.sort(yieldChangeSort);
-    const yieldSet = new Set([...bonus, ...base].map(y => y.YieldType));
-    return [...yieldSet];
+    const yields = [...base, ...bonus].sort(yieldChangeSort);
+    const yieldTypes = new Set(yields.map(y => y.YieldType));
+    return [...yieldTypes];
 }
 function gatherBuildingsTagged(tag) {
     return new Set(GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type));
