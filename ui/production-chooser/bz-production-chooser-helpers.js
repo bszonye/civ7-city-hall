@@ -1,13 +1,10 @@
-import { InterfaceMode } from '../../../core/ui/interface-modes/interface-modes.js';
+import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
+import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { Icon } from '/core/ui/utilities/utilities-image.chunk.js';
 import { BuildingPlacementManager as BPM } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
+import { C as ConstructibleHasTagType, g as getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
 import { c as getNodeName } from '/base-standard/ui/utilities/utilities-textprovider.chunk.js';
-
-// building tag helpers
-const tagTypes = (tag) => GameInfo.TypeTags
-    .filter(e => e.Tag == tag).map(e => Game.getHash(e.Type));
-const BZ_AGELESS_TYPES = new Set(tagTypes("AGELESS"));
 
 const isUnlockable = (playerID, nodeType) => {
     if (nodeType == null) return false;  // null or undefined
@@ -59,7 +56,116 @@ const GetUnitStatsFromDefinition = (definition) => {
     }
     return stats;
 };
+const GetCurrentBestTotalYieldForConstructible = (city, constructibleType) => {
+    const results = [];
+    const constructibleDef = GameInfo.Constructibles.lookup(constructibleType);
+    if (!constructibleDef) {
+        console.error(
+            `production-chooser-helper: GetCurrentBestTotalYieldForConstructible() failed to find constructible definition for type ${constructibleType}`
+        );
+        return results;
+    }
+    if (!BPM.cityID || !ComponentID.isMatch(BPM.cityID, city.id)) {
+        BPM.initializePlacementData(city.id);
+    }
+    const allPlacementData = BPM.allPlacementData;
+    if (!allPlacementData || !allPlacementData.buildings) {
+        return results;
+    }
+    const constructiblePlacementData = allPlacementData.buildings.find(
+        (b) => b.constructibleType == constructibleDef.$hash
+    );
+    if (!constructiblePlacementData) {
+        return results;
+    }
+    let bestPlacement = null;
+    let bestTotal = Number.MIN_SAFE_INTEGER;
+    for (const placement of constructiblePlacementData.placements) {
+        const totalChanges = BPM.getTotalYieldChangesFromPlacementData(placement);
+        let total = 0;
+        for (const change of totalChanges) total += change.yieldChange;
+        if (total > bestTotal) {
+            bestTotal = total;
+            bestPlacement = placement;
+        }
+    }
+    if (!bestPlacement) {
+        return results;
+    }
+    const yieldsCopy = [...bestPlacement.yieldChanges];
+    let ignoreNaturalYields = true;
+    if (constructibleDef.ConstructibleClass == "IMPROVEMENT") {
+        const improvementDef = GameInfo.Improvements.lookup(constructibleDef.ConstructibleType);
+        if (improvementDef) {
+            ignoreNaturalYields = improvementDef.IgnoreNaturalYields;
+        }
+    }
+    const plotCoord = GameplayMap.getLocationFromIndex(bestPlacement.plotID);
+    const constructibles = MapConstructibles.getConstructibles(plotCoord.x, plotCoord.y);
+    for (const constructible of constructibles) {
+        const instance = Constructibles.getByComponentID(constructible);
+        if (!instance) continue;
+        const info = GameInfo.Constructibles.lookup(instance.type);
+        if (info && info.ConstructibleClass == "IMPROVEMENT" && BPM.cityID && ignoreNaturalYields) {
+            const improvementYields = GameplayMap.getYieldsWithCity(
+                bestPlacement.plotID,
+                BPM.cityID
+            );
+            for (const improvementYield of improvementYields) {
+                const yieldDefinition = GameInfo.Yields.lookup(improvementYield[0]);
+                if (yieldDefinition) {
+                    yieldsCopy[yieldDefinition.$index] -= improvementYield[1];
+                }
+            }
+        }
+    }
+    const cityConstructibles = city.Constructibles;
+    if (cityConstructibles) {
+        if (bestPlacement.overbuiltConstructibleID != void 0 && bestPlacement.overbuiltConstructibleID != -1) {
+            const previousConstructibleDefinition = GameInfo.Constructibles.find(
+                (d) => d.$index == bestPlacement.overbuiltConstructibleID
+            );
+            if (previousConstructibleDefinition) {
+                const prevMaint = cityConstructibles.getMaintenance(previousConstructibleDefinition.ConstructibleType);
+                for (let i = 0; i < prevMaint.length; i++) yieldsCopy[i] += prevMaint[i];
+            }
+        }
+        const newMaint = cityConstructibles.getMaintenance(constructibleDef.ConstructibleType);
+        for (let i = 0; i < newMaint.length; i++) yieldsCopy[i] -= newMaint[i];
+    }
+    const nonZeroEntries = [];
+    GameInfo.Yields.forEach((yieldDef, idx) => {
+        const change = yieldsCopy[idx];
+        if (change && change !== 0) {
+            nonZeroEntries.push({ def: yieldDef, change });
+        }
+    });
+    nonZeroEntries.sort((a, b) => b.change - a.change);
+    for (let i = 0; i < nonZeroEntries.length; i++) {
+        const { def, change } = nonZeroEntries[i];
+        let valueText = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", change);
+        if (change < 0) {
+            valueText = `<span class="text-negative font-bold">${valueText}</span>`;
+        }
+        results.push({
+            iconId: def.$index.toString(),
+            icon: Icon.getYieldIcon(def.YieldType),
+            value: valueText,
+            name: def.Name,
+            yieldType: def.YieldType
+        });
+    }
+    return results;
+};
+const GetBaseYieldsHTML = (items) => {
+    return items.reduce((acc, { yieldType, value }) => {
+        const icon = Icon.getYieldIcon(yieldType);
+        const text = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", value);
+        return acc + `<div class="flex items-center mr-2"><img src="${icon}" class="size-8" />${text}</div>`;
+    }, "");
+}
 const GetSecondaryDetailsHTML = (items) => {
+
     return items.reduce((acc, { icon, value, name }) => {
         return acc + `<div class="flex items-center mr-2"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-8" />${value}</div>`;
     }, "");
@@ -82,7 +188,8 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         repairDamaged && info.Repairable ? "LOC_UI_PRODUCTION_REPAIR_NAME" :
         result.MoveToNewLocation? "LOC_UI_PRODUCTION_MOVE_NAME" : null;
     const name = altName ? Locale.compose(altName, info.Name) : info.Name;
-    const ageless = BZ_AGELESS_TYPES.has(hash);
+    const ageless = ConstructibleHasTagType(type, "AGELESS");
+    const tags = getConstructibleTagsFromType(type);
     const insufficientFunds = result.InsufficientFunds ?? false;
     const recommendations = AdvisorUtilities.getBuildRecommendationIcons(recs, type);
     // note: some items are not researchable (like locked legacy items)
@@ -102,11 +209,25 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             if (result.Plots) plots.push(...result.Plots);
             if (result.ExpandUrbanPlots) plots.push(...result.ExpandUrbanPlots);
         }
-        const plotIndex = plots.length == 1 ? plots[0] : -1;
         const locations = Locale.compose("LOC_UI_PRODUCTION_LOCATIONS", plots.length);
-        const yieldChanges = bzGetYieldChanges(city, info, plotIndex);
-        const yieldDetails = bzGetYieldDetails(yieldChanges);
-        const secondaryDetails = GetSecondaryDetailsHTML(yieldDetails);
+        // yields
+        const baseYields = [];
+        for (const yieldChange of GameInfo.Constructible_YieldChanges) {
+            if (yieldChange.$hash != hash) continue;
+            baseYields.push({
+                yieldType: yieldChange.YieldType,
+                value: yieldChange.YieldChange,
+            });
+        }
+        const baseTotal = baseYields.reduce((acc, { value }) => acc + value, 0);
+        const bestYields = GetCurrentBestTotalYieldForConstructible(city, type);
+        const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
+        const canGetWarehouseBonuses = ConstructibleHasTagType(type, "WAREHOUSE");
+        const warehouseCount = BPM.getNumberOfWarehouseBonuses(hash);
+        const canGetAdjacencyBonuses = BPM.canGetAdjacencyBonuses(type);
+        const highestAdjacency = BPM.getHighestAdjacencyBonus(hash);
+        const infoDisplayType = Configuration.getUser().productionPanelBuildingInfoType;
+        // cost
         const cost = result.Cost ??
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
@@ -122,12 +243,12 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
         // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
-        const yieldScore = building || improvement ? BPM.bzYieldScore(yieldChanges) : 0;
+        const yieldScore = building || improvement ?
+            baseTotal + warehouseCount + highestAdjacency / 2 : 0;
         const topTier = Boolean(result.InProgress || inQueue || building && unique);
         const sortTier =
             topTier ? 9 :
             repairDamaged ? 8 :
-            !yieldChanges.length ? -9 :
             buildingTier;
         const sortValue =
             topTier ? -qindex :
@@ -159,10 +280,23 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             ageless,
             // data-secondary-details
             locations,
-            yieldChanges,
             secondaryDetails,
             // data-recommendations
             recommendations,
+            // data-tags
+            tags,
+            // data-base-yields
+            baseYields,
+            // data-can-get-warehouse
+            canGetWarehouseBonuses,
+            // data-info-display-type
+            infoDisplayType,
+            // data-warehouse-count
+            warehouseCount,
+            // data-can-get-adjacency
+            canGetAdjacencyBonuses,
+            // data-highest-adjacency
+            highestAdjacency,
         };
         return item;
     }
@@ -547,30 +681,6 @@ const Construct = (city, item, isPurchase) => {
     return false;
 };
 
-function bzGetYieldChanges(city, constructibleDef, plotIndex=-1) {
-    const changes = plotIndex != -1 ?
-        BPM.bzGetPlotYieldForConstructible(city.id, constructibleDef, plotIndex) :
-        BPM.getBestYieldForConstructible(city.id, constructibleDef);
-    return changes;
-}
-function bzGetYieldDetails(yieldChanges, sorted=true) {
-    const details = [];
-    for (const [i, dy] of yieldChanges.entries()) {
-        if (dy <= 0) continue;
-        const info = GameInfo.Yields.lookup(i);
-        if (!info) continue;
-        details.push({
-            iconId: i.toString(),
-            icon: Icon.getYieldIcon(info.YieldType),
-            value: Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", dy),
-            name: info.Name,
-            yieldType: info.YieldType,
-            isMainYield: true
-        });
-    }
-    if (sorted) details.sort((a, b) => b.value - a.value);
-    return details;
-}
 function bzSortProductionItems(list) {
     for (const item of list) {
         item.sortTier ??= 0;
@@ -586,5 +696,5 @@ function bzSortProductionItems(list) {
     });
 }
 
-export { GetProductionItems as g, Construct as h };
+export { GetBaseYieldsHTML, GetProductionItems as g, Construct as h };
 //# sourceMappingURL=production-chooser-helpers.chunk.js.map

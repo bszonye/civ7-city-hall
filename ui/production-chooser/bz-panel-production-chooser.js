@@ -6,7 +6,7 @@ import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chu
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
 import { BuildQueue } from '/base-standard/ui/build-queue/model-build-queue.js';
 import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
-import { g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
+import { GetBaseYieldsHTML, g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
 
 // color palette
 const BZ_COLOR = {
@@ -474,10 +474,37 @@ class bzProductionChooserItem {
                 break;
             case "data-is-ageless":
             case "data-secondary-details":
-                // toggle .hidden instead of .invisible
+                // hide details for repairs
                 this.updateInfo();
                 return false;
             // case "data-recommendations":
+            // case "data-tags":
+            case "data-base-yields": {
+                if (newValue) {
+                    const baseYields = JSON.parse(newValue);
+                    c.itemBaseYieldsElement.innerHTML = GetBaseYieldsHTML(baseYields);
+                    c.itemBaseYieldsElement.classList.remove("hidden");
+                } else {
+                    c.itemBaseYieldsElement.classList.add("hidden");
+                }
+                return false;
+            }
+            // case "data-can-get-warehouse":
+            case "data-info-display-type":
+                // hide details for repairs
+                this.updateInfo();
+                return false;
+            // case "data-warehouse-count":
+            // case "data-can-get-adjacency":
+            case "data-highest-adjacency":
+                if (Number(newValue)) {
+                    c.adjacencyBonusValue.textContent = newValue;
+                    c.adjacencyBonusContainer.classList.remove("hidden");
+                } else {
+                    c.adjacencyBonusContainer.classList.add("hidden");
+                }
+                return false;
+            // case "data-highest-adjacency":
         }
         return true;  // continue to component
     }
@@ -503,9 +530,38 @@ class bzProductionChooserItem {
         // error messages
         c.errorTextElement.classList.value = "bz-pci-error flex-col hidden font-body-xs text-negative-light mx-1 -mt-1 mb-1 z-1 pointer-events-none";
         infoColumn.appendChild(c.errorTextElement);
-        // yields and unit stats
-        c.secondaryDetailsElement.classList.value = "bz-pci-details hidden flex font-body-xs -mt-1";
+        // yield preview display + unit stats
+        c.secondaryDetailsElement.classList.value =
+            "bz-pci-details hidden flex font-body-xs -mt-1";
         infoColumn.appendChild(c.secondaryDetailsElement);
+        // base yield display
+        c.alternateYieldElement.classList.value =
+            "bz-pci-details hidden flex font-body-xs -mt-1";
+        infoColumn.appendChild(c.alternateYieldElement);
+        c.itemBaseYieldsElement.classList.value = "flex items-center -mr-1";
+        c.alternateYieldElement.appendChild(c.itemBaseYieldsElement);
+        c.warehouseCountContainer.classList.add("hidden", "flex", "items-center");
+        c.alternateYieldElement.appendChild(c.warehouseCountContainer);
+        const warehouseDivider = document.createElement("div");
+        warehouseDivider.classList.add("mx-2");
+        warehouseDivider.textContent = "|";
+        c.warehouseCountContainer.appendChild(warehouseDivider);
+        c.warehouseCountValue.className = "mx-1";
+        c.warehouseCountContainer.appendChild(c.warehouseCountValue);
+        const warehouseIcon = document.createElement("fxs-font-icon");
+        warehouseIcon.setAttribute("data-icon-id", "YIELD_WAREHOUSE");
+        c.warehouseCountContainer.appendChild(warehouseIcon);
+        c.adjacencyBonusContainer.classList.add("hidden", "flex", "items-center");
+        c.alternateYieldElement.appendChild(c.adjacencyBonusContainer);
+        const adjacencyDivider = document.createElement("div");
+        adjacencyDivider.classList.add("mx-2");
+        adjacencyDivider.textContent = "|";
+        c.adjacencyBonusContainer.appendChild(adjacencyDivider);
+        c.adjacencyBonusValue.className = "mx-1";
+        c.adjacencyBonusContainer.appendChild(c.adjacencyBonusValue);
+        const adjacencyIcon = document.createElement("fxs-font-icon");
+        adjacencyIcon.setAttribute("data-icon-id", "YIELD_ADJACENCY");
+        c.adjacencyBonusContainer.appendChild(adjacencyIcon);
         c.container.appendChild(infoColumn);
         // production and purchase costs
         const costColumn = document.createElement("div");
@@ -555,6 +611,7 @@ class bzProductionChooserItem {
         const dataName = e.getAttribute("data-name");
         const dataIsAgeless = e.getAttribute("data-is-ageless") === "true";
         const dataSecondaryDetails = e.getAttribute("data-secondary-details");
+        const dataInfoDisplayType = e.getAttribute("data-info-display-type");
         // interpret attributes
         const isRepair = this.isRepair = (() => {
             if (dataCategory != "buildings") return false;
@@ -564,14 +621,16 @@ class bzProductionChooserItem {
             return dataName != info.Name;
         })();
         const isAgeless = dataIsAgeless && !isRepair;
-        const details = !isRepair && dataSecondaryDetails || "";
         const cname = c.itemNameElement;
         cname.classList.toggle("bz-city-repair", isRepair);
         cname.classList.toggle("text-accent-2", !isAgeless && !isRepair);
         cname.classList.toggle("text-gradient-secondary", isAgeless && !isRepair);
         c.agelessContainer.classList.toggle("hidden", !isAgeless);
+        const details = !isRepair && dataSecondaryDetails || "";
         c.secondaryDetailsElement.innerHTML = details;
         c.secondaryDetailsElement.classList.toggle("hidden", !details);
+        const baseYield = dataInfoDisplayType == "base-yield" && !isRepair;
+        c.alternateYieldElement.classList.toggle("hidden", !baseYield);
     }
     updateProductionCost() {
         // styling for production costs and progress bars
