@@ -46,7 +46,7 @@ WYLL.updateSpecialistPlot = function(info) {
         }
     });
     const currentWorkers = info.NumWorkers;
-    const workerCap = PlotWorkersManager.cityWorkerCap + 1;  // TODO: remove offset
+    const workerCap = PlotWorkersManager.cityWorkerCap;
     const location = GameplayMap.getLocationFromIndex(info.PlotIndex);
     if (currentWorkers > 0) {
         for (let i = 0; i < workerCap; i++) {
