@@ -465,7 +465,14 @@ class bzProductionChooserItem {
                 this.updateInfo();
                 this.updateProductionCost();
                 break;
-            // case "data-cost":
+            case "data-cost": {
+                const cost = newValue ? parseInt(newValue) : 0;
+                const showCost = isNaN(cost) || cost < 0;
+                c.costContainer.classList.toggle("hidden", showCost);
+                const text = Locale.compose("LOC_BZ_GROUPED_DIGITS", cost);
+                c.costAmountElement.textContent = text;
+                return false;
+            }
             // case "data-prereq":
             // case "data-description":
             // case "data-error":
@@ -659,7 +666,8 @@ class bzProductionChooserItem {
                 return;
             }
             this.pCostContainer.classList.remove("hidden");
-            this.pCostAmountElement.textContent = base - progress;
+            const text = Locale.compose("LOC_BZ_GROUPED_DIGITS", base - progress);
+            this.pCostAmountElement.textContent = text;
         }
         switch (dataCategory) {
             case "buildings":

@@ -1,10 +1,10 @@
 <Database>
     <LocalizedText>
         <Replace Tag="LOC_BZ_GROUPED_DIGITS" Language="zh_Hans_CN">
-            <Text>{1_amount: number #,###;-#,###}</Text>
+            <Text>{1_Amount}</Text>
         </Replace>
         <Replace Tag="LOC_BZ_GROUPED_MODIFIER" Language="zh_Hans_CN">
-            <Text>{1_amount: number +#,###;-#,###}</Text>
+            <Text>{1_Amount: number +#,###;-#,###}</Text>
         </Replace>
         <Replace Tag="LOC_BZ_SETTLEMENT_CONNECTIONS" Language="zh_Hans_CN">
             <Text>连接定居点</Text>

@@ -2,7 +2,7 @@
 <Database>
     <LocalizedText>
         <Replace Tag="LOC_BZ_GROUPED_DIGITS" Language="fr_FR">
-            <Text>{1_amount: number #;-#}</Text>
+            <Text>{1_Amount}</Text>
         </Replace>
         <Replace Tag="LOC_BZ_GROUPED_MODIFIER" Language="fr_FR">
             <Text>{1_amount: number +#;-#}</Text>
