@@ -159,7 +159,7 @@ const GetCurrentBestTotalYieldForConstructible = (city, constructibleType) => {
 };
 const GetBaseYieldsHTML = (items) => {
     return items.reduce((acc, { yieldType, value }) => {
-        const icon = Icon.getYieldIcon(yieldType);
+        const icon = UI.getIconURL(yieldType);
         const text = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", value);
         return acc + `<div class="flex items-center ml-1">${text}<img src="${icon}" class="size-6" /></div>`;
     }, "");

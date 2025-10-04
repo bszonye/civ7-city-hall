@@ -113,9 +113,7 @@ const BZ_HEAD_STYLE = [
     width: 1.3333333333rem;
     height: 1.3333333333rem;
 }
-.bz-city-hall .bz-pci-icon,
-.bz-city-hall .bz-pci-name,
-.bz-city-hall .bz-pci-cost {
+.bz-city-hall .bz-pci-container {
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
 }
 .bz-city-hall .bz-pci-cost .production-chooser-tooltip__subtext-bg.rounded {
@@ -534,14 +532,17 @@ class bzProductionChooserItem {
     render() {
         const c = this.component;
         c.Root.classList.add("production-chooser-item", "text-xs", "leading-tight");
-        c.container.classList.add("flex", "justify-start", "items-center");
+        c.container.classList.remove("tracking-100");
+        c.container.classList.add(
+            "bz-pci-container", "flex", "justify-start", "items-center"
+        );
         c.iconElement.classList.value = "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1";
         c.container.appendChild(c.iconElement);
         const infoColumn = document.createElement("div");
         infoColumn.classList.value = "bz-pci-info relative flex flex-col flex-auto justify-center";
         // name and advisor icons
         const nameContainer = document.createElement("div");
-        nameContainer.classList.value = "flex justify-start items-center";
+        nameContainer.classList.value = "flex justify-start items-center tracking-25";
         c.itemNameElement.classList.value = "bz-pci-name font-title-xs text-accent-2 m-1 uppercase";
         nameContainer.appendChild(c.itemNameElement);
         c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 -my-2";
@@ -563,7 +564,7 @@ class bzProductionChooserItem {
         c.warehouseCountContainer.classList.add("hidden", "flex", "items-center");
         c.alternateYieldElement.appendChild(c.warehouseCountContainer);
         const warehouseDivider = document.createElement("div");
-        warehouseDivider.classList.add("mx-1\\.5");
+        warehouseDivider.classList.add("mx-1");
         warehouseDivider.textContent = "|";
         c.warehouseCountContainer.appendChild(warehouseDivider);
         c.warehouseCountValue.className = "ml-1";
@@ -575,7 +576,7 @@ class bzProductionChooserItem {
         c.adjacencyBonusContainer.classList.add("hidden", "flex", "items-center");
         c.alternateYieldElement.appendChild(c.adjacencyBonusContainer);
         const adjacencyDivider = document.createElement("div");
-        adjacencyDivider.classList.add("mx-1\\.5");
+        adjacencyDivider.classList.add("mx-1");
         adjacencyDivider.textContent = "|";
         c.adjacencyBonusContainer.appendChild(adjacencyDivider);
         c.adjacencyBonusValue.className = "ml-1";
@@ -587,7 +588,8 @@ class bzProductionChooserItem {
         c.container.appendChild(infoColumn);
         // production and purchase costs
         const costColumn = document.createElement("div");
-        costColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
+        costColumn.classList.value =
+            "relative flex flex-col items-end justify-between mr-1";
         this.pCostContainer.classList.value = "bz-pci-pcost flex items-center";
         this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
         this.pCostContainer.appendChild(this.pCostAmountElement);
