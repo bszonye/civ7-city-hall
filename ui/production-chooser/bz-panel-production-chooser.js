@@ -82,7 +82,7 @@ const BZ_HEAD_STYLE = [
     padding-right: 0.4444444444rem;
 }
 .bz-city-hall .panel-production-chooser .subsystem-frame__content {
-    padding-left: 0.5555555556rem;
+    padding-left: 0.4444444444rem;
     padding-right: 0.2222222222rem;
     margin-bottom: -0.3333333333rem;
 }
@@ -95,6 +95,23 @@ const BZ_HEAD_STYLE = [
 }
 .bz-city-hall .panel-production-chooser .fxs-scrollbar__track--vertical {
     right: -0.1111111111rem;
+}
+.bz-city-hall .bz-view-hidden {
+    position: fixed;
+    z-index: 1;
+    bottom: 0.0555555556rem;
+    left: 37.3333333333rem;
+    margin-left: 0.1666666667rem;
+    transform: translateX(-100%);
+    padding: 0 0.4444444444rem 0 0;
+    background-color: #23252b;
+}
+.bz-city-compact .bz-view-hidden {
+    left: 28.4444444444rem;
+}
+.bz-city-hall .bz-view-hidden fxs-checkbox {
+    width: 1.3333333333rem;
+    height: 1.3333333333rem;
 }
 .bz-city-hall .bz-pci-icon,
 .bz-city-hall .bz-pci-name,
@@ -320,6 +337,12 @@ class bzProductionChooserScreen {
         for (const slot of Object.values(c.productionCategorySlots)) {
             slot.root.classList.remove("ml-4");
         }
+        // move View Hidden interface
+        const viewHiddenContainer = c.viewHiddenCheckbox.parentElement;
+        const viewHiddenCheckboxLabel = viewHiddenContainer.lastChild;
+        c.viewHiddenCheckbox.classList.add("mr-1");
+        viewHiddenContainer.classList.add("bz-view-hidden", "hud_sidepanel_list-bg");
+        viewHiddenCheckboxLabel.classList.add("text-shadow-subtle");
     }
     afterUpdateCategories() {
         const uq = this.component.uniqueQuarter;
@@ -516,7 +539,7 @@ class bzProductionChooserItem {
         c.container.appendChild(c.iconElement);
         const infoColumn = document.createElement("div");
         infoColumn.classList.value = "bz-pci-info relative flex flex-col flex-auto justify-center";
-        // name and ageless/advisor icons
+        // name and advisor icons
         const nameContainer = document.createElement("div");
         nameContainer.classList.value = "flex justify-start items-center";
         c.itemNameElement.classList.value = "bz-pci-name font-title-xs text-accent-2 m-1 uppercase";
@@ -599,15 +622,15 @@ class bzProductionChooserItem {
         this.progressBar.appendChild(this.progressBarFill);
         this.progressBarFill.style.heightPERCENT = 100;
         c.container.appendChild(this.progressBar);
-        // TODO: find a place for this
+        // ageless tag
         c.agelessContainer.classList.value =
-            "bz-pci-ageless hidden flex items-center absolute -top-1 left-40 translate-x-1\\/2 z-1 font-fit-shrink";
+            "bz-pci-ageless hidden flex items-center absolute bottom-px -left-3 -translate-x-full";
         c.agelessContainer.innerHTML = `
         <div class="img-hud-production-pill flex text-2xs items-center">
             <div class="px-2 uppercase leading-none" data-l10n-id="LOC_UI_PRODUCTION_AGELESS"></div>
         </div>
         `;
-        c.container.appendChild(c.agelessContainer);
+        costColumn.appendChild(c.agelessContainer);
     }
     updateInfo() {
         // styling for repairs, ageless items, and secondary details
