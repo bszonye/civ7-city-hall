@@ -99,11 +99,11 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-view-hidden {
     position: fixed;
     z-index: 1;
-    bottom: 0.0555555556rem;
+    bottom: -0.0555555556rem;
     left: 37.3333333333rem;
-    margin-left: 0.1666666667rem;
+    margin-left: 0.1111111111rem;
     transform: translateX(-100%);
-    padding: 0 0.4444444444rem 0 0;
+    padding: 0 0.5555555556rem 0 0.3333333333rem;
     background-color: #23252b;
 }
 .bz-city-compact .bz-view-hidden {
@@ -341,7 +341,7 @@ class bzProductionChooserScreen {
         const viewHiddenContainer = c.viewHiddenCheckbox.parentElement;
         const viewHiddenCheckboxLabel = viewHiddenContainer.lastChild;
         c.viewHiddenCheckbox.classList.add("mr-1");
-        viewHiddenContainer.classList.add("bz-view-hidden", "hud_sidepanel_list-bg");
+        viewHiddenContainer.classList.add("bz-view-hidden");
         viewHiddenCheckboxLabel.classList.add("text-shadow-subtle");
     }
     afterUpdateCategories() {
@@ -624,7 +624,7 @@ class bzProductionChooserItem {
         c.container.appendChild(this.progressBar);
         // ageless tag
         c.agelessContainer.classList.value =
-            "bz-pci-ageless hidden flex items-center absolute bottom-px -left-3 -translate-x-full";
+            "bz-pci-ageless hidden flex items-center absolute right-20 top-1\\/2 -translate-y-1\\/2";
         c.agelessContainer.innerHTML = `
         <div class="img-hud-production-pill flex text-2xs items-center">
             <div class="px-2 uppercase leading-none" data-l10n-id="LOC_UI_PRODUCTION_AGELESS"></div>
