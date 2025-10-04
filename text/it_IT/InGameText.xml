@@ -2,10 +2,10 @@
 <Database>
     <LocalizedText>
         <Replace Tag="LOC_BZ_GROUPED_DIGITS" Language="it_IT">
-            <Text>{1_Amount}</Text>
+            <Text>{1_amount: number #,###;-#,###}</Text>
         </Replace>
         <Replace Tag="LOC_BZ_GROUPED_MODIFIER" Language="it_IT">
-            <Text>{1_Amount: number +#,###;-#,###}</Text>
+            <Text>{1_amount: number +#,###;-#,###}</Text>
         </Replace>
         <Replace Tag="LOC_BZ_SETTLEMENT_CONNECTIONS" Language="it_IT">
             <Text>Connessioni</Text>
