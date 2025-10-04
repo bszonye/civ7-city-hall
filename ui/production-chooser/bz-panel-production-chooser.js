@@ -82,21 +82,19 @@ const BZ_HEAD_STYLE = [
     padding-right: 0.4444444444rem;
 }
 .bz-city-hall .panel-production-chooser .subsystem-frame__content {
+    padding-left: 0.5555555556rem;
     padding-right: 0.2222222222rem;
     margin-bottom: -0.3333333333rem;
 }
 .bz-city-hall .production-category {
-    margin-right: 0.4444444444rem;
+    margin-right: 0;
     margin-bottom: 0.7222222222rem;
 }
 .bz-city-hall .production-category:last-child {
     margin-bottom: 0;
 }
-.bz-city-hall .production-category > div > div.pl-3 {
-    padding-left: 0;
-}
 .bz-city-hall .panel-production-chooser .fxs-scrollbar__track--vertical {
-    margin-left: -0.2222222222rem;
+    right: -0.1111111111rem;
 }
 .bz-city-hall .bz-pci-icon,
 .bz-city-hall .bz-pci-name,
@@ -311,11 +309,17 @@ class bzProductionChooserScreen {
         Databind.classToggle(nameWrapper, "bz-nav-help", "{{g_NavTray.isTrayRequired}}");
         nameWrapper.classList.add("mx-2");
         // make Production/Purchase tabs more compact and consistent
+        c.productionPurchaseTabBar.classList.remove("mx-6");
+        c.productionPurchaseTabBar.classList.add("mx-1\\.5");
         const tabs = JSON.parse(c.productionPurchaseTabBar.getAttribute("tab-items"));
         tabs.forEach(t => t.className = "px-2 text-sm tracking-100");
         c.productionPurchaseTabBar.setAttribute("tab-items", JSON.stringify(tabs));
         c.townPurchaseLabel.innerHTML = c.townPurchaseLabel.innerHTML
             .replaceAll("text-xs", "text-sm tracking-100 mt-1");
+        // remove production-category margins
+        for (const slot of Object.values(c.productionCategorySlots)) {
+            slot.root.classList.remove("ml-4");
+        }
     }
     afterUpdateCategories() {
         const uq = this.component.uniqueQuarter;
