@@ -161,13 +161,13 @@ const GetBaseYieldsHTML = (items) => {
     return items.reduce((acc, { yieldType, value }) => {
         const icon = Icon.getYieldIcon(yieldType);
         const text = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", value);
-        return acc + `<div class="flex items-center mr-2"><img src="${icon}" class="size-8" />${text}</div>`;
+        return acc + `<div class="flex items-center ml-1">${text}<img src="${icon}" class="size-6" /></div>`;
     }, "");
 }
 const GetSecondaryDetailsHTML = (items) => {
 
     return items.reduce((acc, { icon, value, name }) => {
-        return acc + `<div class="flex items-center mr-2"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-8" />${value}</div>`;
+        return acc + `<div class="flex items-center mr-2"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-6" />${value}</div>`;
     }, "");
 };
 const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidden) => {
@@ -244,7 +244,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ?
-            baseTotal + warehouseCount + highestAdjacency / 2 : 0;
+            baseTotal + warehouseCount + highestAdjacency : 0;
         const topTier = Boolean(result.InProgress || inQueue || building && unique);
         const sortTier =
             topTier ? 9 :

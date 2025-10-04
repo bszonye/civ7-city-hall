@@ -115,10 +115,6 @@ const BZ_HEAD_STYLE = [
     padding: 0 0.5rem;
     margin: 0.2777777778rem 0 0.3333333333rem;
 }
-.bz-city-hall .bz-pci-ageless {
-    background-image: url("fs://game/city_ageless.png");
-    background-size: cover;
-}
 .bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
     height: 1.1111111111rem;
@@ -496,14 +492,7 @@ class bzProductionChooserItem {
                 return false;
             // case "data-warehouse-count":
             // case "data-can-get-adjacency":
-            case "data-highest-adjacency":
-                if (Number(newValue)) {
-                    c.adjacencyBonusValue.textContent = newValue;
-                    c.adjacencyBonusContainer.classList.remove("hidden");
-                } else {
-                    c.adjacencyBonusContainer.classList.add("hidden");
-                }
-                return false;
+            // case "data-highest-adjacency":
             // case "data-highest-adjacency":
         }
         return true;  // continue to component
@@ -521,9 +510,6 @@ class bzProductionChooserItem {
         nameContainer.classList.value = "flex justify-start items-center";
         c.itemNameElement.classList.value = "bz-pci-name font-title-xs text-accent-2 m-1 uppercase";
         nameContainer.appendChild(c.itemNameElement);
-        c.agelessContainer.classList.value = "bz-pci-ageless hidden size-5 mx-1 -my-2";
-        c.agelessContainer.innerHTML = "";
-        nameContainer.appendChild(c.agelessContainer);
         c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 -my-2";
         nameContainer.appendChild(c.recommendationsContainer);
         infoColumn.appendChild(nameContainer);
@@ -538,29 +524,31 @@ class bzProductionChooserItem {
         c.alternateYieldElement.classList.value =
             "bz-pci-details hidden flex font-body-xs -mt-1";
         infoColumn.appendChild(c.alternateYieldElement);
-        c.itemBaseYieldsElement.classList.value = "flex items-center -mr-1";
+        c.itemBaseYieldsElement.classList.value = "flex items-center";
         c.alternateYieldElement.appendChild(c.itemBaseYieldsElement);
         c.warehouseCountContainer.classList.add("hidden", "flex", "items-center");
         c.alternateYieldElement.appendChild(c.warehouseCountContainer);
         const warehouseDivider = document.createElement("div");
-        warehouseDivider.classList.add("mx-2");
+        warehouseDivider.classList.add("mx-1\\.5");
         warehouseDivider.textContent = "|";
         c.warehouseCountContainer.appendChild(warehouseDivider);
-        c.warehouseCountValue.className = "mx-1";
+        c.warehouseCountValue.className = "ml-1";
         c.warehouseCountContainer.appendChild(c.warehouseCountValue);
-        const warehouseIcon = document.createElement("fxs-font-icon");
-        warehouseIcon.setAttribute("data-icon-id", "YIELD_WAREHOUSE");
+        const warehouseIcon = document.createElement("img");
+        warehouseIcon.className = "size-6";
+        warehouseIcon.setAttribute("src", "blp:yield_warehouse");
         c.warehouseCountContainer.appendChild(warehouseIcon);
         c.adjacencyBonusContainer.classList.add("hidden", "flex", "items-center");
         c.alternateYieldElement.appendChild(c.adjacencyBonusContainer);
         const adjacencyDivider = document.createElement("div");
-        adjacencyDivider.classList.add("mx-2");
+        adjacencyDivider.classList.add("mx-1\\.5");
         adjacencyDivider.textContent = "|";
         c.adjacencyBonusContainer.appendChild(adjacencyDivider);
-        c.adjacencyBonusValue.className = "mx-1";
+        c.adjacencyBonusValue.className = "ml-1";
         c.adjacencyBonusContainer.appendChild(c.adjacencyBonusValue);
-        const adjacencyIcon = document.createElement("fxs-font-icon");
-        adjacencyIcon.setAttribute("data-icon-id", "YIELD_ADJACENCY");
+        const adjacencyIcon = document.createElement("img");
+        adjacencyIcon.className = "size-6";
+        adjacencyIcon.setAttribute("src", "blp:yield_adjacency");
         c.adjacencyBonusContainer.appendChild(adjacencyIcon);
         c.container.appendChild(infoColumn);
         // production and purchase costs
@@ -600,6 +588,15 @@ class bzProductionChooserItem {
         this.progressBar.appendChild(this.progressBarFill);
         this.progressBarFill.style.heightPERCENT = 100;
         c.container.appendChild(this.progressBar);
+        // TODO: find a place for this
+        c.agelessContainer.classList.value =
+            "bz-pci-ageless hidden flex items-center absolute -top-1 left-40 translate-x-1\\/2 z-1 font-fit-shrink";
+        c.agelessContainer.innerHTML = `
+        <div class="img-hud-production-pill flex text-2xs items-center">
+            <div class="px-2 uppercase leading-none" data-l10n-id="LOC_UI_PRODUCTION_AGELESS"></div>
+        </div>
+        `;
+        c.container.appendChild(c.agelessContainer);
     }
     updateInfo() {
         // styling for repairs, ageless items, and secondary details
