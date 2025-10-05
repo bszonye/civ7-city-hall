@@ -58,6 +58,7 @@ export default [
                 ResourceTypes: "readonly",
                 RevealedStates: "readonly",
                 RiverTypes: "readonly",
+                SpriteMode: "readonly",
                 UI: "readonly",
                 UIHTMLCursorTypes: "readonly",
                 Units: "readonly",

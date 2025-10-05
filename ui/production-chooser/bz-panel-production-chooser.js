@@ -1,11 +1,12 @@
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
-import FocusManager, { A as Audio } from '/core/ui/input/focus-manager.js';
+import { A as Audio } from '/core/ui/audio-base/audio-support.chunk.js';
+import FocusManager from '/core/ui/input/focus-manager.js';
 import { InterfaceMode } from '../../../core/ui/interface-modes/interface-modes.js';
 import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
 import { BuildQueue } from '/base-standard/ui/build-queue/model-build-queue.js';
 import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
-import { g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
+import { GetBaseYieldsHTML, g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
 
 // color palette
 const BZ_COLOR = {
@@ -80,26 +81,42 @@ const BZ_HEAD_STYLE = [
 .bz-city-compact .last-production-frame .pr-4 {
     padding-right: 0.4444444444rem;
 }
+`,  // general item styling
+`
+.bz-city-hall .text-negative,
+.bz-city-hall .text-negative-light {
+    color: #ee5566;
+    text-shadow: 0 0.0555555556rem 0.1111111111rem black, 0 0 0.3333333333rem #a00;
+}
+`,  // production item styling
+`
 .bz-city-hall .panel-production-chooser .subsystem-frame__content {
+    padding-left: 0.4444444444rem;
     padding-right: 0.2222222222rem;
     margin-bottom: -0.3333333333rem;
 }
 .bz-city-hall .production-category {
-    margin-right: 0.4444444444rem;
+    margin-right: 0;
     margin-bottom: 0.7222222222rem;
 }
 .bz-city-hall .production-category:last-child {
     margin-bottom: 0;
 }
-.bz-city-hall .production-category > div > div.pl-3 {
-    padding-left: 0;
-}
 .bz-city-hall .panel-production-chooser .fxs-scrollbar__track--vertical {
-    margin-left: -0.2222222222rem;
+    right: -0.1111111111rem;
+}
+.bz-city-hall .bz-pci-pcost,
+.bz-city-hall .bz-pci-cost {
+    text-shadow: 0.0555555556rem 0.0555555556rem 0.1111111111rem black,
+                 0 0.0555555556rem 0.1666666667rem black;
 }
 .bz-city-hall .bz-pci-icon,
-.bz-city-hall .bz-pci-name,
-.bz-city-hall .bz-pci-cost {
+.bz-city-hall .bz-pci-recs,
+.bz-city-hall .bz-pci-details img,
+.bz-city-hall .bz-pci-pcost-icon,
+.bz-city-hall .bz-pci-cost-icon,
+.bz-city-hall .bz-pci-progress,
+.bz-city-hall .bz-pci-ageless {
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
 }
 .bz-city-hall .bz-pci-cost .production-chooser-tooltip__subtext-bg.rounded {
@@ -114,17 +131,9 @@ const BZ_HEAD_STYLE = [
     padding: 0 0.5rem;
     margin: 0.2777777778rem 0 0.3333333333rem;
 }
-.bz-city-hall .bz-pci-ageless {
-    background-image: url("fs://game/city_ageless.png");
-    background-size: cover;
-}
 .bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
     height: 1.1111111111rem;
-}
-.bz-city-hall .bz-pci-details img.size-8 {
-    width: 1.3333333333rem;
-    height: 1.3333333333rem;
 }
 .bz-city-hall .bz-show-progress .bz-pci-pcost-icon,
 .bz-city-hall .bz-show-progress .bz-pci-cost-icon {
@@ -133,6 +142,26 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-is-purchase.bz-has-progress .build-queue__progress-bar-fill {
     filter: saturate(0) fxs-color-tint(${BZ_COLOR.gold}) brightness(2.0) contrast(1.8) saturate(0.7);
   background-position: center;
+}
+`,  // relocate View Hidden button
+`
+.bz-city-hall .bz-view-hidden {
+    position: fixed;
+    z-index: 1;
+    top: calc(100vh - 1rem);
+    height: 1rem;
+    left: 1.5555555556rem;
+    padding: 0 0.4444444444rem 0 0.3333333333rem;
+    text-shadow: 0 0.0555555556rem 0.1666666667rem black;
+    background-color: #23252bcc;
+    border-style: solid;
+    border-width: 0 0.1111111111rem;
+    border-color: #4c473d;
+}
+.bz-city-hall .bz-view-hidden fxs-checkbox {
+    width: 1rem;
+    height: 1rem;
+    filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
 }
 `,  // improve panel header layout
 `
@@ -158,12 +187,12 @@ const BZ_HEAD_STYLE = [
     z-index: 1;
 }
 .bz-city-hall .bz-city-name-wrapper.bz-nav-help .bz-cycle-city {
-    top: 1.8333333333rem;
-    left: 4.2222222222rem;
+    top: 1.3333333333rem;
+    left: 2.3888888889rem;
 }
 .bz-city-hall .bz-city-name-wrapper.bz-no-help .bz-cycle-city {
-    top: 1.3888888889rem;
-    left: 4.2222222222rem;
+    top: 1.2777777778rem;
+    left: 2.6666666667rem;
 }
 `,  // relocate City Details button
 `
@@ -198,6 +227,7 @@ class bzProductionChooserScreen {
     static c_doOrConfirmConstruction;
     static isPurchase = false;
     static isCDPanelOpen = true;
+    viewHiddenActiveLabel = document.createElement("fxs-activatable");
     isGamepadActive = Input.getActiveDeviceType() == InputDeviceType.Controller;
     constructor(component) {
         this.component = component;
@@ -268,13 +298,17 @@ class bzProductionChooserScreen {
         engine.on("input-source-changed", this.onActiveDeviceTypeChanged, this);
     }
     afterAttach() {
-        engine.on("ConstructibleChanged", this.component.onConstructibleAddedToMap, this.component);
+        const c = this.component;
+        engine.on("ConstructibleChanged", c.onConstructibleAddedToMap, this.component);
+        requestAnimationFrame(() => this.viewHiddenActiveLabel.addEventListener(
+            "engine-input", c.viewHiddenCheckbox.component.engineInputListener));
         // restore the city details panel if it was open previously
         if (bzProductionChooserScreen.isCDPanelOpen && !this.component.isSmallScreen()) {
             this.component.showCityDetails();
         }
     }
     beforeDetach() {
+        const c = this.component;
         if (!this.component.isSmallScreen()) {
             // remember whether the city details panel is open
             const cdSlot = this.component.cityDetailsSlot;
@@ -282,13 +316,15 @@ class bzProductionChooserScreen {
             bzProductionChooserScreen.isCDPanelOpen =
                 cdPanel && !cdPanel.classList.contains("hidden");
         }
+        engine.off("ConstructibleChanged", c.onConstructibleAddedToMap, this.component);
+        this.viewHiddenActiveLabel.removeEventListener(
+            "engine-input", c.viewHiddenCheckbox.component.engineInputListener);
     }
     afterDetach() {
         // clear Purchase tab memory when closing the panel.
         // this includes switches to the building-placement interface,
         // but that has its own means of restoring the Purchase tab.
         bzProductionChooserScreen.isPurchase = false;
-        engine.off("ConstructibleChanged", this.component.onConstructibleAddedToMap, this.component);
         engine.off("input-source-changed", this.onActiveDeviceTypeChanged, this);
     }
     afterRender() {
@@ -314,11 +350,30 @@ class bzProductionChooserScreen {
         Databind.classToggle(nameWrapper, "bz-nav-help", "{{g_NavTray.isTrayRequired}}");
         nameWrapper.classList.add("mx-2");
         // make Production/Purchase tabs more compact and consistent
+        c.productionPurchaseTabBar.classList.remove("mx-6");
+        c.productionPurchaseTabBar.classList.add("mx-1\\.5");
         const tabs = JSON.parse(c.productionPurchaseTabBar.getAttribute("tab-items"));
         tabs.forEach(t => t.className = "px-2 text-sm tracking-100");
         c.productionPurchaseTabBar.setAttribute("tab-items", JSON.stringify(tabs));
         c.townPurchaseLabel.innerHTML = c.townPurchaseLabel.innerHTML
             .replaceAll("text-xs", "text-sm tracking-100 mt-1");
+        // remove production-category margins
+        for (const slot of Object.values(c.productionCategorySlots)) {
+            slot.root.classList.remove("ml-4");
+        }
+        // move View Hidden interface
+        const viewHiddenContainer = c.viewHiddenCheckbox.parentElement;
+        const viewHiddenCheckboxLabel = viewHiddenContainer.lastChild;
+        c.viewHiddenCheckbox.classList.add("mr-1");
+        viewHiddenContainer.classList.add("bz-view-hidden", "group");
+        viewHiddenCheckboxLabel.classList.add("relative");
+        this.viewHiddenActiveLabel.classList.value =
+            "absolute truncate pb-2 px-1 -mx-1 text-secondary text-xs opacity-0 group-hover\\:opacity-100 transition-opacity";
+        this.viewHiddenActiveLabel.setAttribute("data-l10n-id", "LOC_UI_PRODUCTION_VIEW_HIDDEN");
+        viewHiddenCheckboxLabel.appendChild(this.viewHiddenActiveLabel);
+        // make room between checkbox and Convert to City button
+        c.upgradeToCityButton.classList.add("mt-0\\.5", "mb-1\\.5");
+        c.frame.dataset.footerClass = "px-5 pb-1 mx-0\\.5";
     }
     afterUpdateCategories() {
         const uq = this.component.uniqueQuarter;
@@ -461,10 +516,22 @@ class bzProductionChooserItem {
                 this.updateInfo();
                 break;
             case "data-type":
+                if (newValue) {
+                    c.iconElement.setAttribute("data-icon-id", newValue);
+                } else {
+                    c.iconElement.removeAttribute("data-icon-id");
+                }
                 this.updateInfo();
                 this.updateProductionCost();
-                break;
-            // case "data-cost":
+                return false;
+            case "data-cost": {
+                const cost = newValue ? parseInt(newValue) : 0;
+                const showCost = isNaN(cost) || cost < 0;
+                c.costContainer.classList.toggle("hidden", showCost);
+                const text = Locale.compose("LOC_BZ_GROUPED_DIGITS", cost);
+                c.costAmountElement.textContent = text;
+                return false;
+            }
             // case "data-prereq":
             // case "data-description":
             // case "data-error":
@@ -473,42 +540,94 @@ class bzProductionChooserItem {
                 break;
             case "data-is-ageless":
             case "data-secondary-details":
-                // toggle .hidden instead of .invisible
+                // hide details for repairs
                 this.updateInfo();
                 return false;
             // case "data-recommendations":
+            // case "data-tags":
+            case "data-base-yields": {
+                if (newValue) {
+                    const baseYields = JSON.parse(newValue);
+                    c.itemBaseYieldsElement.innerHTML = GetBaseYieldsHTML(baseYields);
+                    c.itemBaseYieldsElement.classList.remove("hidden");
+                } else {
+                    c.itemBaseYieldsElement.classList.add("hidden");
+                }
+                return false;
+            }
+            // case "data-can-get-warehouse":
+            case "data-info-display-type":
+                // hide details for repairs
+                this.updateInfo();
+                return false;
+            // case "data-warehouse-count":
+            // case "data-can-get-adjacency":
+            // case "data-highest-adjacency":
+            // case "data-highest-adjacency":
         }
         return true;  // continue to component
     }
     render() {
         const c = this.component;
         c.Root.classList.add("production-chooser-item", "text-xs", "leading-tight");
-        c.container.classList.add("flex", "justify-start", "items-center");
+        c.container.classList.remove("tracking-100");
+        c.container.classList.add(
+            "bz-pci-container", "flex", "justify-start", "items-center"
+        );
         c.iconElement.classList.value = "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1";
         c.container.appendChild(c.iconElement);
         const infoColumn = document.createElement("div");
         infoColumn.classList.value = "bz-pci-info relative flex flex-col flex-auto justify-center";
-        // name and ageless/advisor icons
+        // name and advisor icons
         const nameContainer = document.createElement("div");
-        nameContainer.classList.value = "flex justify-start items-center";
-        c.itemNameElement.classList.value = "bz-pci-name font-title-xs text-accent-2 m-1 uppercase";
+        nameContainer.classList.value = "flex justify-start items-center tracking-25";
+        c.itemNameElement.classList.value = "bz-pci-name font-title-xs text-accent-2 uppercase m-1 z-1";
         nameContainer.appendChild(c.itemNameElement);
-        c.agelessContainer.classList.value = "bz-pci-ageless hidden size-5 mx-1 -my-2";
-        c.agelessContainer.innerHTML = "";
-        nameContainer.appendChild(c.agelessContainer);
-        c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 -my-2";
+        c.recommendationsContainer.classList.value = "bz-pci-recs flex items-center justify-center mx-1 -my-2";
         nameContainer.appendChild(c.recommendationsContainer);
         infoColumn.appendChild(nameContainer);
         // error messages
-        c.errorTextElement.classList.value = "bz-pci-error flex-col hidden font-body-xs text-negative-light mx-1 -mt-1 mb-1 z-1 pointer-events-none";
+        c.errorTextElement.classList.value = "bz-pci-error font-body-xs text-negative-light mx-1 -mt-1 mb-1 z-1 pointer-events-none";
         infoColumn.appendChild(c.errorTextElement);
-        // yields and unit stats
-        c.secondaryDetailsElement.classList.value = "bz-pci-details hidden flex font-body-xs -mt-1";
+        // yield preview display + unit stats
+        c.secondaryDetailsElement.classList.value =
+            "bz-pci-details hidden flex font-body-xs -mt-1";
         infoColumn.appendChild(c.secondaryDetailsElement);
+        // base yield display
+        c.alternateYieldElement.classList.value =
+            "bz-pci-details hidden flex font-body-xs -mt-1";
+        infoColumn.appendChild(c.alternateYieldElement);
+        c.itemBaseYieldsElement.classList.value = "flex items-center";
+        c.alternateYieldElement.appendChild(c.itemBaseYieldsElement);
+        c.warehouseCountContainer.classList.add("hidden", "flex", "items-center");
+        c.alternateYieldElement.appendChild(c.warehouseCountContainer);
+        const warehouseDivider = document.createElement("div");
+        warehouseDivider.classList.add("mx-1");
+        warehouseDivider.textContent = "|";
+        c.warehouseCountContainer.appendChild(warehouseDivider);
+        c.warehouseCountValue.className = "ml-1";
+        c.warehouseCountContainer.appendChild(c.warehouseCountValue);
+        const warehouseIcon = document.createElement("img");
+        warehouseIcon.className = "size-6";
+        warehouseIcon.setAttribute("src", "blp:yield_warehouse");
+        c.warehouseCountContainer.appendChild(warehouseIcon);
+        c.adjacencyBonusContainer.classList.add("hidden", "flex", "items-center");
+        c.alternateYieldElement.appendChild(c.adjacencyBonusContainer);
+        const adjacencyDivider = document.createElement("div");
+        adjacencyDivider.classList.add("mx-1");
+        adjacencyDivider.textContent = "|";
+        c.adjacencyBonusContainer.appendChild(adjacencyDivider);
+        c.adjacencyBonusValue.className = "ml-1";
+        c.adjacencyBonusContainer.appendChild(c.adjacencyBonusValue);
+        const adjacencyIcon = document.createElement("img");
+        adjacencyIcon.className = "size-6";
+        adjacencyIcon.setAttribute("src", "blp:yield_adjacency");
+        c.adjacencyBonusContainer.appendChild(adjacencyIcon);
         c.container.appendChild(infoColumn);
         // production and purchase costs
         const costColumn = document.createElement("div");
-        costColumn.classList.value = "relative flex flex-col items-end justify-between mr-1";
+        costColumn.classList.value =
+            "relative flex flex-col items-end justify-between mr-1";
         this.pCostContainer.classList.value = "bz-pci-pcost flex items-center";
         this.pCostAmountElement.classList.value = "font-body-xs text-accent-4";
         this.pCostContainer.appendChild(this.pCostAmountElement);
@@ -543,6 +662,15 @@ class bzProductionChooserItem {
         this.progressBar.appendChild(this.progressBarFill);
         this.progressBarFill.style.heightPERCENT = 100;
         c.container.appendChild(this.progressBar);
+        // ageless tag
+        c.agelessContainer.classList.value =
+            "bz-pci-ageless hidden flex items-center absolute right-20 top-1\\/2 -translate-y-1\\/2";
+        c.agelessContainer.innerHTML = `
+        <div class="img-hud-production-pill flex text-2xs items-center">
+            <div class="px-2 uppercase leading-none" data-l10n-id="LOC_UI_PRODUCTION_AGELESS"></div>
+        </div>
+        `;
+        costColumn.appendChild(c.agelessContainer);
     }
     updateInfo() {
         // styling for repairs, ageless items, and secondary details
@@ -554,6 +682,7 @@ class bzProductionChooserItem {
         const dataName = e.getAttribute("data-name");
         const dataIsAgeless = e.getAttribute("data-is-ageless") === "true";
         const dataSecondaryDetails = e.getAttribute("data-secondary-details");
+        const dataInfoDisplayType = e.getAttribute("data-info-display-type");
         // interpret attributes
         const isRepair = this.isRepair = (() => {
             if (dataCategory != "buildings") return false;
@@ -563,14 +692,16 @@ class bzProductionChooserItem {
             return dataName != info.Name;
         })();
         const isAgeless = dataIsAgeless && !isRepair;
-        const details = !isRepair && dataSecondaryDetails || "";
         const cname = c.itemNameElement;
         cname.classList.toggle("bz-city-repair", isRepair);
         cname.classList.toggle("text-accent-2", !isAgeless && !isRepair);
         cname.classList.toggle("text-gradient-secondary", isAgeless && !isRepair);
         c.agelessContainer.classList.toggle("hidden", !isAgeless);
+        const details = !isRepair && dataSecondaryDetails || "";
         c.secondaryDetailsElement.innerHTML = details;
         c.secondaryDetailsElement.classList.toggle("hidden", !details);
+        const baseYield = dataInfoDisplayType == "base-yield" && !isRepair;
+        c.alternateYieldElement.classList.toggle("hidden", !baseYield);
     }
     updateProductionCost() {
         // styling for production costs and progress bars
@@ -598,7 +729,8 @@ class bzProductionChooserItem {
                 return;
             }
             this.pCostContainer.classList.remove("hidden");
-            this.pCostAmountElement.textContent = base - progress;
+            const text = Locale.compose("LOC_BZ_GROUPED_DIGITS", base - progress);
+            this.pCostAmountElement.textContent = text;
         }
         switch (dataCategory) {
             case "buildings":

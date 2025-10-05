@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Mod id="bz-city-hall" version="20202"
+<Mod id="bz-city-hall" version="20300"
     xmlns="ModInfo">
     <Properties>
         <Name>LOC_MOD_BZ_CITY_HALL_NAME</Name>
-        <Version>2.2.2</Version>
+        <Version>2.3.0</Version>
         <Description>LOC_MOD_BZ_CITY_HALL_DESCRIPTION</Description>
         <Authors>beezany</Authors>
         <URL>https://forums.civfanatics.com/resources/city-hall.31946/</URL>
@@ -32,7 +32,7 @@
             <Actions>
                 <UIScripts>
                     <Item>ui/options/bz-city-hall-options.js</Item>
-                    <Item>ui/options/mod-options-decorator.js</Item>
+                    <Item>ui/options/mod-options.js</Item>
                 </UIScripts>
                 <UpdateText>
                     <Item>text/en_us/InGameText.xml</Item>
@@ -59,12 +59,13 @@
                     <Item>ui/building-placement/bz-building-placement-manager.js</Item>
                     <Item>ui/city-details/bz-model-city-details.js</Item>
                     <Item>ui/city-details/bz-panel-city-details.js</Item>
+                    <Item>ui/constructible-details/bz-constructible-details.js</Item>
                     <Item>ui/interface-modes/bz-interface-mode-place-building.js</Item>
                     <Item>ui/lenses/layer/bz-building-placement-layer.js</Item>
                     <Item>ui/lenses/layer/bz-urban-layer.js</Item>
                     <Item>ui/lenses/layer/bz-worker-yields-layer.js</Item>
                     <Item>ui/options/bz-city-hall-options.js</Item>
-                    <Item>ui/options/mod-options-decorator.js</Item>
+                    <Item>ui/options/mod-options.js</Item>
                     <Item>ui/place-population/bz-place-population.js</Item>
                     <Item>ui/plot-workers/bz-plot-workers-manager.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>

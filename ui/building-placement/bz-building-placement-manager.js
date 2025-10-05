@@ -11,15 +11,13 @@ const BZ_SLOTLESS = new Set(tagTypes("IGNORE_DISTRICT_PLACEMENT_CAP"));
 // add BPM.bzReservedPlots property:
 // plots that would block a unique quarter
 BuildingPlacementManager._bzReservedPlots = [];
-const BPM_expandablePlots = Object.getOwnPropertyDescriptor(proto, "expandablePlots");
-const bzReservedPlots = {
-    configurable: BPM_expandablePlots.configurable,
-    enumerable: BPM_expandablePlots.enumerable,
+Object.defineProperty(proto, "bzReservedPlots", {
+    configurable: true,
+    enumerable: true,
     get() {
         return this._bzReservedPlots;
     }
-};
-Object.defineProperty(proto, "bzReservedPlots", bzReservedPlots);
+});
 
 // replace BPM.selectPlacementData method:
 // implements unique quarter assistant
@@ -163,56 +161,4 @@ proto.findExistingUniqueBuilding = function(uniqueQuarterDef) {
     }
     // not found
     return -1;
-}
-// replace getBestYieldForConstructible method:
-// improve yield scoring and refactor it into a new method
-proto.bzYieldScore = function(yields) {
-    // given an array of yields, rank by absolute value and sum:
-    // first + 1/2 second + 1/3 third ...
-    const score = [...yields];
-    score.sort((a, b) => Math.abs(b) - Math.abs(a));
-    return score.reduce((a, b, i) => a + b/(i+1), 0);
-}
-proto.bzGetPlotYieldForConstructible = function(cityID, constructibleDef, plotIndex) {
-    if (!ComponentID.isMatch(cityID, this.cityID)) return [];
-    if (!this.allPlacementData) return [];
-    const yields = this.allPlacementData.buildings
-        .find(b => b.constructibleType == constructibleDef.$hash)?.placements
-        .find(p => p.plotID == plotIndex)?.yieldChanges;
-    return yields ?? [];
-}
-proto.getBestYieldForConstructible = function(cityID, constructibleDef) {
-    if (!ComponentID.isMatch(cityID, this.cityID)) {
-        console.error(
-            `building-placement-manager: getBestYieldForConstructible() - cityID ${cityID} passed into selectPlacementData does not match cityID used for initializePlacementData ${this.cityID}`
-        );
-        return [];
-    }
-    if (!this.allPlacementData) {
-        console.error(
-            `building-placement-manager: getBestYieldForConstructible() - invalid allPlacementData for cityID ${cityID}`
-        );
-        return [];
-    }
-    const constructiblePlacementData = this.allPlacementData.buildings.find((data) => {
-        return data.constructibleType == constructibleDef.$hash;
-    });
-    if (!constructiblePlacementData) {
-        console.error(
-            `building-placement-manager: getBestYieldForConstructible() - failed to find placement data for type ${constructibleDef.ConstructibleType}`
-        );
-        return [];
-    }
-    let bestYieldChanges = [];
-    let bestYieldChangesScore = Number.MIN_SAFE_INTEGER;
-    if (constructiblePlacementData) {
-        for (const placement of constructiblePlacementData.placements) {
-            const score = this.bzYieldScore(placement.yieldChanges);
-            if (bestYieldChangesScore < score) {
-                bestYieldChangesScore = score;
-                bestYieldChanges = placement.yieldChanges;
-            }
-        }
-    }
-    return bestYieldChanges;
 }

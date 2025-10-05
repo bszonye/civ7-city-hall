@@ -4,13 +4,15 @@ import { realizeBuildSlots } from '/bz-city-hall/ui/lenses/layer/bz-building-slo
 import '/base-standard/ui/lenses/layer/building-placement-layer.js';
 
 // get registered lens layer
-// TODO: determine whether any of this is still necessary
-const _WYLL = LensManager.layers.get("fxs-worker-yields-layer");
-const WYLL = {};
+const BPL = LensManager.layers.get("fxs-building-placement-layer");
 
-// switch to reusable method (shared with other city screens)
-WYLL.YIELD_SPRITE_HEIGHT = 6;
-WYLL.YIELD_SPRITE_ANGLE = Math.PI / 6;  // 30°
-WYLL.realizeBuildSlots = function(district) {
-    return realizeBuildSlots.apply(this, [district, this.yieldSpriteGrid]);
+// modify build slot rendering
+BPL.buildSlotAngle = Math.PI / 6;  // 30°
+BPL.realizeBuildSlots = function(district) {
+    const args = [
+        district,
+        this.yieldVisualizer.backgroundSpriteGrid,
+        this.yieldVisualizer.foregroundSpriteGrid,
+    ];
+    return realizeBuildSlots.apply(this, args);
 }

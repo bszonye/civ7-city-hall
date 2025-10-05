@@ -25,7 +25,8 @@ const BZ_TAB_OVERVIEW = {
     icon: {
         default: UI.getIconBLP("CITY_BUILDINGS"),
         hover: UI.getIconBLP("CITY_BUILDINGS_HI"),
-        focus: UI.getIconBLP("CITY_BUILDINGS_HI")
+        focus: UI.getIconBLP("CITY_BUILDINGS_HI"),
+        pressed: UI.getIconBLP("CITY_BUILDINGS_HI")
     },
     iconClass: "size-16",
     headerText: "LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB"
@@ -35,7 +36,8 @@ const BZ_TAB_BUILDINGS = {
     icon: {
         default: UI.getIconBLP("CITY_SETTLEMENT"),
         hover: UI.getIconBLP("CITY_SETTLEMENT_HI"),
-        focus: UI.getIconBLP("CITY_SETTLEMENT_HI")
+        focus: UI.getIconBLP("CITY_SETTLEMENT_HI"),
+        pressed: UI.getIconBLP("CITY_SETTLEMENT_HI")
     },
     iconClass: "size-16",
     headerText: "LOC_UI_CITY_DETAILS_BUILDINGS_TAB"
@@ -147,7 +149,7 @@ const BZ_HEAD_STYLE = [
     z-index: 1;
 }
 .bz-city-hall .panel-city-details.bz-nav-help .bz-cycle-city {
-    top: 0.6111111111rem;
+    top: 0.6666666667rem;
     left: 1rem;
 }
 .bz-city-hall .panel-city-details.bz-no-help .bz-cycle-city {

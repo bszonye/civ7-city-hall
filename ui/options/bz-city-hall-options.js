@@ -1,47 +1,46 @@
 import '/core/ui/options/screen-options.js';  // make sure this loads first
 import { C as CategoryType, O as Options, a as OptionType } from '/core/ui/options/editors/index.chunk.js';
-import ModSettings from '/bz-city-hall/ui/options/mod-options-decorator.js';
+// set up mod options tab
+import ModOptions from '/bz-map-trix/ui/options/mod-options.js';
 
-const MOD_ID = "bz-city-hall";
-
-const BZ_DEFAULT_OPTIONS = {
-    compact: true,
-};
 const bzCityHallOptions = new class {
-    data = { ...BZ_DEFAULT_OPTIONS };
-    constructor() {
-        const modSettings = ModSettings.load(MOD_ID);
-        if (modSettings) this.data = modSettings;
+    modID = "bz-city-hall";
+    defaults = {
+        compact: Number(true),
+    };
+    data = {};
+    load(optionID) {
+        const value = ModOptions.load(this.modID, optionID);
+        if (value == null) {
+            const value = this.defaults[optionID];
+            console.warn(`LOAD ${this.modID}.${optionID}=${value} (default)`);
+            return value;
+        }
+        return value;
     }
-    save() {
-        ModSettings.save(MOD_ID, this.data);
-        document.body.classList.toggle("bz-city-compact", this.compact);
+    save(optionID) {
+        const value = Number(this.data[optionID]);
+        ModOptions.save(this.modID, optionID, value);
     }
     get compact() {
-        return this.data.compact ?? BZ_DEFAULT_OPTIONS.compact;
+        this.data.compact ??= Boolean(this.load("compact"));
+        return this.data.compact;
     }
     set compact(flag) {
-        this.data.compact = !!flag;
-        this.save();
+        this.data.compact = Boolean(flag);
+        this.save("compact");
+        document.body.classList.toggle("bz-city-compact", this.data.compact);
     }
-};
-
-const onInitCityCompact = (info) => {
-    info.currentValue = bzCityHallOptions.compact;
-};
-const onUpdateCityCompact = (_info, flag) => {
-    bzCityHallOptions.compact = flag;
 };
 
 Options.addInitCallback(() => {
     Options.addOption({
         category: CategoryType.Mods,
-        // @ts-ignore
         group: "bz_mods",
         type: OptionType.Checkbox,
         id: "bz-city-compact",
-        initListener: onInitCityCompact,
-        updateListener: onUpdateCityCompact,
+        initListener: (info) => info.currentValue = bzCityHallOptions.compact,
+        updateListener: (_info, value) => bzCityHallOptions.compact = value,
         label: "LOC_OPTIONS_BZ_CITY_COMPACT",
         description: "LOC_OPTIONS_BZ_CITY_COMPACT_DESCRIPTION",
     });

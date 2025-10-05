@@ -22,16 +22,18 @@ var CityDecorationSupport;
     class Instance {
         cityOverlayGroup = null;
         cityOverlay = null;
-        citySpriteGrid = null;
+        slotGrid = null;
+        yieldGrid = null;
         beforeUnloadListener = () => {
             this.onUnload();
         };
         onPlotChange = () => this.updateGate.call('onPlotChange');
         updateGate = new UpdateGate(this.updatePlots.bind(this));
-        BUILD_SLOT_SPRITE_PADDING = 12;
-        YIELD_SPRITE_HEIGHT = 6;
-        YIELD_SPRITE_ANGLE = Math.PI / 4;  // 45°
-        YIELD_SPRITE_PADDING = 11;
+        buildSlotSpritePadding = 20;
+        buildSlotSpritePosition = { x: 0, y: 0, z: 10 };
+        buildSlotSpriteScale = 1.2;
+        buildSlotAngle = Math.PI / 4;  // 45°
+        yieldSpritePadding = 11;
         OUTER_REGION_OVERLAY_FILTER = { brightness: 4/9 }; // darken outside plots
         cityID = null;
         filtered = false;
@@ -40,8 +42,10 @@ var CityDecorationSupport;
             const op = OVERLAY_PRIORITY.PLOT_HIGHLIGHT - 1;
             this.cityOverlayGroup = WorldUI.createOverlayGroup("CityOverlayGroup", op);
             this.cityOverlay = this.cityOverlayGroup.addPlotOverlay();
-            this.citySpriteGrid = WorldUI.createSpriteGrid("bzCity_SpriteGroup", true);
-            this.citySpriteGrid.setVisible(false);
+            this.slotGrid = WorldUI.createSpriteGrid("bzCitySlot_SpriteGroup", true);
+            this.yieldGrid = WorldUI.createSpriteGrid("bzCityYield_SpriteGroup", true);
+            this.slotGrid.setVisible(false);
+            this.yieldGrid.setVisible(false);
             this.urbanLayer = LensManager.layers.get('bz-urban-layer');
             engine.on("BeforeUnload", this.beforeUnloadListener);
         }
@@ -57,8 +61,10 @@ var CityDecorationSupport;
         updatePlots(cityID=this.cityID) {
             if (!cityID) return;  // not initialized yet
             this.cityOverlayGroup?.clearAll();
-            this.citySpriteGrid?.clear();
-            this.citySpriteGrid?.setVisible(true);
+            this.slotGrid?.clear();
+            this.slotGrid?.setVisible(true);
+            this.yieldGrid?.clear();
+            this.yieldGrid?.setVisible(true);
             const city = Cities.get(cityID);
             if (!city) {
                 console.error(`City Decoration support: Failed to find city (${ComponentID.toLogString(cityID)})!`);
@@ -73,10 +79,10 @@ var CityDecorationSupport;
             const districts = city.Districts.getIds().map(id => Districts.get(id));
             for (const district of districts) {
                 const loc = district.location;
+                this.realizeBuildSlots(district, this.slotGrid, this.yieldGrid);
                 if (district.type == DistrictTypes.CITY_CENTER) {
-                    this.realizeBuildSlots(district, this.citySpriteGrid);
+                    // skip
                 } else if (district.type == DistrictTypes.URBAN) {
-                    this.realizeBuildSlots(district, this.citySpriteGrid);
                     urban.push(loc);
                 } else if (district.type == DistrictTypes.RURAL) {
                     const ttypeID = GameplayMap.getTerrainType(loc.x, loc.y);
@@ -101,8 +107,10 @@ var CityDecorationSupport;
             if (this.filtered) WorldUI.popFilter();
             this.filtered = false;
             this.cityOverlayGroup?.clearAll();
-            this.citySpriteGrid?.clear();
-            this.citySpriteGrid?.setVisible(false);
+            this.slotGrid?.setVisible(false);
+            this.slotGrid?.clear();
+            this.yieldGrid?.setVisible(false);
+            this.yieldGrid?.clear();
             engine.off('ConstructibleAddedToMap', this.onPlotChange);
             engine.off('ConstructibleRemovedFromMap', this.onPlotChange);
         }

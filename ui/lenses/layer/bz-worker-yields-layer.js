@@ -1,96 +1,141 @@
-import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
 import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
 import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-manager.js';
+import { realizeBuildSlots } from '/bz-city-hall/ui/lenses/layer/bz-building-slots.js';
 // make sure the vanilla layer loads first
 import '/base-standard/ui/lenses/layer/worker-yields-layer.js';
 
-const ACTIVE_MODS = new Set(Modding.getActiveMods().map(m => Modding.getModInfo(m).id));
-
 // get registered lens layer
-// TODO: reimplement this to work with the new growth UI
-const _WYLL = LensManager.layers.get("fxs-worker-yields-layer");
-const WYLL = {};
+const WYLL = LensManager.layers.get("fxs-worker-yields-layer");
 
-// patch WYLL.realizeGrowthPlots() to limit yield area
-WYLL.realizeGrowthPlots = function() {
-    let plotsToCheck = null;
-    const mode = InterfaceMode.getCurrent();
-    const cityID = InterfaceMode.getInterfaceModeHandler(mode)?.cityID;
-    if (cityID) {
-        const city = Cities.get(cityID);
-        if (city) {
-            const excludeHidden = true;
-            plotsToCheck = city.Growth?.getGrowthDomain(excludeHidden);
-        }
-    }
-    if (plotsToCheck == null) {
-        const width = GameplayMap.getGridWidth();
-        const height = GameplayMap.getGridHeight();
-        plotsToCheck = [];
-        for (let x = 0; x < width; x++) {
-            for (let y = 0; y < height; y++) {
-                const revealedState = GameplayMap.getRevealedState(GameContext.localPlayerID, x, y);
-                if (revealedState != RevealedStates.HIDDEN) {
-                    plotsToCheck.push(GameplayMap.getIndexFromXY(x, y));
-                }
-            }
-        }
-    }
-    this.yieldSpriteGrid.clear();
-    for (const plotIndex of plotsToCheck) {
-        if (plotIndex !== null) {
-            this.updatePlot(plotIndex, cityID);
-        }
-    }
+// modify build slot rendering
+const SPECIALIST_COLUMNS = 5;
+const SPECIALIST_DX = 15;
+const SPECIALIST_Y = 3;
+const SPECIALIST_DY = 18;
+const SPECIALIST_SHRINK_LIMIT = 4;
+const SPECIALIST_SHRINK_SCALE = 0.7;
+const ICON_Z_OFFSET = 5;
+const YIELD_CHANGE_OFFSET = { x: 0, y: -10, z: 0 };
+WYLL.buildSlotSpritePadding = 15 * 0.7;
+WYLL.buildSlotSpritePosition = { x: 0, y: 0, z: ICON_Z_OFFSET };
+WYLL.buildSlotSpriteScale = 0.625;
+WYLL.buildSlotAngle = Math.PI / 6;  // 30°
+WYLL.realizeBuildSlots = function(district) {
+    const args = [
+        district,
+        this.yieldVisualizer.backgroundSpriteGrid,
+        this.yieldVisualizer.foregroundSpriteGrid,
+    ];
+    return realizeBuildSlots.apply(this, args);
 }
-// patch WYLL.updatePlot() to fix fractional yields under 5
-WYLL.updatePlot = function(location, cityID) {
+WYLL.updateSpecialistPlot = function(info) {
     const yieldsToAdd = [];
-    for (const workablePlotIndex of PlotWorkersManager.allWorkerPlotIndexes) {
-        if (workablePlotIndex == location) {
-            return;
-        }
-    }
-    this.yieldSpriteGrid.clearPlot(location);
-    const yields = cityID ? GameplayMap.getYieldsWithCity(location, cityID) :
-        GameplayMap.getYields(location, GameContext.localPlayerID);
-    for (const [yieldType, amount] of yields) {
-        const yieldDef = GameInfo.Yields.lookup(yieldType);
-        if (yieldDef) {
-            const icons = this.yieldIcons.get(yieldType);
-            if (icons) {
-                if (amount >= 5 || Math.ceil(amount) != amount) {
-                    yieldsToAdd.push({ icon: icons[4], amount });
-                } else {
-                    yieldsToAdd.push({ icon: icons[amount - 1] });
-                }
-            }
-        }
-    }
-    const groupWidth = (yieldsToAdd.length - 1) * this.yieldSpritePadding;
-    const groupOffset = groupWidth * 0.5 - groupWidth;
-    const iconOffset = {
-        x: 0,
-        y: 0,
-        z: this.iconZOffset
-    };
-    yieldsToAdd.forEach((yieldData, i) => {
-        const xPos = i * this.yieldSpritePadding + groupOffset;
-        iconOffset.x = xPos;
-        if (yieldData.icon) {
-            this.yieldSpriteGrid.addSprite(location, yieldData.icon, iconOffset);
-        }
-        if (yieldData.amount) {
-            this.yieldSpriteGrid.addText(location, yieldData.amount.toString(), iconOffset, this.fontData);
+    const maintenancesToAdd = [];
+    info.NextYields.forEach((yieldNum, i) => {
+        const yieldDefinition = GameInfo.Yields[i];
+        const netYieldChange = Math.round((yieldNum - info.CurrentYields[i]) * 10) / 10;
+        if (netYieldChange != 0 && yieldDefinition) {
+            yieldsToAdd.push({ yieldDelta: netYieldChange, yieldType: yieldDefinition.YieldType });
         }
     });
+    info.NextMaintenance.forEach((yieldNum, i) => {
+        const yieldDefinition = GameInfo.Yields[i];
+        const netYieldChange = Math.round((-yieldNum + info.CurrentMaintenance[i]) * 10) / 10;
+        if (netYieldChange != 0 && yieldDefinition) {
+            maintenancesToAdd.push({ yieldDelta: netYieldChange, yieldType: yieldDefinition.YieldType });
+        }
+    });
+    const currentWorkers = info.NumWorkers;
+    const workerCap = PlotWorkersManager.cityWorkerCap;
+    const location = GameplayMap.getLocationFromIndex(info.PlotIndex);
+    if (currentWorkers > 0) {
+        for (let i = 0; i < workerCap; i++) {
+            const offsetAndScale = this.getSpecialistPipOffsetsAndScale(i, workerCap);
+            if (i < currentWorkers) {
+                const texture = "specialist_tile_pip_full";
+                this.yieldVisualizer.addSprite(
+                    location,
+                    texture,
+                    {
+                        x: offsetAndScale.xOffset,
+                        y: offsetAndScale.yOffset,
+                        z: ICON_Z_OFFSET
+                    },
+                    { scale: offsetAndScale.scale }
+                );
+            } else {
+                const texture = "specialist_tile_pip_empty";
+                this.yieldVisualizer.addSprite(
+                    location,
+                    texture,
+                    {
+                        x: offsetAndScale.xOffset,
+                        y: offsetAndScale.yOffset,
+                        z: ICON_Z_OFFSET
+                    },
+                    { scale: offsetAndScale.scale }
+                );
+            }
+        }
+    } else {
+        for (let i = 0; i < workerCap; i++) {
+            const offsetAndScale = this.getSpecialistPipOffsetsAndScale(i, workerCap);
+            this.yieldVisualizer.addSprite(
+                location,
+                "specialist_tile_pip_empty",
+                {
+                    x: offsetAndScale.xOffset,
+                    y: offsetAndScale.yOffset,
+                    z: ICON_Z_OFFSET
+                },
+                { scale: offsetAndScale.scale }
+            );
+        }
+    }
+    if (!info.IsBlocked) {
+        yieldsToAdd.forEach((yieldPillData, i) => {
+            const groupWidth = (yieldsToAdd.length - 1) * this.yieldSpritePadding;
+            const offset = { x: i * this.yieldSpritePadding + groupWidth / 2 - groupWidth, y: 6 };
+            this.yieldVisualizer.addYieldChange(yieldPillData, location, offset, 4294967295, YIELD_CHANGE_OFFSET);
+        });
+        maintenancesToAdd.forEach((yieldPillData, i) => {
+            const groupWidth = (maintenancesToAdd.length - 1) * this.yieldSpritePadding;
+            const offset = { x: i * this.yieldSpritePadding + groupWidth / 2 - groupWidth, y: -10 };
+            this.yieldVisualizer.addYieldChange(yieldPillData, location, offset, 4294967295, YIELD_CHANGE_OFFSET);
+        });
+    }
+    const topOffset = this.getSpecialistPipOffsetsAndScale(-1, workerCap);
+    this.buildSlotSpritePosition.y = topOffset.yOffset;
+    const districtID = MapCities.getDistrict(location.x, location.y);
+    const district = Districts.get(districtID);
+    realizeBuildSlots.apply(this, [
+        district,
+        this.yieldVisualizer.backgroundSpriteGrid,
+        this.yieldVisualizer.foregroundSpriteGrid,
+    ]);
+}
+WYLL.getSpecialistPipOffsetsAndScale = function(index, pips) {
+    const scale = SPECIALIST_SHRINK_LIMIT < pips ? SPECIALIST_SHRINK_SCALE : 0.9;
+    const rows = Math.ceil(pips / SPECIALIST_COLUMNS);
+    const yOrigin = SPECIALIST_Y + (rows - 1/2) * SPECIALIST_DY * scale;
+    if (index < 0) {
+        const xOffset = 0;
+        const yOffset = Math.max(24, yOrigin + SPECIALIST_DY * scale);
+        return { xOffset, yOffset, scale };
+    }
+    const cols = Math.ceil(pips / rows);
+    const firstSize = pips % cols || cols;
+    const colIndex = Math.floor((index - firstSize) / cols) + 1;
+    const rowSize = colIndex ? cols : firstSize;
+    const xOrigin = (1 - rowSize) * SPECIALIST_DX / 2;
+    const rowIndex = index < firstSize ? index : (index - firstSize) % cols;
+    const xOffset = (xOrigin + rowIndex * SPECIALIST_DX) * scale;
+    const yOffset = yOrigin - colIndex * SPECIALIST_DY * scale;
+    return { xOffset, yOffset, scale };
 }
 // patch WYLL.updateWorkablePlot()
-if (!ACTIVE_MODS.has("jnr-concise-specialists-lens")) {
-    // yield to Concise Specialist Lens
-    WYLL.updateWorkablePlot = updateWorkablePlot;
-}
-function updateWorkablePlot(info) {
+// TODO: rework this and merge with WYLL.updateSpecialistPlot()
+WYLL.updateWorkablePlot = function(info) {
     if (info.IsBlocked) {
         const location = GameplayMap.getLocationFromIndex(info.PlotIndex);
         this.yieldSpriteGrid.addSprite(location, "city_special_base", this.blockedSpecialistSpriteOffset, {
