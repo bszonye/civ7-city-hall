@@ -1,7 +1,7 @@
 import '/core/ui/options/screen-options.js';  // make sure this loads first
 import { C as CategoryType, O as Options, a as OptionType } from '/core/ui/options/editors/index.chunk.js';
 // set up mod options tab
-import ModOptions from '/bz-map-trix/ui/options/mod-options.js';
+import ModOptions from '/bz-city-hall/ui/options/mod-options.js';
 
 const bzCityHallOptions = new class {
     modID = "bz-city-hall";
