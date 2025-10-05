@@ -12,9 +12,10 @@ function getYields(building) {
         .filter(a => a.$hash == type && !a.RequiresActivation)
         .map(a => Game.getHash(a.YieldChangeId));
     const bonus = atypes.map(atype => GameInfo.Adjacency_YieldChanges.lookup(atype));
-    const yields = [...base, ...bonus].sort(yieldChangeSort);
-    const yieldTypes = new Set(yields.map(y => y.YieldType));
-    return [...yieldTypes];
+    const types = (list) => list.sort(yieldChangeSort).map(y => y.YieldType);
+    const baseYields = new Set(types(base));
+    const bonusYields = new Set(types(bonus));
+    return { baseYields, bonusYields };
 }
 function gatherBuildingsTagged(tag) {
     return new Set(GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type));
@@ -32,7 +33,7 @@ function realizeBuildSlots(district, slotGrid, yieldGrid) {
     }
     const loc = district.location;
     const constructibles = MapConstructibles.getConstructibles(loc.x, loc.y);
-    const buildingSlots = [];
+    const slots = [];
     let maxSlots = districtDefinition.MaxConstructibles;
     for (const constructibleID of constructibles) {
         const existingConstructible = Constructibles.getByComponentID(constructibleID);
@@ -56,35 +57,50 @@ function realizeBuildSlots(district, slotGrid, yieldGrid) {
         // building icon
         const iconURL = UI.getIconBLP(info.ConstructibleType) || "";
         // building yield type flag
-        const yields = getYields(info).map(y => UI.getIconBLP(y + "_5"));
-        buildingSlots.push({ iconURL, yields, });
+        const { baseYields, bonusYields } = getYields(info);
+        const isBuilding = info.ConstructibleClass == "BUILDING";
+        slots.push({ iconURL, baseYields, bonusYields, isBuilding });
     }
     const origin = this.buildSlotSpritePosition ?? { x: 0, y: 24, z: 0 };
     const scale = this.buildSlotSpriteScale ?? 0.9;
     const padding = this.buildSlotSpritePadding;
-    for (let i = 0; i < maxSlots; i++) {
+    for (const [i, slot] of slots.entries()) {
         // get coordinates
         const groupWidth = (maxSlots - 1) * padding;
         const position = { ...origin };
         position.x = origin.x + i * padding - groupWidth / 2;
         // show constructible icon (or empty slot)
-        const slot = buildingSlots[i];
         const icon = slot ? slot.iconURL : UI.getIconBLP("BUILDING_EMPTY");
         const params = { scale: slot ? scale : 8/9 * scale };
         slotGrid.addSprite(loc, icon, position, params);
         if (!slot) continue;
         // show constructible yields
-        for (const [j, yieldIcon] of slot.yields.entries()) {
-            const p = { ...position };
-            const w = slot.yields.length - 1;
-            const a = (j - w/2) * 2/7 * Math.PI;
-            const dx = 7 * scale * Math.sin(a);
-            const dy = -7 * scale * Math.cos(a);
+        // const yields = getYields(info).map(y => UI.getIconBLP(y + "_5"));
+        const addBadges = (yields, mirror) => {
+            const list = [...yields];
             const params = { scale: scale / 2 };
-            p.x += dx;
-            p.y += dy * Math.cos(this.buildSlotAngle);
-            p.z += dy * Math.sin(this.buildSlotAngle);
-            yieldGrid.addSprite(loc, yieldIcon, p, params);
+            const start = (1 - list.length) / 2;
+            for (const [j, type] of list.entries()) {
+                const icon = UI.getIconBLP(type + "_5");
+                const p = { ...position };
+                const a = (j + start) * 2/7 * Math.PI;
+                const r = 7;
+                const dx = scale * r * Math.sin(a) * (mirror ? -1 : 1);
+                const dy = -scale * r * Math.cos(a);
+                p.x += dx;
+                p.y += dy * Math.cos(this.buildSlotAngle);
+                p.z += dy * Math.sin(this.buildSlotAngle);
+                yieldGrid.addSprite(loc, icon, p, params);
+            }
+        }
+        const base = slot.baseYields;
+        const bonus = slot.bonusYields;
+        if (base.size == 1 && bonus.size == 1) {
+            // always show at least two yields
+            addBadges([...bonus, ...base]);
+        } else {
+            // otherwise, merge the sets
+            addBadges(new Set([...bonus, ...base]));
         }
     }
 }
