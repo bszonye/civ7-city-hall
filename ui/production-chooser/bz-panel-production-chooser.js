@@ -86,8 +86,7 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .text-negative,
 .bz-city-hall .text-negative-light {
     color: #ee5566;
-    text-shadow: 0 0.0555555556rem 0.1111111111rem black,
-                 0 0 0.3333333333rem #a00;
+    text-shadow: 0 0.0555555556rem 0.1111111111rem black, 0 0 0.3333333333rem #a00;
 }
 `,  // production item styling
 `
@@ -106,11 +105,8 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .panel-production-chooser .fxs-scrollbar__track--vertical {
     right: -0.1111111111rem;
 }
-.bz-city-hall .bz-pci-name,
-.bz-city-hall .bz-pci-details,
 .bz-city-hall .bz-pci-pcost,
-.bz-city-hall .bz-pci-cost,
-.bz-city-hall .bz-pci-ageless {
+.bz-city-hall .bz-pci-cost {
     text-shadow: 0.0555555556rem 0.0555555556rem 0.1111111111rem black,
                  0 0.0555555556rem 0.1666666667rem black;
 }
