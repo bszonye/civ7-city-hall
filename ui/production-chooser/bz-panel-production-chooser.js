@@ -111,7 +111,14 @@ const BZ_HEAD_STYLE = [
     height: 1rem;
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
 }
-.bz-city-hall .bz-pci-container {
+.bz-city-hall .bz-pci-icon,
+.bz-city-hall .bz-pci-name,
+.bz-city-hall .bz-pci-recs,
+.bz-city-hall .bz-pci-details,
+.bz-city-hall .bz-pci-pcost,
+.bz-city-hall .bz-pci-cost,
+.bz-city-hall .bz-pci-progress,
+.bz-city-hall .bz-pci-ageless {
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
 }
 .bz-city-hall .bz-pci-cost .production-chooser-tooltip__subtext-bg.rounded {
@@ -129,10 +136,6 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
     height: 1.1111111111rem;
-}
-.bz-city-hall .bz-pci-details img.size-8 {
-    width: 1.3333333333rem;
-    height: 1.3333333333rem;
 }
 .bz-city-hall .bz-show-progress .bz-pci-pcost-icon,
 .bz-city-hall .bz-show-progress .bz-pci-cost-icon {
@@ -557,15 +560,15 @@ class bzProductionChooserItem {
         nameContainer.classList.value = "flex justify-start items-center tracking-25";
         c.itemNameElement.classList.value = "bz-pci-name font-title-xs text-accent-2 m-1 uppercase";
         nameContainer.appendChild(c.itemNameElement);
-        c.recommendationsContainer.classList.value = "flex items-center justify-center mx-1 -my-2";
+        c.recommendationsContainer.classList.value = "bz-pci-recs flex items-center justify-center mx-1 -my-2";
         nameContainer.appendChild(c.recommendationsContainer);
         infoColumn.appendChild(nameContainer);
         // error messages
-        c.errorTextElement.classList.value = "bz-pci-error flex-col hidden font-body-xs text-negative-light mx-1 -mt-1 mb-1 z-1 pointer-events-none";
+        c.errorTextElement.classList.value = "bz-pci-error font-body-xs text-negative-light mx-1 -mt-1 mb-1 z-1 pointer-events-none";
         infoColumn.appendChild(c.errorTextElement);
         // yield preview display + unit stats
         c.secondaryDetailsElement.classList.value =
-            "bz-pci-details hidden flex font-body-xs -mt-1";
+            "bz-pci-details hidden flex font-body-xs -mt-1 bg-primary";
         infoColumn.appendChild(c.secondaryDetailsElement);
         // base yield display
         c.alternateYieldElement.classList.value =

@@ -165,7 +165,6 @@ const GetBaseYieldsHTML = (items) => {
     }, "");
 }
 const GetSecondaryDetailsHTML = (items) => {
-
     return items.reduce((acc, { icon, value, name }) => {
         return acc + `<div class="flex items-center mr-2"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-6" />${value}</div>`;
     }, "");
