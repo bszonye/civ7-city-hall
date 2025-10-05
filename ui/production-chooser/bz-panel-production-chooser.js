@@ -99,15 +99,16 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-view-hidden {
     position: fixed;
     z-index: 1;
-    bottom: -0.0555555556rem;
+    top: calc(100vh - 1rem);
+    height: 1rem;
     left: 1.6666666667rem;
     padding: 0 0.5555555556rem 0 0.2777777778rem;
-    background-color: #23252b;
     text-shadow: 0 0.0555555556rem 0.1111111111rem black;
+    background-color: #23252bdd;
 }
 .bz-city-hall .bz-view-hidden fxs-checkbox {
-    width: 1.3333333333rem;
-    height: 1.3333333333rem;
+    width: 1rem;
+    height: 1rem;
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
 }
 .bz-city-hall .bz-pci-container {
@@ -349,8 +350,9 @@ class bzProductionChooserScreen {
             "absolute truncate pb-2 px-1 -mx-1 text-secondary text-xs opacity-0 group-hover\\:opacity-100 transition-opacity";
         this.viewHiddenActiveLabel.setAttribute("data-l10n-id", "LOC_UI_PRODUCTION_VIEW_HIDDEN");
         viewHiddenCheckboxLabel.appendChild(this.viewHiddenActiveLabel);
-        // make room between footer (Convert to City) and checkbox
-        c.frame.dataset.footerClass = "px-5 pb-2 m-0\\.5";
+        // make room between checkbox and Convert to City button
+        c.upgradeToCityButton.classList.add("mt-0\\.5", "mb-1\\.5");
+        c.frame.dataset.footerClass = "px-5 pb-1 mx-0\\.5";
     }
     afterUpdateCategories() {
         const uq = this.component.uniqueQuarter;
