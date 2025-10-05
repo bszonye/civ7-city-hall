@@ -81,6 +81,16 @@ const BZ_HEAD_STYLE = [
 .bz-city-compact .last-production-frame .pr-4 {
     padding-right: 0.4444444444rem;
 }
+`,  // general item styling
+`
+.bz-city-hall .text-negative,
+.bz-city-hall .text-negative-light {
+    color: #ee5566;
+    text-shadow: 0 0.0555555556rem 0.1111111111rem black,
+                 0 0 0.3333333333rem #a00;
+}
+`,  // production item styling
+`
 .bz-city-hall .panel-production-chooser .subsystem-frame__content {
     padding-left: 0.4444444444rem;
     padding-right: 0.2222222222rem;
@@ -96,27 +106,19 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .panel-production-chooser .fxs-scrollbar__track--vertical {
     right: -0.1111111111rem;
 }
-.bz-city-hall .bz-view-hidden {
-    position: fixed;
-    z-index: 1;
-    top: calc(100vh - 1rem);
-    height: 1rem;
-    left: 1.6666666667rem;
-    padding: 0 0.5555555556rem 0 0.2777777778rem;
-    text-shadow: 0 0.0555555556rem 0.1111111111rem black;
-    background-color: #23252bdd;
-}
-.bz-city-hall .bz-view-hidden fxs-checkbox {
-    width: 1rem;
-    height: 1rem;
-    filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
-}
-.bz-city-hall .bz-pci-icon,
 .bz-city-hall .bz-pci-name,
-.bz-city-hall .bz-pci-recs,
 .bz-city-hall .bz-pci-details,
 .bz-city-hall .bz-pci-pcost,
 .bz-city-hall .bz-pci-cost,
+.bz-city-hall .bz-pci-ageless {
+    text-shadow: 0 0.0555555556rem 0.1666666667rem black,
+                 0.0555555556rem 0.0555555556rem 0.1111111111rem black;
+}
+.bz-city-hall .bz-pci-icon,
+.bz-city-hall .bz-pci-recs,
+.bz-city-hall .bz-pci-details img,
+.bz-city-hall .bz-pci-pcost-icon,
+.bz-city-hall .bz-pci-cost-icon,
 .bz-city-hall .bz-pci-progress,
 .bz-city-hall .bz-pci-ageless {
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
@@ -144,6 +146,23 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-is-purchase.bz-has-progress .build-queue__progress-bar-fill {
     filter: saturate(0) fxs-color-tint(${BZ_COLOR.gold}) brightness(2.0) contrast(1.8) saturate(0.7);
   background-position: center;
+}
+`,  // relocate View Hidden button
+`
+.bz-city-hall .bz-view-hidden {
+    position: fixed;
+    z-index: 1;
+    top: calc(100vh - 1rem);
+    height: 1rem;
+    left: 1.6666666667rem;
+    padding: 0 0.5555555556rem 0 0.2777777778rem;
+    text-shadow: 0 0.0555555556rem 0.1666666667rem black;
+    background-color: #23252bdd;
+}
+.bz-city-hall .bz-view-hidden fxs-checkbox {
+    width: 1rem;
+    height: 1rem;
+    filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
 }
 `,  // improve panel header layout
 `
@@ -498,9 +517,14 @@ class bzProductionChooserItem {
                 this.updateInfo();
                 break;
             case "data-type":
+                if (newValue) {
+                    c.iconElement.setAttribute("data-icon-id", newValue);
+                } else {
+                    c.iconElement.removeAttribute("data-icon-id");
+                }
                 this.updateInfo();
                 this.updateProductionCost();
-                break;
+                return false;
             case "data-cost": {
                 const cost = newValue ? parseInt(newValue) : 0;
                 const showCost = isNaN(cost) || cost < 0;
@@ -568,7 +592,7 @@ class bzProductionChooserItem {
         infoColumn.appendChild(c.errorTextElement);
         // yield preview display + unit stats
         c.secondaryDetailsElement.classList.value =
-            "bz-pci-details hidden flex font-body-xs -mt-1 bg-primary";
+            "bz-pci-details hidden flex font-body-xs -mt-1";
         infoColumn.appendChild(c.secondaryDetailsElement);
         // base yield display
         c.alternateYieldElement.classList.value =

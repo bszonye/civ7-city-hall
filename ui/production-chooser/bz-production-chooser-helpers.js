@@ -145,7 +145,7 @@ const GetCurrentBestTotalYieldForConstructible = (city, constructibleType) => {
         const { def, change } = nonZeroEntries[i];
         let valueText = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", change);
         if (change < 0) {
-            valueText = `<span class="text-negative font-bold">${valueText}</span>`;
+            valueText = `<span class="text-negative">${valueText}</span>`;
         }
         results.push({
             iconId: def.$index.toString(),
