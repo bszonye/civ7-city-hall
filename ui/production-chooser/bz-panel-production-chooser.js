@@ -100,18 +100,15 @@ const BZ_HEAD_STYLE = [
     position: fixed;
     z-index: 1;
     bottom: -0.0555555556rem;
-    left: 37.3333333333rem;
-    margin-left: 0.1111111111rem;
-    transform: translateX(-100%);
-    padding: 0 0.5555555556rem 0 0.3333333333rem;
+    left: 1.6666666667rem;
+    padding: 0 0.5555555556rem 0 0.2777777778rem;
     background-color: #23252b;
-}
-.bz-city-compact .bz-view-hidden {
-    left: 28.4444444444rem;
+    text-shadow: 0 0.0555555556rem 0.1111111111rem black;
 }
 .bz-city-hall .bz-view-hidden fxs-checkbox {
     width: 1.3333333333rem;
     height: 1.3333333333rem;
+    filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
 }
 .bz-city-hall .bz-pci-container {
     filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
@@ -208,6 +205,7 @@ class bzProductionChooserScreen {
     static c_doOrConfirmConstruction;
     static isPurchase = false;
     static isCDPanelOpen = true;
+    viewHiddenActiveLabel = document.createElement("fxs-activatable");
     isGamepadActive = Input.getActiveDeviceType() == InputDeviceType.Controller;
     constructor(component) {
         this.component = component;
@@ -278,13 +276,17 @@ class bzProductionChooserScreen {
         engine.on("input-source-changed", this.onActiveDeviceTypeChanged, this);
     }
     afterAttach() {
-        engine.on("ConstructibleChanged", this.component.onConstructibleAddedToMap, this.component);
+        const c = this.component;
+        engine.on("ConstructibleChanged", c.onConstructibleAddedToMap, this.component);
+        requestAnimationFrame(() => this.viewHiddenActiveLabel.addEventListener(
+            "engine-input", c.viewHiddenCheckbox.component.engineInputListener));
         // restore the city details panel if it was open previously
         if (bzProductionChooserScreen.isCDPanelOpen && !this.component.isSmallScreen()) {
             this.component.showCityDetails();
         }
     }
     beforeDetach() {
+        const c = this.component;
         if (!this.component.isSmallScreen()) {
             // remember whether the city details panel is open
             const cdSlot = this.component.cityDetailsSlot;
@@ -292,13 +294,15 @@ class bzProductionChooserScreen {
             bzProductionChooserScreen.isCDPanelOpen =
                 cdPanel && !cdPanel.classList.contains("hidden");
         }
+        engine.off("ConstructibleChanged", c.onConstructibleAddedToMap, this.component);
+        this.viewHiddenActiveLabel.removeEventListener(
+            "engine-input", c.viewHiddenCheckbox.component.engineInputListener);
     }
     afterDetach() {
         // clear Purchase tab memory when closing the panel.
         // this includes switches to the building-placement interface,
         // but that has its own means of restoring the Purchase tab.
         bzProductionChooserScreen.isPurchase = false;
-        engine.off("ConstructibleChanged", this.component.onConstructibleAddedToMap, this.component);
         engine.off("input-source-changed", this.onActiveDeviceTypeChanged, this);
     }
     afterRender() {
@@ -339,8 +343,14 @@ class bzProductionChooserScreen {
         const viewHiddenContainer = c.viewHiddenCheckbox.parentElement;
         const viewHiddenCheckboxLabel = viewHiddenContainer.lastChild;
         c.viewHiddenCheckbox.classList.add("mr-1");
-        viewHiddenContainer.classList.add("bz-view-hidden");
-        viewHiddenCheckboxLabel.classList.add("text-shadow-subtle");
+        viewHiddenContainer.classList.add("bz-view-hidden", "group");
+        viewHiddenCheckboxLabel.classList.add("relative");
+        this.viewHiddenActiveLabel.classList.value =
+            "absolute truncate pb-2 px-1 -mx-1 text-secondary text-xs opacity-0 group-hover\\:opacity-100 transition-opacity";
+        this.viewHiddenActiveLabel.setAttribute("data-l10n-id", "LOC_UI_PRODUCTION_VIEW_HIDDEN");
+        viewHiddenCheckboxLabel.appendChild(this.viewHiddenActiveLabel);
+        // make room between footer (Convert to City) and checkbox
+        c.frame.dataset.footerClass = "px-5 pb-2 m-0\\.5";
     }
     afterUpdateCategories() {
         const uq = this.component.uniqueQuarter;
