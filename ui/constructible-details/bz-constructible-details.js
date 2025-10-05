@@ -30,6 +30,3 @@ class bzConstructibleDetails {
     }
 }
 Controls.decorate("constructible-details", (c) => new bzConstructibleDetails(c));
-for (const adjacency of GameInfo.Constructible_Adjacencies) {
-    console.warn(`TRIX ADJ ${JSON.stringify(adjacency)}`);
-}
