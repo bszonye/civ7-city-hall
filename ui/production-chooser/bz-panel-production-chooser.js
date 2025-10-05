@@ -111,8 +111,8 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-pci-pcost,
 .bz-city-hall .bz-pci-cost,
 .bz-city-hall .bz-pci-ageless {
-    text-shadow: 0 0.0555555556rem 0.1666666667rem black,
-                 0.0555555556rem 0.0555555556rem 0.1111111111rem black;
+    text-shadow: 0.0555555556rem 0.0555555556rem 0.1111111111rem black,
+                 0 0.0555555556rem 0.1666666667rem black;
 }
 .bz-city-hall .bz-pci-icon,
 .bz-city-hall .bz-pci-recs,
@@ -154,10 +154,13 @@ const BZ_HEAD_STYLE = [
     z-index: 1;
     top: calc(100vh - 1rem);
     height: 1rem;
-    left: 1.6666666667rem;
-    padding: 0 0.5555555556rem 0 0.2777777778rem;
+    left: 1.5555555556rem;
+    padding: 0 0.4444444444rem 0 0.3333333333rem;
     text-shadow: 0 0.0555555556rem 0.1666666667rem black;
-    background-color: #23252bdd;
+    background-color: #23252bcc;
+    border-style: solid;
+    border-width: 0 0.1111111111rem;
+    border-color: #4c473d;
 }
 .bz-city-hall .bz-view-hidden fxs-checkbox {
     width: 1rem;
@@ -582,7 +585,7 @@ class bzProductionChooserItem {
         // name and advisor icons
         const nameContainer = document.createElement("div");
         nameContainer.classList.value = "flex justify-start items-center tracking-25";
-        c.itemNameElement.classList.value = "bz-pci-name font-title-xs text-accent-2 m-1 uppercase";
+        c.itemNameElement.classList.value = "bz-pci-name font-title-xs text-accent-2 uppercase m-1 z-1";
         nameContainer.appendChild(c.itemNameElement);
         c.recommendationsContainer.classList.value = "bz-pci-recs flex items-center justify-center mx-1 -my-2";
         nameContainer.appendChild(c.recommendationsContainer);
