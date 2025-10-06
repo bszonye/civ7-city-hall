@@ -68,8 +68,7 @@ class bzPlacePopulationPanel {
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
-        // TODO: update this if necessary
-        // this.patchPrototypes(this.component);
+        this.patchPrototypes(this.component);
     }
     patchPrototypes(component) {
         const c_prototype = Object.getPrototypeOf(component);
@@ -80,15 +79,38 @@ class bzPlacePopulationPanel {
         const c_buildSpecialistInfo = proto.buildSpecialistInfo;
         const after_buildSpecialistInfo = this.afterBuildSpecialistInfo;
         proto.buildSpecialistInfo = function(...args) {
-            const c_rv = c_buildSpecialistInfo.apply(this, args);
-            return after_buildSpecialistInfo.apply(this.bzComponent, [c_rv, ...args]);
+            const rv = c_buildSpecialistInfo.apply(this, args);
+            after_buildSpecialistInfo.apply(this.bzComponent, args);
+            return rv;
         }
     }
     beforeAttach() { }
     afterAttach() { }
     beforeDetach() { }
     afterDetach() { }
-    afterBuildSpecialistInfo(specialistInfoFrame) {
+    afterBuildSpecialistInfo() {
+        // improve Breakdown layout
+        const c = this.component;
+        const heads = c.specialistMaximizedContainer.querySelectorAll(
+            [
+                `[data-l10n-id="LOC_BUILDING_PLACEMENT_TILE_TYPE"]`,
+                `[data-l10n-id="LOC_BUILDING_PLACEMENT_SPECIALIST_BONUS"]`,
+                `[data-l10n-id="LOC_BUILDING_PLACEMENT_SPECIALIST_MAINTENANCE"]`,
+            ].join(",")
+        );
+        for (const head of heads) {
+            const section = head.parentElement;
+            section.classList.remove("mx-2");
+            section.classList.add("flex-wrap", "mt-1", "mx-1");
+            for (const text of section.querySelectorAll(".text-sm")) {
+                // shrink and align text
+                text.parentElement.classList.add("items-center");
+                text.classList.remove("text-sm");
+                text.classList.add("text-xs");
+            }
+        }
+    }
+    TODOafterBuildSpecialistInfo(specialistInfoFrame) {  // TODO: remove
         // fix styling
         const infoContainer = specialistInfoFrame.lastChild;
         infoContainer.classList.remove("ml-5", "ml-8");
