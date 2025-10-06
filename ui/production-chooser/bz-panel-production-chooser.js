@@ -85,8 +85,8 @@ const BZ_HEAD_STYLE = [
 `
 .bz-city-hall .text-negative,
 .bz-city-hall .text-negative-light {
-    color: #ee5566;
-    text-shadow: 0 0.0555555556rem 0.1111111111rem black, 0 0 0.3333333333rem #a00;
+    color: #ff6644;
+    text-shadow: 0 0.0555555556rem 0.1111111111rem black, 0 0 0.3333333333rem black;
 }
 `,  // production item styling
 `
