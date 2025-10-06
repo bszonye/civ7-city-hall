@@ -1,4 +1,5 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
+import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
 
 const YIELD_ORDER = new Map([...GameInfo.Yields].map(y => [y.YieldType, y.$index]));
 const yieldSort = (a, b) => YIELD_ORDER.get(a.YieldType) - YIELD_ORDER.get(b.YieldType);
@@ -17,11 +18,6 @@ function getYields(building) {
     const bonusYields = new Set(types(bonus));
     return { baseYields, bonusYields };
 }
-function gatherBuildingsTagged(tag) {
-    return new Set(GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type));
-}
-const BZ_LARGE = gatherBuildingsTagged("FULL_TILE");
-
 function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
     if (!district || !slotGrid) return;
     const districtDefinition = GameInfo.Districts.lookup(district.type);
@@ -53,7 +49,7 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
         // skip walls
         if (info.ExistingDistrictOnly) continue;
         // large buildings take up an extra slot
-        if (BZ_LARGE.has(info.ConstructibleType)) maxSlots -= 1;
+        if (ConstructibleHasTagType(info.ConstructibleType, "FULL_TILE")) maxSlots -= 1;
         // building icon
         const iconURL = UI.getIconBLP(info.ConstructibleType) || "";
         // building yield type flag
