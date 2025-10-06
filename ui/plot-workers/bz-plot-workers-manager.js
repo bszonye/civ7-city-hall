@@ -32,6 +32,8 @@ proto.update = function() {
         );
         return;
     }
+    this._bzWorkerBase = null;
+    this._bzWorkerInfo = new Map();
     this._allWorkerPlots = city.Workers.GetAllPlacementInfo();
     this._allWorkerPlots.forEach((info) => {
         this._allWorkerPlotIndexes.push(info.PlotIndex);
@@ -41,8 +43,8 @@ proto.update = function() {
         } else {
             this._workablePlots.push(info);
             this._workablePlotIndexes.push(info.PlotIndex);
+            this.bzUpdateWorkerInfo(info);
         }
-        this.bzUpdateWorkerInfo(info);
     });
     this._cityWorkerCap = city.Workers.getCityWorkerCap();
 }
