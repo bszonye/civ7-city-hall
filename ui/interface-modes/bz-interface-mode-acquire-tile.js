@@ -1,4 +1,4 @@
-import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
+// import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { C as CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.chunk.js';
 import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-manager.js';
@@ -14,7 +14,7 @@ const YIELD_COLOR = [
 ];
 
 // get registered interface mode object
-const ATIM = InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_ACQUIRE_TILE");
+const ATIM = {};  // InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_ACQUIRE_TILE");
 
 // patch ATIM.decorate() to extend its overlay
 ATIM.decorate = function(overlay) {

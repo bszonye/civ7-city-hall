@@ -22,7 +22,7 @@ function gatherBuildingsTagged(tag) {
 }
 const BZ_LARGE = gatherBuildingsTagged("FULL_TILE");
 
-function realizeBuildSlots(district, slotGrid, yieldGrid) {
+function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
     if (!district || !slotGrid) return;
     const districtDefinition = GameInfo.Districts.lookup(district.type);
     if (!districtDefinition) {
@@ -95,13 +95,8 @@ function realizeBuildSlots(district, slotGrid, yieldGrid) {
         }
         const base = slot.baseYields;
         const bonus = slot.bonusYields;
-        if (base.size == 1 && bonus.size == 1) {
-            // always show at least two yields
-            addBadges([...bonus, ...base]);
-        } else {
-            // otherwise, merge the sets
-            addBadges(new Set([...bonus, ...base]));
-        }
+        const merged = showBase ? new Set([...bonus, ...base]) : bonus;
+        addBadges(merged);
     }
 }
 

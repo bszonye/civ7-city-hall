@@ -25,6 +25,7 @@ WYLL.realizeBuildSlots = function(district) {
         district,
         this.yieldVisualizer.backgroundSpriteGrid,
         this.yieldVisualizer.foregroundSpriteGrid,
+        false,
     ];
     return realizeBuildSlots.apply(this, args);
 }
@@ -108,11 +109,7 @@ WYLL.updateSpecialistPlot = function(info) {
     this.buildSlotSpritePosition.y = topOffset.yOffset;
     const districtID = MapCities.getDistrict(location.x, location.y);
     const district = Districts.get(districtID);
-    realizeBuildSlots.apply(this, [
-        district,
-        this.yieldVisualizer.backgroundSpriteGrid,
-        this.yieldVisualizer.foregroundSpriteGrid,
-    ]);
+    this.realizeBuildSlots(district);
 }
 WYLL.getSpecialistPipOffsetsAndScale = function(index, pips) {
     const scale = SPECIALIST_SHRINK_LIMIT < pips ? SPECIALIST_SHRINK_SCALE : 0.9;
