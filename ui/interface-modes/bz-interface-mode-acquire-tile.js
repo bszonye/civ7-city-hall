@@ -21,7 +21,7 @@ const YIELD_BORDER_COLOR_LINEAR = YIELD_COLOR_LINEAR.map(c => ({
 
 const sortedYields = (yields) => {
     const iterator = yields
-        .map((value, index) => ({ value, index }))
+        .map((value, index) => ({ index, value }))
         .filter(y => y.value);
     return [...iterator].sort((a, b) => b.value - a.value);
 }
@@ -51,55 +51,62 @@ ATIM.decorate = function(overlay) {
         fillColor: EXPAND_CITY_COLOR_LINEAR,
         edgeColor: EXPAND_CITY_BORDER_COLOR_LINEAR
     });
-    const plotYields = new Map();
-    const bestYields = [];
-    for (const plot of PlotWorkersManager.workablePlotIndexes) {
+    const workablePlots = PlotWorkersManager.workablePlotIndexes.map(plot => {
         const changes = PlotWorkersManager.bzGetWorkerChanges(plot);
-        plotYields.set(plot, [...changes.plotYields]);
-        if (!bestYields.length) bestYields.push(...sortedYields(changes.bestPlotYields));
+        return { plot, yields: sortedYields(changes.plotYields) };
+    });
+    workablePlots.sort((a, b) => {
+        const a1 = a.yields.at(0) ?? { index: GameInfo.Yields.length, value: 0 };
+        const b1 = b.yields.at(0) ?? { index: GameInfo.Yields.length, value: 0 };
+        return b1.value - a1.value || b1.index - a1.index;
+    });
+    workablePlots.forEach(y => console.warn(`TRIX WORK ${JSON.stringify(y)}`));
+    const basicPlots = new Set(workablePlots.map(info => info.plot));
+    const usedPlots = new Set();
+    const usedColors = new Set();
+    const isRepeat = (i) => {
+        if (!i) return false;
+        const last = workablePlots[i - 1].yields[0];
+        const next = workablePlots[i].yields[0];
+        return next && last.index == next.index && last.value == next.value;
     }
     // highlight the best yields overall
-    for (const best of bestYields) {
-        if (!best.value) break;
+    for (const [i, info] of workablePlots.entries()) {
+        if (!info.yields.length) break;
         // get plots matching best change
-        const bestPlots = [];
-        for (const [plot, changes] of plotYields.entries()) {
-            if (changes[best.index] == best.value) {
-                bestPlots.push(plot);
-                plotYields.delete(plot);
-            }
-        }
-        this.plotOverlay.addPlots(bestPlots, {
-            fillColor: YIELD_COLOR_LINEAR[best.index],
-            edgeColor: YIELD_BORDER_COLOR_LINEAR[best.index],
+        const plot = info.plot;
+        const color = info.yields[0].index;
+        if (usedColors.has(color) && !isRepeat(i)) continue;
+        console.warn(`TRIX BEST ${plot} ${JSON.stringify(info.yields[0])}`);
+        this.plotOverlay.addPlots(plot, {
+            fillColor: YIELD_COLOR_LINEAR[color],
+            edgeColor: YIELD_BORDER_COLOR_LINEAR[color],
         });
+        usedColors.add(color);
+        usedPlots.add(plot);
+        basicPlots.delete(plot);
     }
-    // highlight the best yield on each plot, if it's non-trivial
-    if (bestYields.length) {
-        const threshold = Math.max(1, bestYields.at(-1).value);
-        for (const [plot, yields] of plotYields.entries()) {
-            const best = sortedYields(yields).at(0);
-            if (!best || best.value < threshold) continue;
-            plotYields.delete(plot);
-            // highlight best yield
-            this.plotOverlay.addPlots(plot, {
-                fillColor: YIELD_COLOR_LINEAR[best.index],
-                edgeColor: YIELD_BORDER_COLOR_LINEAR[best.index],
-            });
-        }
+    // highlight additional yields up to a limit
+    const maxHighlights = GameInfo.Yields.length;
+    // const maxHighlights = workablePlots.length * 2/5;
+    for (const [i, info] of workablePlots.entries()) {
+        if (!info.yields.length) break;
+        if (usedPlots.has(info.plot)) continue;
+        if (maxHighlights <= usedPlots.size && !isRepeat(i)) break;
+        // get plots matching best change
+        const plot = info.plot;
+        const color = info.yields[0].index;
+        console.warn(`TRIX EXTRA ${plot} ${JSON.stringify(info.yields[0])}`);
+        this.plotOverlay.addPlots(plot, {
+            fillColor: YIELD_COLOR_LINEAR[color],
+            edgeColor: YIELD_BORDER_COLOR_LINEAR[color],
+        });
+        usedColors.add(color);
+        usedPlots.add(plot);
+        basicPlots.delete(plot);
     }
-    if (!plotYields.size) {  // TODO: remove debug block
-        for (const [plot, yields] of plotYields.entries()) {
-            const best = sortedYields(yields).at(0);
-            const index = best?.index ?? 6;
-            plotYields.delete(plot);
-            this.plotOverlay.addPlots(plot, {
-                fillColor: YIELD_COLOR_LINEAR[index],
-                edgeColor: YIELD_BORDER_COLOR_LINEAR[index],
-            });
-        }
-    }
-    this.plotOverlay.addPlots([...plotYields.keys()], {
+    // use basic specialist color for remaining yields
+    this.plotOverlay.addPlots([...basicPlots], {
         fillColor: ADD_SPECIALIST_COLOR,
         edgeColor: ADD_SPECIALIST_BORDER_COLOR,
     });
