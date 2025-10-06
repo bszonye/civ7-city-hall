@@ -83,10 +83,8 @@ const BZ_HEAD_STYLE = [
 }
 `,  // general item styling
 `
-.bz-city-hall .panel-city-details .text-negative,
-.bz-city-hall .panel-city-details .text-negative-light,
-.bz-city-hall .panel-production-chooser .text-negative,
-.bz-city-hall .panel-production-chooser .text-negative-light {
+.bz-city-hall .text-negative,
+.bz-city-hall .text-negative-light {
     color: #ee5566;
     text-shadow: 0 0.0555555556rem 0.1111111111rem black, 0 0 0.3333333333rem #a00;
 }
