@@ -22,6 +22,7 @@ export default [
                 CityOperationTypes: "readonly",
                 CityOperationsParametersValues: "readonly",
                 CityQueryType: "readonly",
+                Color: "readonly",
                 CombatTypes: "readonly",
                 Configuration: "readonly",
                 Constructibles: "readonly",

@@ -2,12 +2,9 @@ import { d as CategoryData, C as CategoryType } from '/core/ui/options/editors/i
 
 CategoryType["Mods"] = "mods";
 CategoryData[CategoryType.Mods] ??= {
-    title: "LOC_PAUSE_MENU_MODS_TITLE",
+    title: "LOC_UI_CONTENT_MGR_SUBTITLE",
     description: "LOC_UI_CONTENT_MGR_SUBTITLE_DESCRIPTION",
 };
-window.addEventListener("user-interface-loaded-and-ready", () => {
-    CategoryData[CategoryType.Mods].title = "LOC_PAUSE_MENU_MODS_TITLE";
-});
 
 // fix Options tab spacing
 const MOD_OPTIONS_STYLE = document.createElement("style");
