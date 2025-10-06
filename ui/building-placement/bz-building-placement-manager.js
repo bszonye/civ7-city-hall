@@ -1,12 +1,8 @@
 import { BuildingPlacementManager, BuildingPlacementConstructibleChangedEvent } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
+import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
 
 const proto = Object.getPrototypeOf(BuildingPlacementManager);
-
-// building tag helpers
-const tagTypes = (tag) => GameInfo.TypeTags.filter(e => e.Tag == tag).map(e => e.Type);
-const BZ_AGELESS = new Set(tagTypes("AGELESS"));
-const BZ_SLOTLESS = new Set(tagTypes("IGNORE_DISTRICT_PLACEMENT_CAP"));
 
 // add BPM.bzReservedPlots property:
 // plots that would block a unique quarter
@@ -48,7 +44,6 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     // find a partial unique quarter, if any
     const partialUQ = this.findExistingUniqueBuilding(civUQ);  // -1 if not found
     // check whether a district can make a unique quarter
-    // TODO: account for potential blockers in queue / in progress
     const hasUQBlocker = (p) => {
         const loc = GameplayMap.getLocationFromIndex(p);
         const ids = MapConstructibles.getConstructibles(loc.x, loc.y);
@@ -56,9 +51,11 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
         const slots = ids.map(id => Constructibles.getByComponentID(id))
             .map(c => GameInfo.Constructibles.lookup(c.type))
             .filter(c => c.ConstructibleClass == "BUILDING")
-            .filter(c => !BZ_SLOTLESS.has(c.ConstructibleType));
+            .filter(c => !c.ExistingDistrictOnly);
         // ageless buildings are blockers
-        if (slots.find(c => BZ_AGELESS.has(c.ConstructibleType))) return true;
+        if (slots.find(c => ConstructibleHasTagType(c.ConstructibleType, "AGELESS"))) {
+            return true;
+        }
         // current-age buildings are blockers
         const current = Game.age;
         if (slots.find(c => Database.makeHash(c.Age ?? "") == current)) return true;
@@ -69,7 +66,7 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     const isUQCompatible = (p) => {
         // repairs and walls are always compatible with UQs
         if (this.isRepairing) return true;
-        if (BZ_SLOTLESS.has(btype?.ConstructibleType)) return true;
+        if (constructible.ExistingDistrictOnly) return true;
         // unique district selected
         if (p == partialUQ) {
             // good: a unique building here finishes the UQ
