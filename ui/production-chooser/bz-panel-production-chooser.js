@@ -91,8 +91,7 @@ const BZ_HEAD_STYLE = [
 `,  // production item styling
 `
 .bz-city-hall .panel-production-chooser .subsystem-frame__content {
-    padding-left: 0.4444444444rem;
-    padding-right: 0.2222222222rem;
+    padding: 0.6666666667rem 0.4444444444rem;
     margin-bottom: -0.3333333333rem;
 }
 .bz-city-hall .production-category {
@@ -102,8 +101,9 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .production-category:last-child {
     margin-bottom: 0;
 }
-.bz-city-hall .panel-production-chooser .fxs-scrollbar__track--vertical {
-    right: -0.1111111111rem;
+.bz-city-hall panel-production-chooser .subsystem-frame__content .fxs-scrollbar__track--vertical {
+    margin: 1.3333333333rem -0.1111111111rem;
+    right: -0.2222222222rem;
 }
 .bz-city-hall .bz-pci-pcost,
 .bz-city-hall .bz-pci-cost {
@@ -185,6 +185,10 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-city-name-wrapper .bz-cycle-city {
     position: relative;
     z-index: 1;
+}
+.bz-city-hall .bz-city-name-wrapper .bz-cycle-city.hidden {
+    display: flex;
+    opacity: 0;
 }
 .bz-city-hall .bz-city-name-wrapper.bz-nav-help .bz-cycle-city {
     top: 1.3333333333rem;
