@@ -237,7 +237,6 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
                 });
             }
         }
-        const baseTotal = baseYields.reduce((acc, { value }) => acc + value, 0);
         const canGetWarehouseBonuses = disabled ? void 0 :
             ConstructibleHasTagType(type, "WAREHOUSE");
         const warehouseCount = disabled ? void 0 : BPM.getNumberOfWarehouseBonuses(hash);
@@ -248,7 +247,8 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ?
-            baseTotal + (warehouseCount ?? 0) + (highestAdjacency ?? 0) : 0;
+            baseYields.reduce((acc, { value }) => acc + value, 0) +
+            (warehouseCount ?? 0) + (highestAdjacency ?? 0) : 0;
         const topTier = Boolean(result.InProgress || inQueue || building && unique);
         const sortTier =
             topTier ? 9 :
