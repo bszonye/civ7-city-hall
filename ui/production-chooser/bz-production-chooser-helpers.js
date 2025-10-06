@@ -188,7 +188,6 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         result.MoveToNewLocation? "LOC_UI_PRODUCTION_MOVE_NAME" : null;
     const name = altName ? Locale.compose(altName, info.Name) : info.Name;
     const ageless = ConstructibleHasTagType(type, "AGELESS");
-    const tags = wonder ? [] : getConstructibleTagsFromType(type);
     const insufficientFunds = result.InsufficientFunds ?? false;
     const recommendations = AdvisorUtilities.getBuildRecommendationIcons(recs, type);
     // note: some items are not researchable (like locked legacy items)
@@ -223,6 +222,8 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             insufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
             inQueue && disabled ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
             !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
+        // tags
+        const tags = wonder ? [] : getConstructibleTagsFromType(type);
         // yield preview details
         const bestYields = GetCurrentBestTotalYieldForConstructible(city, type);
         const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
