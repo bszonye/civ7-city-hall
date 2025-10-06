@@ -76,7 +76,7 @@ ATIM.decorate = function(overlay) {
     }
     // highlight the best yield on each plot, if it's non-trivial
     if (bestYields.length) {
-        const threshold = bestYields.at(-1).value;
+        const threshold = Math.max(1, bestYields.at(-1).value);
         for (const [plot, yields] of plotYields.entries()) {
             const best = sortedYields(yields).at(0);
             if (!best || best.value < threshold) continue;
