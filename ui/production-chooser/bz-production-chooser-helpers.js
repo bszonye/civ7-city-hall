@@ -188,7 +188,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         result.MoveToNewLocation? "LOC_UI_PRODUCTION_MOVE_NAME" : null;
     const name = altName ? Locale.compose(altName, info.Name) : info.Name;
     const ageless = ConstructibleHasTagType(type, "AGELESS");
-    const tags = getConstructibleTagsFromType(type);
+    const tags = wonder ? [] : getConstructibleTagsFromType(type);
     const insufficientFunds = result.InsufficientFunds ?? false;
     const recommendations = AdvisorUtilities.getBuildRecommendationIcons(recs, type);
     // note: some items are not researchable (like locked legacy items)
@@ -209,23 +209,6 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             if (result.ExpandUrbanPlots) plots.push(...result.ExpandUrbanPlots);
         }
         const locations = Locale.compose("LOC_UI_PRODUCTION_LOCATIONS", plots.length);
-        // yields
-        const baseYields = [];
-        for (const yieldChange of GameInfo.Constructible_YieldChanges) {
-            if (yieldChange.$hash != hash) continue;
-            baseYields.push({
-                yieldType: yieldChange.YieldType,
-                value: yieldChange.YieldChange,
-            });
-        }
-        const baseTotal = baseYields.reduce((acc, { value }) => acc + value, 0);
-        const bestYields = GetCurrentBestTotalYieldForConstructible(city, type);
-        const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
-        const canGetWarehouseBonuses = ConstructibleHasTagType(type, "WAREHOUSE");
-        const warehouseCount = BPM.getNumberOfWarehouseBonuses(hash);
-        const canGetAdjacencyBonuses = BPM.canGetAdjacencyBonuses(type);
-        const highestAdjacency = BPM.getHighestAdjacencyBonus(hash);
-        const infoDisplayType = Configuration.getUser().productionPanelBuildingInfoType;
         // cost
         const cost = result.Cost ??
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
@@ -240,10 +223,32 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             insufficientFunds ? "LOC_CITY_PURCHASE_INSUFFICIENT_FUNDS" :
             inQueue && disabled ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" :
             !plots.length ? "LOC_UI_PRODUCTION_NO_SUITABLE_LOCATIONS" : void 0;
+        // yield preview details
+        const bestYields = GetCurrentBestTotalYieldForConstructible(city, type);
+        const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
+        // base yield details
+        const baseYields = [];
+        if (!disabled) {
+            for (const yieldChange of GameInfo.Constructible_YieldChanges) {
+                if (yieldChange.$hash != hash) continue;
+                baseYields.push({
+                    yieldType: yieldChange.YieldType,
+                    value: yieldChange.YieldChange,
+                });
+            }
+        }
+        const baseTotal = baseYields.reduce((acc, { value }) => acc + value, 0);
+        const canGetWarehouseBonuses = disabled ? void 0 :
+            ConstructibleHasTagType(type, "WAREHOUSE");
+        const warehouseCount = disabled ? void 0 : BPM.getNumberOfWarehouseBonuses(hash);
+        const canGetAdjacencyBonuses = disabled ? void 0 :
+            BPM.canGetAdjacencyBonuses(type);
+        const highestAdjacency = disabled ? void 0 : BPM.getHighestAdjacencyBonus(hash);
+        const infoDisplayType = Configuration.getUser().productionPanelBuildingInfoType;
         // sort items
         const buildingTier = improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ?
-            baseTotal + warehouseCount + highestAdjacency : 0;
+            baseTotal + (warehouseCount ?? 0) + (highestAdjacency ?? 0) : 0;
         const topTier = Boolean(result.InProgress || inQueue || building && unique);
         const sortTier =
             topTier ? 9 :
@@ -251,8 +256,7 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             buildingTier;
         const sortValue =
             topTier ? -qindex :
-            sortTier == buildingTier ? yieldScore :
-            buildingTier;
+            sortTier == buildingTier ? yieldScore : buildingTier;
         // assemble item
         const item = {
             sortTier,
