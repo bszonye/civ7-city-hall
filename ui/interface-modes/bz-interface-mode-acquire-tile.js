@@ -1,20 +1,32 @@
-// import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
+import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { C as CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.chunk.js';
 import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-manager.js';
 
 const YIELD_COLOR = [
-    0xff30b57d,  // #7db530  #80b34d   90° 40 50 green
-    0xff293da3,  //          #a33d29   10° 60 40 red
-    0xff55cef6,  //          #f6ce55   45° 90 65 yellow
-    0xfffe991d,  // #1d99fe  #6ca6e0  210° 65 65 cyan
-    0xffff7b7c,  // #7c7bff  #5c5cd6  240° 60 60 violet
-    0xff2093fd,  // #fd9320  #f5993d   30° 90 60 orange
-    0xffcfb7af,  //          #afb7cf  225° 25 75 gray
+    0x4db380,  // #80b34d   90° 40 50 green
+    0x293da3,  // #a33d29   10° 60 40 red
+    0x55cef6,  // #f6ce55   45° 90 65 yellow
+    0xe0a66c,  // #6ca6e0  210° 65 65 cyan
+    0xff817c,  // #5c5cd6  240° 60 60 violet => #7c81ff
+    0x3d99f5,  // #f5993d   30° 90 60 orange
+    0xcfb7af,  // #afb7cf  225° 25 75 gray
 ];
+const YIELD_COLOR_LINEAR = YIELD_COLOR.map(c => ({
+    ...Color.convertToLinear(c), w: 8/9,
+}));
+const YIELD_BORDER_COLOR_LINEAR = YIELD_COLOR_LINEAR.map(c => ({
+    x: c.x / 4, y: c.y / 4, z: c.z / 4, w: 1,
+}));
 
+const sortedYields = (yields) => {
+    const iterator = yields
+        .map((value, index) => ({ value, index }))
+        .filter(y => y.value);
+    return [...iterator].sort((a, b) => b.value - a.value);
+}
 // get registered interface mode object
-const ATIM = {};  // InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_ACQUIRE_TILE");
+const ATIM = InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_ACQUIRE_TILE");
 
 // patch ATIM.decorate() to extend its overlay
 ATIM.decorate = function(overlay) {
@@ -39,40 +51,53 @@ ATIM.decorate = function(overlay) {
         fillColor: EXPAND_CITY_COLOR_LINEAR,
         edgeColor: EXPAND_CITY_BORDER_COLOR_LINEAR
     });
-    const yields = new Set([...GameInfo.Yields].map(y => y.$index));
     const plotYields = new Map();
+    const bestYields = [];
     for (const plot of PlotWorkersManager.workablePlotIndexes) {
         const changes = PlotWorkersManager.bzGetWorkerChanges(plot);
         plotYields.set(plot, [...changes.plotYields]);
+        if (!bestYields.length) bestYields.push(...sortedYields(changes.bestPlotYields));
     }
-    while (yields.size) {
-        // get best change across all plots and yields
-        let bestIndex;
-        let bestChange = 0;
-        for (const changes of plotYields.values()) {
-            for (const index of yields) {
-                const change = changes[index];
-                if (bestChange < change) {
-                    bestIndex = index;
-                    bestChange = change;
-                }
-            }
-        }
-        if (!bestChange) break;
+    // highlight the best yields overall
+    for (const best of bestYields) {
+        if (!best.value) break;
         // get plots matching best change
         const bestPlots = [];
         for (const [plot, changes] of plotYields.entries()) {
-            if (changes[bestIndex] == bestChange) {
+            if (changes[best.index] == best.value) {
                 bestPlots.push(plot);
                 plotYields.delete(plot);
             }
         }
-        // highlight best plots
-        const color = YIELD_COLOR[bestIndex];
-        const fillColor = Color.convertToLinear(color);
-        const edgeColor = ADD_SPECIALIST_BORDER_COLOR;
-        this.plotOverlay.addPlots(bestPlots, { fillColor, edgeColor });
-        yields.delete(bestIndex);
+        this.plotOverlay.addPlots(bestPlots, {
+            fillColor: YIELD_COLOR_LINEAR[best.index],
+            edgeColor: YIELD_BORDER_COLOR_LINEAR[best.index],
+        });
+    }
+    // highlight the best yield on each plot, if it's non-trivial
+    if (bestYields.length) {
+        const threshold = bestYields.at(-1).value;
+        for (const [plot, yields] of plotYields.entries()) {
+            const best = sortedYields(yields).at(0);
+            if (!best || best.value < threshold) continue;
+            plotYields.delete(plot);
+            // highlight best yield
+            this.plotOverlay.addPlots(plot, {
+                fillColor: YIELD_COLOR_LINEAR[best.index],
+                edgeColor: YIELD_BORDER_COLOR_LINEAR[best.index],
+            });
+        }
+    }
+    if (!plotYields.size) {  // TODO: remove debug block
+        for (const [plot, yields] of plotYields.entries()) {
+            const best = sortedYields(yields).at(0);
+            const index = best?.index ?? 6;
+            plotYields.delete(plot);
+            this.plotOverlay.addPlots(plot, {
+                fillColor: YIELD_COLOR_LINEAR[index],
+                edgeColor: YIELD_BORDER_COLOR_LINEAR[index],
+            });
+        }
     }
     this.plotOverlay.addPlots([...plotYields.keys()], {
         fillColor: ADD_SPECIALIST_COLOR,

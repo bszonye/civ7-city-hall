@@ -53,9 +53,11 @@ proto.bzUpdateWorkerInfo = function(info) {
     const netMaintenance = info.NextMaintenance
         .map((amount, i) => info.CurrentMaintenance[i] - amount);
     this._bzWorkerInfo.set(info.PlotIndex, { netYields, netMaintenance });
-    this._bzWorkerBase ??= { netYields, netMaintenance };
+    this._bzWorkerBase ??= { maxYields: netYields, netYields, netMaintenance };
     const base = this._bzWorkerBase;
+    const arrayMax = (a, b) => a.map((v, i) => Math.max(v, b[i]));
     const arrayMin = (a, b) => a.map((v, i) => Math.min(v, b[i]));
+    base.maxYields = arrayMax(netYields, base.maxYields);
     base.netYields = arrayMin(netYields, base.netYields);
     base.netMaintenance = arrayMin(netMaintenance, base.netMaintenance);
 }
@@ -72,6 +74,9 @@ proto.bzGetWorkerChanges = function(plotIndex) {
         .map((amount, i) => amount - base.netYields[i]);
     const plotMaintenance = netMaintenance
         .map((amount, i) => amount - base.netMaintenance[i]);
+    const bestYields = base.maxYields;
+    const bestPlotYields = bestYields
+        .map((amount, i) => amount - base.netYields[i]);
     return {
         netYields,
         netMaintenance,
@@ -79,5 +84,7 @@ proto.bzGetWorkerChanges = function(plotIndex) {
         baseMaintenance,
         plotYields,
         plotMaintenance,
+        bestYields,
+        bestPlotYields,
     };
 }
