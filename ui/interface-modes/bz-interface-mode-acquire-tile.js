@@ -110,7 +110,7 @@ ATIM.decorate = function(overlay) {
         }
     }
     // highlight the best plots overall
-    const bestTotal = Math.max(...workablePlots.map(({ yields }) => sum(yields)), 0);
+    const bestTotal = Math.max(0, ...workablePlots.map(({ yields }) => sum(yields)));
     this.growthModelGroup.clear();
     for (const info of workablePlots) {
         if (!bestTotal || !info.yields.length) break;
