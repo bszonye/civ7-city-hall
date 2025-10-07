@@ -3,6 +3,10 @@ import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chun
 import { C as CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.chunk.js';
 import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-manager.js';
 
+const VFX_RING = "VFX_3dUI_Tut_SelectThis_01";
+const VFX_OFFSET = { x: 0, y: 0, z: 0 };
+const VFX_PARAMS = { placement: PlacementMode.TERRAIN };
+
 const YIELD_COLOR = [
     0x4db380,  // #80b34d   90° 40 50 green
     0x293da3,  // #a33d29   10° 60 40 red
@@ -27,6 +31,22 @@ const sortedYields = (yields) => {
 }
 // get registered interface mode object
 const ATIM = InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_ACQUIRE_TILE");
+
+ATIM.growthModelGroup = WorldUI.createModelGroup("bzGrowthModelGroup");
+
+// patch ATIM.undecorate() and ATIM.transitionFrom() to clear VFX
+const ATIM_transitionFrom = ATIM.transitionFrom;
+ATIM.transitionFrom = function transitionFrom(...args) {
+    const rc = ATIM_transitionFrom.apply(this, args);
+    this.growthModelGroup.clear();
+    return rc;
+}
+const ATIM_undecorate = ATIM.undecorate;
+ATIM.undecorate = function(...args) {
+    const rc = ATIM_undecorate.apply(this, args);
+    this.growthModelGroup.clear();
+    return rc;
+}
 
 // patch ATIM.decorate() to extend its overlay
 ATIM.decorate = function(overlay) {
@@ -87,22 +107,25 @@ ATIM.decorate = function(overlay) {
             usedColors.set(color, value);  // record best value for yield
             usedTotals.add(sum(info.yields));
             console.warn(`TRIX YIELD ${plot} ${sum(info.yields)} ${JSON.stringify(info.yields)}`);
-            highlight(plot, color);
+            // if multiple yields are valid, only use the first
+            if (!usedPlots.has(plot)) highlight(plot, color);
         }
     }
     // highlight the best plots overall
-    const threshold = Math.max(...usedTotals, 1);
-    console.warn(`TRIX THRESHOLD ${threshold}`);
-    workablePlots.sort((a, b) => sum(b.yields) - sum(a.yields));
+    const bestTotal = Math.max(...workablePlots.map(({ yields }) => sum(yields)), 0);
+    console.warn(`TRIX BEST ${bestTotal}`);
+    this.growthModelGroup.clear();
     for (const info of workablePlots) {
-        if (!info.yields.length) break;
+        if (!bestTotal || !info.yields.length) break;
         const total = sum(info.yields);
-        if (total < threshold) break;
+        if (total != bestTotal) continue;
+        // add a ring highlight to all plots with the best total
         const plot = info.plot;
+        this.growthModelGroup.addVFXAtPlot(VFX_RING, plot, VFX_OFFSET, VFX_PARAMS);
         console.warn(`TRIX TOTAL ${plot} ${sum(info.yields)} ${JSON.stringify(info.yields)}`);
         if (usedPlots.has(plot)) continue;
-        // get plots matching best change
-        const color = info.yields[0].index;
+        // also add a color highlight if the plot isn't already colored
+        const color = info.yields[0].color;
         highlight(plot, color);
     }
     // use basic specialist color for remaining yields

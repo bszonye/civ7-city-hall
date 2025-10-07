@@ -52,6 +52,7 @@ export default [
                 MapPlotEffects: "readonly",
                 MapUnits: "readonly",
                 Modding: "readonly",
+                PlacementMode: "readonly",
                 PlayerIds: "readonly",
                 Players: "readonly",
                 ProgressionTreeNodeState: "readonly",
