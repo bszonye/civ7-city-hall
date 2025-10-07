@@ -71,14 +71,7 @@ ATIM.decorate = function(overlay) {
         const next = workablePlots[i].yields[0];
         return next && last.index == next.index && last.value == next.value;
     }
-    // highlight the best yields overall
-    for (const [i, info] of workablePlots.entries()) {
-        if (!info.yields.length) break;
-        // get plots matching best change
-        const plot = info.plot;
-        const color = info.yields[0].index;
-        if (usedColors.has(color) && !isRepeat(i)) continue;
-        console.warn(`TRIX BEST ${plot} ${JSON.stringify(info.yields[0])}`);
+    const highlight = (plot, color) => {
         this.plotOverlay.addPlots(plot, {
             fillColor: YIELD_COLOR_LINEAR[color],
             edgeColor: YIELD_BORDER_COLOR_LINEAR[color],
@@ -87,9 +80,18 @@ ATIM.decorate = function(overlay) {
         usedPlots.add(plot);
         basicPlots.delete(plot);
     }
+    // highlight the best yields overall
+    for (const [i, info] of workablePlots.entries()) {
+        if (!info.yields.length) break;
+        // get plots matching best change
+        const plot = info.plot;
+        const color = info.yields[0].index;
+        if (usedColors.has(color) && !isRepeat(i)) continue;
+        console.warn(`TRIX BEST ${plot} ${JSON.stringify(info.yields[0])}`);
+        highlight(plot, color);
+    }
     // highlight additional yields up to a limit
-    const maxHighlights = GameInfo.Yields.length;
-    // const maxHighlights = workablePlots.length * 2/5;
+    const maxHighlights = GameInfo.Yields.length - 1;
     for (const [i, info] of workablePlots.entries()) {
         if (!info.yields.length) break;
         if (usedPlots.has(info.plot)) continue;
@@ -98,13 +100,7 @@ ATIM.decorate = function(overlay) {
         const plot = info.plot;
         const color = info.yields[0].index;
         console.warn(`TRIX EXTRA ${plot} ${JSON.stringify(info.yields[0])}`);
-        this.plotOverlay.addPlots(plot, {
-            fillColor: YIELD_COLOR_LINEAR[color],
-            edgeColor: YIELD_BORDER_COLOR_LINEAR[color],
-        });
-        usedColors.add(color);
-        usedPlots.add(plot);
-        basicPlots.delete(plot);
+        highlight(plot, color);
     }
     // use basic specialist color for remaining yields
     this.plotOverlay.addPlots([...basicPlots], {
