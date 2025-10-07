@@ -10,86 +10,103 @@ for (const icon of [YIELD_NEUTRAL, YIELD_POSITIVE, YIELD_NEGATIVE]) {
 
 // initializate PlacePopulation
 PlacePopulation.bzGrowthTitle = "";
+PlacePopulation.bzTotalYields = null;
 PlacePopulation.bzTotalYieldsText = "";
 
 // patch PlacePopulation.update
 const proto = Object.getPrototypeOf(PlacePopulation);
 const PP_update = proto.update;
 proto.update = function(...args) {
+    // apply base updates
     PP_update.apply(this, args);
-    this.bzGrowthTitle = this.isTown ? Locale.compose("LOC_UI_TOWN_GROWTH_TITLE") : Locale.compose("LOC_UI_CITY_GROWTH_TITLE");
-    const info = this.hoveredPlotWorkerPlacementInfo;
-    if (!info) return;
+    const m = PlacePopulation;
+    // fix panel title
+    this.bzGrowthTitle = this.isTown ?
+        Locale.compose("LOC_UI_TOWN_GROWTH_TITLE") :
+        Locale.compose("LOC_UI_CITY_GROWTH_TITLE");
+    // calculate total yield changes
     const sum = (list) => list.reduce((acc, value) => acc + value, 0);
-    const totalYields = sum(info.NextYields) - sum(info.CurrentYields);
-    const totalMaintenance = sum(info.NextMaintenance) - sum(info.CurrentMaintenance);
-    const totalChange = totalYields - totalMaintenance;
-    const total = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", totalChange);
-    PlacePopulation.bzTotalYieldsText = Locale.compose("LOC_PLOT_TOTAL_YIELDS", total);
+    if (this.hoveredPlotWorkerIndex) {
+        const info = this.hoveredPlotWorkerPlacementInfo;
+        const totalYields = sum(info.NextYields) - sum(info.CurrentYields);
+        const totalMaintenance =
+            sum(info.NextMaintenance) - sum(info.CurrentMaintenance);
+        m.bzTotalYields = totalYields - totalMaintenance;
+    } else if (this.constructibleToBeBuiltOnExpand && this.hoveredPlotIndex) {
+        const deltas = JSON.parse(this.afterYieldDeltasJSONd);
+        const values = deltas.map(d => d.value);
+        m.bzTotalYields = sum(values);
+    } else {
+        m.bzTotalYields = null;
+    }
+    // format total yields
+    if (m.bzTotalYields != null) {
+        const total =
+            Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", m.bzTotalYields);
+        m.bzTotalYieldsText = Locale.compose("LOC_PLOT_TOTAL_YIELDS", total);
+    } else {
+        m.bzTotalYieldsText = "";
+    }
 }
 
 class bzPlacePopulationPanel {
-    static c_prototype;
     constructor(component) {
         this.component = component;
         component.bzComponent = this;
-        this.patchPrototypes(this.component);
-    }
-    patchPrototypes(component) {
-        const c_prototype = Object.getPrototypeOf(component);
-        if (bzPlacePopulationPanel.c_prototype == c_prototype) return;
-        // patch PanelCityDetails methods
-        const proto = bzPlacePopulationPanel.c_prototype = c_prototype;
-        // wrap buildSpecialistInfo method to extend it
-        const c_buildSpecialistInfo = proto.buildSpecialistInfo;
-        const after_buildSpecialistInfo = this.afterBuildSpecialistInfo;
-        proto.buildSpecialistInfo = function(...args) {
-            const rv = c_buildSpecialistInfo.apply(this, args);
-            after_buildSpecialistInfo.apply(this.bzComponent, args);
-            return rv;
-        }
     }
     beforeAttach() { }
     afterAttach() {
         const c = this.component;
+        // fix title: City Growth or Town Growth
         const header = c.subsystemFrame.querySelector("fxs-header");
         Databind.attribute(header, "title", "g_PlacePopulation.bzGrowthTitle");
-    }
-    beforeDetach() { }
-    afterDetach() { }
-    afterBuildSpecialistInfo() {
-        const c = this.component;
-        const views = [c.specialistMinimizedContainer, c.specialistMaximizedContainer];
+        // add yield totals
+        const views = [
+            c.improvementMinimizedContainer,
+            c.improvementMaximizedContainer,
+            c.specialistMinimizedContainer,
+            c.specialistMaximizedContainer,
+        ];
         for (const view of views) {
             // Results: add total changes
             const resultsHeading = view.querySelector(
                 `[data-l10n-id="LOC_BUILDING_PLACEMENT_RESULTS"]`
             );
             const results = resultsHeading.parentElement;
+            results.classList.remove("my-2", "my-2\\.5");
+            results.classList.add("mt-2");
             const totals = document.createElement("div");
-            totals.className = "self-center text-sm -mt-1 mb-2";
+            totals.className = "self-center text-sm mt-1 mb-2";
             Databind.loc(totals, "{{g_PlacePopulation.bzTotalYieldsText}}");
             results.insertAdjacentElement("afterend", totals);
             // Breakdown: improve layout
             const breakdownHeadings = view.querySelectorAll(
                 [
+                    `[data-bind-attr-data-l10n-id="{{entry.description}}"]`,
                     `[data-l10n-id="LOC_BUILDING_PLACEMENT_TILE_TYPE"]`,
                     `[data-l10n-id="LOC_BUILDING_PLACEMENT_SPECIALIST_BONUS"]`,
                     `[data-l10n-id="LOC_BUILDING_PLACEMENT_SPECIALIST_MAINTENANCE"]`,
                 ].join(",")
             );
             for (const head of breakdownHeadings) {
+                // shrink and align text
                 const section = head.parentElement;
                 section.classList.remove("mx-2");
-                section.classList.add("flex-wrap", "mt-1", "mx-1");
+                section.classList.add(
+                    "flex-wrap", "items-center", "mt-1", "mx-1",
+                    "text-xs", "leading-normal",
+                );
+                // remove all text-sm classes
                 for (const text of section.querySelectorAll(".text-sm")) {
-                    // shrink and align text
-                    text.parentElement.classList.add("items-center");
                     text.classList.remove("text-sm");
-                    text.classList.add("text-xs");
                 }
+                // match improvement yield spacing to workers
+                const imp = section.querySelector(`[data-bind-html="{{bonusHtml}}"]`);
+                imp?.classList.add("ml-1");
             }
         }
     }
+    beforeDetach() { }
+    afterDetach() { }
 }
 Controls.decorate("panel-place-population", (c) => new bzPlacePopulationPanel(c));
