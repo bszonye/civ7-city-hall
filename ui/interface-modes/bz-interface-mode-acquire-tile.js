@@ -89,7 +89,6 @@ ATIM.decorate = function(overlay) {
     const basicPlots = new Set(workablePlots.map(info => info.plot));
     const usedPlots = new Set();
     const usedColors = new Map();
-    const usedTotals = new Set();
     // highlight the best plots for each yield
     workablePlots.sort((a, b) => {
         const a1 = a.yields.at(0) ?? { color: GameInfo.Yields.length, value: 0 };
@@ -105,15 +104,12 @@ ATIM.decorate = function(overlay) {
             const used = usedColors.get(color);
             if (used != null && used != value) continue;  // already used
             usedColors.set(color, value);  // record best value for yield
-            usedTotals.add(sum(info.yields));
-            console.warn(`TRIX YIELD ${plot} ${sum(info.yields)} ${JSON.stringify(info.yields)}`);
             // if multiple yields are valid, only use the first
             if (!usedPlots.has(plot)) highlight(plot, color);
         }
     }
     // highlight the best plots overall
     const bestTotal = Math.max(...workablePlots.map(({ yields }) => sum(yields)), 0);
-    console.warn(`TRIX BEST ${bestTotal}`);
     this.growthModelGroup.clear();
     for (const info of workablePlots) {
         if (!bestTotal || !info.yields.length) break;
@@ -122,7 +118,6 @@ ATIM.decorate = function(overlay) {
         // add a ring highlight to all plots with the best total
         const plot = info.plot;
         this.growthModelGroup.addVFXAtPlot(VFX_RING, plot, VFX_OFFSET, VFX_PARAMS);
-        console.warn(`TRIX TOTAL ${plot} ${sum(info.yields)} ${JSON.stringify(info.yields)}`);
         if (usedPlots.has(plot)) continue;
         // also add a color highlight if the plot isn't already colored
         const color = info.yields[0].color;
