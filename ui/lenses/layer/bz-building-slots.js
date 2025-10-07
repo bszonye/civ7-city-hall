@@ -60,7 +60,8 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
     const origin = this.buildSlotSpritePosition ?? { x: 0, y: 24, z: 0 };
     const scale = this.buildSlotSpriteScale ?? 0.9;
     const padding = this.buildSlotSpritePadding;
-    for (const [i, slot] of slots.entries()) {
+    for (let i = 0; i < maxSlots; ++i) {
+        const slot = slots[i];  // undefined => BUILDING_EMPTY
         // get coordinates
         const groupWidth = (maxSlots - 1) * padding;
         const position = { ...origin };
