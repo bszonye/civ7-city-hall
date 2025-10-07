@@ -43,7 +43,8 @@ ATIM.decorate = function(overlay) {
     const CITY_TILE_GRAY_COLOR = { x: 0, y: 0, z: 0, w: 0.1 };
     const EXPAND_CITY_COLOR_LINEAR = { x: 0.8, y: 1, z: 0, w: 0.6 };
     const EXPAND_CITY_BORDER_COLOR_LINEAR = { x: 0.2, y: 0.3, z: 0, w: 1 };
-    const ADD_SPECIALIST_COLOR = { x: 0.05, y: 0, z: 0.4, w: 0.9 };
+    // const ADD_SPECIALIST_COLOR = { x: 0.05, y: 0, z: 0.4, w: 0.9 };
+    const ADD_SPECIALIST_COLOR = { x: 0.03, y: 0, z: 0.24, w: 0.9 };
     const ADD_SPECIALIST_BORDER_COLOR = { x: 0.1, y: 0, z: 0.1, w: 1 };
     this.plotOverlay = overlay.addPlotOverlay();
     this.plotOverlay.addPlots([...validPlots], { fillColor: CITY_TILE_GRAY_COLOR });
