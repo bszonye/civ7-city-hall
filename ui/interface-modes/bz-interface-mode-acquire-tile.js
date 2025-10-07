@@ -23,12 +23,15 @@ const YIELD_BORDER_COLOR_LINEAR = YIELD_COLOR_LINEAR.map(c => ({
     x: c.x / 4, y: c.y / 4, z: c.z / 4, w: 1,
 }));
 
+// utility functions
 const sortedYields = (yields) => {
     const iterator = yields
         .map((value, color) => ({ color, value }))
         .filter(y => y.value);
     return [...iterator].sort((a, b) => b.value - a.value);
 }
+const sum = (yields) => yields.reduce((a, y) => a + y.value, 0);
+
 // get registered interface mode object
 const ATIM = InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_ACQUIRE_TILE");
 
@@ -71,8 +74,15 @@ ATIM.decorate = function(overlay) {
         fillColor: EXPAND_CITY_COLOR_LINEAR,
         edgeColor: EXPAND_CITY_BORDER_COLOR_LINEAR
     });
-    // utility functions
-    const sum = (yields) => yields.reduce((a, y) => a + y.value, 0);
+    // get all workable plots
+    const workablePlots = PlotWorkersManager.workablePlotIndexes.map(plot => {
+        const changes = PlotWorkersManager.bzGetWorkerChanges(plot);
+        return { plot, yields: sortedYields(changes.plotYields) };
+    });
+    const basicPlots = new Set(workablePlots.map(info => info.plot));
+    // highlight the most important plots
+    const usedPlots = new Set();
+    const usedColors = new Map();
     const highlight = (plot, color) => {
         this.plotOverlay.addPlots(plot, {
             fillColor: YIELD_COLOR_LINEAR[color],
@@ -81,14 +91,6 @@ ATIM.decorate = function(overlay) {
         usedPlots.add(plot);
         basicPlots.delete(plot);
     }
-    // get all workable plots
-    const workablePlots = PlotWorkersManager.workablePlotIndexes.map(plot => {
-        const changes = PlotWorkersManager.bzGetWorkerChanges(plot);
-        return { plot, yields: sortedYields(changes.plotYields) };
-    });
-    const basicPlots = new Set(workablePlots.map(info => info.plot));
-    const usedPlots = new Set();
-    const usedColors = new Map();
     // highlight the best plots for each yield
     workablePlots.sort((a, b) => {
         const a1 = a.yields.at(0) ?? { color: GameInfo.Yields.length, value: 0 };
