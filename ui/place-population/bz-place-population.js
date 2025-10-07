@@ -72,13 +72,15 @@ class bzPlacePopulationPanel {
             const resultsHeading = view.querySelector(
                 `[data-l10n-id="LOC_BUILDING_PLACEMENT_RESULTS"]`
             );
-            const results = resultsHeading.parentElement;
-            results.classList.remove("my-2", "my-2\\.5");
-            results.classList.add("mt-2");
-            const totals = document.createElement("div");
-            totals.className = "self-center text-sm mt-1 mb-2";
-            Databind.loc(totals, "{{g_PlacePopulation.bzTotalYieldsText}}");
-            results.insertAdjacentElement("afterend", totals);
+            if (resultsHeading) {
+                const results = resultsHeading.parentElement;
+                results.classList.remove("my-2", "my-2\\.5");
+                results.classList.add("mt-2");
+                const totals = document.createElement("div");
+                totals.className = "self-center text-sm mt-1 mb-2";
+                Databind.loc(totals, "{{g_PlacePopulation.bzTotalYieldsText}}");
+                results.insertAdjacentElement("afterend", totals);
+            }
             // Breakdown: improve layout
             const breakdownHeadings = view.querySelectorAll(
                 [
