@@ -21,7 +21,7 @@ const YIELD_BORDER_COLOR_LINEAR = YIELD_COLOR_LINEAR.map(c => ({
 
 const sortedYields = (yields) => {
     const iterator = yields
-        .map((value, index) => ({ index, value }))
+        .map((value, color) => ({ color, value }))
         .filter(y => y.value);
     return [...iterator].sort((a, b) => b.value - a.value);
 }
@@ -51,54 +51,58 @@ ATIM.decorate = function(overlay) {
         fillColor: EXPAND_CITY_COLOR_LINEAR,
         edgeColor: EXPAND_CITY_BORDER_COLOR_LINEAR
     });
-    const workablePlots = PlotWorkersManager.workablePlotIndexes.map(plot => {
-        const changes = PlotWorkersManager.bzGetWorkerChanges(plot);
-        return { plot, yields: sortedYields(changes.plotYields) };
-    });
-    workablePlots.sort((a, b) => {
-        const a1 = a.yields.at(0) ?? { index: GameInfo.Yields.length, value: 0 };
-        const b1 = b.yields.at(0) ?? { index: GameInfo.Yields.length, value: 0 };
-        return b1.value - a1.value || b1.index - a1.index;
-    });
-    workablePlots.forEach(y => console.warn(`TRIX WORK ${JSON.stringify(y)}`));
-    const basicPlots = new Set(workablePlots.map(info => info.plot));
-    const usedPlots = new Set();
-    const usedColors = new Set();
-    const isRepeat = (i) => {
-        if (!i) return false;
-        const last = workablePlots[i - 1].yields[0];
-        const next = workablePlots[i].yields[0];
-        return next && last.index == next.index && last.value == next.value;
-    }
+    // utility functions
+    const sum = (yields) => yields.reduce((a, y) => a + y.value, 0);
     const highlight = (plot, color) => {
         this.plotOverlay.addPlots(plot, {
             fillColor: YIELD_COLOR_LINEAR[color],
             edgeColor: YIELD_BORDER_COLOR_LINEAR[color],
         });
-        usedColors.add(color);
         usedPlots.add(plot);
         basicPlots.delete(plot);
     }
-    // highlight the best yields overall
-    for (const [i, info] of workablePlots.entries()) {
+    // get all workable plots
+    const workablePlots = PlotWorkersManager.workablePlotIndexes.map(plot => {
+        const changes = PlotWorkersManager.bzGetWorkerChanges(plot);
+        return { plot, yields: sortedYields(changes.plotYields) };
+    });
+    const basicPlots = new Set(workablePlots.map(info => info.plot));
+    const usedPlots = new Set();
+    const usedColors = new Map();
+    const usedTotals = new Set();
+    // highlight the best plots for each yield
+    workablePlots.sort((a, b) => {
+        const a1 = a.yields.at(0) ?? { color: GameInfo.Yields.length, value: 0 };
+        const b1 = b.yields.at(0) ?? { color: GameInfo.Yields.length, value: 0 };
+        return b1.value - a1.value || a1.color - b1.color;
+    });
+    for (const info of workablePlots) {
         if (!info.yields.length) break;
-        // get plots matching best change
         const plot = info.plot;
-        const color = info.yields[0].index;
-        if (usedColors.has(color) && !isRepeat(i)) continue;
-        console.warn(`TRIX BEST ${plot} ${JSON.stringify(info.yields[0])}`);
-        highlight(plot, color);
+        const value = info.yields[0].value;  // best yield value on this plot
+        for (const { color } of info.yields.filter(y => y.value == value)) {
+            // consider all yields tied for best
+            const used = usedColors.get(color);
+            if (used != null && used != value) continue;  // already used
+            usedColors.set(color, value);  // record best value for yield
+            usedTotals.add(sum(info.yields));
+            console.warn(`TRIX YIELD ${plot} ${sum(info.yields)} ${JSON.stringify(info.yields)}`);
+            highlight(plot, color);
+        }
     }
-    // highlight additional yields up to a limit
-    const maxHighlights = GameInfo.Yields.length - 1;
-    for (const [i, info] of workablePlots.entries()) {
+    // highlight the best plots overall
+    const threshold = Math.max(...usedTotals, 1);
+    console.warn(`TRIX THRESHOLD ${threshold}`);
+    workablePlots.sort((a, b) => sum(b.yields) - sum(a.yields));
+    for (const info of workablePlots) {
         if (!info.yields.length) break;
-        if (usedPlots.has(info.plot)) continue;
-        if (maxHighlights <= usedPlots.size && !isRepeat(i)) break;
-        // get plots matching best change
+        const total = sum(info.yields);
+        if (total < threshold) break;
         const plot = info.plot;
+        console.warn(`TRIX TOTAL ${plot} ${sum(info.yields)} ${JSON.stringify(info.yields)}`);
+        if (usedPlots.has(plot)) continue;
+        // get plots matching best change
         const color = info.yields[0].index;
-        console.warn(`TRIX EXTRA ${plot} ${JSON.stringify(info.yields[0])}`);
         highlight(plot, color);
     }
     // use basic specialist color for remaining yields
