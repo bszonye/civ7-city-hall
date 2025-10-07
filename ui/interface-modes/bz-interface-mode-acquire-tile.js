@@ -30,7 +30,6 @@ const sortedYields = (yields) => {
         .filter(y => y.value);
     return [...iterator].sort((a, b) => b.value - a.value);
 }
-const sum = (yields) => yields.reduce((a, y) => a + y.value, 0);
 
 // get registered interface mode object
 const ATIM = InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_ACQUIRE_TILE");
@@ -76,7 +75,9 @@ ATIM.decorate = function(overlay) {
     // get all workable plots
     const workablePlots = PlotWorkersManager.workablePlotIndexes.map(plot => {
         const changes = PlotWorkersManager.bzGetWorkerChanges(plot);
-        return { plot, yields: sortedYields(changes.plotYields) };
+        const yields = sortedYields(changes.plotYields);
+        const total = yields.reduce((a, y) => a + y.value, 0);
+        return { plot, total, yields };
     });
     const basicPlots = new Set(workablePlots.map(info => info.plot));
     // highlight the most important plots
@@ -110,12 +111,11 @@ ATIM.decorate = function(overlay) {
         }
     }
     // highlight the best plots overall
-    const bestTotal = Math.max(0, ...workablePlots.map(({ yields }) => sum(yields)));
+    const bestTotal = Math.max(0, ...workablePlots.map(({ total }) => total));
     this.growthModelGroup.clear();
     for (const info of workablePlots) {
         if (!bestTotal || !info.yields.length) break;
-        const total = sum(info.yields);
-        if (total != bestTotal) continue;
+        if (info.total != bestTotal) continue;
         // add a ring highlight to all plots with the best total
         const plot = info.plot;
         this.growthModelGroup.addVFXAtPlot(VFX_RING, plot, VFX_OFFSET, VFX_PARAMS);
