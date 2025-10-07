@@ -35,20 +35,19 @@ const sum = (yields) => yields.reduce((a, y) => a + y.value, 0);
 // get registered interface mode object
 const ATIM = InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_ACQUIRE_TILE");
 
+// initialize VFX model
 ATIM.growthModelGroup = WorldUI.createModelGroup("bzGrowthModelGroup");
 
 // patch ATIM.undecorate() and ATIM.transitionFrom() to clear VFX
 const ATIM_transitionFrom = ATIM.transitionFrom;
 ATIM.transitionFrom = function transitionFrom(...args) {
-    const rc = ATIM_transitionFrom.apply(this, args);
     this.growthModelGroup.clear();
-    return rc;
+    return ATIM_transitionFrom.apply(this, args);
 }
 const ATIM_undecorate = ATIM.undecorate;
 ATIM.undecorate = function(...args) {
-    const rc = ATIM_undecorate.apply(this, args);
     this.growthModelGroup.clear();
-    return rc;
+    return ATIM_undecorate.apply(this, args);
 }
 
 // patch ATIM.decorate() to extend its overlay
