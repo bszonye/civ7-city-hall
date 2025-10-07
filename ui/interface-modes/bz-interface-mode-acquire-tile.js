@@ -79,7 +79,7 @@ ATIM.decorate = function(overlay) {
     for (const info of workablePlots) {
         if (!info.yields.length) break;
         const plot = info.plot;
-        const value = info.yields[0].value;  // best yield value on this plot
+        const value = info.yields[0].value;  // best yield delta on this plot
         for (const { color } of info.yields.filter(y => y.value == value)) {
             // consider all yields tied for best
             const used = usedColors.get(color);
