@@ -23,14 +23,6 @@ const YIELD_BORDER_COLOR_LINEAR = YIELD_COLOR_LINEAR.map(c => ({
     x: c.x / 4, y: c.y / 4, z: c.z / 4, w: 1,
 }));
 
-// utility functions
-const sortedYields = (yields) => {
-    const iterator = yields
-        .map((value, color) => ({ color, value }))
-        .filter(y => y.value);
-    return [...iterator].sort((a, b) => b.value - a.value);
-}
-
 // get registered interface mode object
 const ATIM = InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_ACQUIRE_TILE");
 
@@ -75,7 +67,12 @@ ATIM.decorate = function(overlay) {
     // get all workable plots
     const workablePlots = PlotWorkersManager.workablePlotIndexes.map(plot => {
         const changes = PlotWorkersManager.bzGetWorkerChanges(plot);
-        const yields = sortedYields(changes.plotYields);
+        const yields = (() => {
+            const iterator = changes.plotYields
+                .map((value, color) => ({ color, value }))
+                .filter(y => y.value);
+            return [...iterator].sort((a, b) => b.value - a.value);
+        })();
         const total = yields.reduce((a, y) => a + y.value, 0);
         return { plot, total, yields };
     });
