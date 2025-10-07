@@ -66,13 +66,10 @@ ATIM.decorate = function(overlay) {
     });
     // get all workable plots
     const workablePlots = PlotWorkersManager.workablePlotIndexes.map(plot => {
-        const changes = PlotWorkersManager.bzGetWorkerChanges(plot);
-        const yields = (() => {
-            const iterator = changes.plotYields
-                .map((value, color) => ({ color, value }))
-                .filter(y => y.value);
-            return [...iterator].sort((a, b) => b.value - a.value);
-        })();
+        const changes = PlotWorkersManager.bzGetWorkerChanges(plot).plotYields
+            .map((value, color) => ({ color, value }))
+            .filter(y => y.value);
+        const yields = [...changes].sort((a, b) => b.value - a.value);
         const total = yields.reduce((a, y) => a + y.value, 0);
         return { plot, total, yields };
     });
