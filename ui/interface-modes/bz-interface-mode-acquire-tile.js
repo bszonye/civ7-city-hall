@@ -80,8 +80,8 @@ ATIM.decorate = function(overlay) {
     });
     const basicPlots = new Set(workablePlots.map(info => info.plot));
     // highlight the most important plots
-    const usedPlots = new Set();
     const usedColors = new Map();
+    const usedPlots = new Set();
     const highlight = (plot, color) => {
         this.plotOverlay.addPlots(plot, {
             fillColor: YIELD_COLOR_LINEAR[color],
