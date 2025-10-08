@@ -401,6 +401,7 @@ class bzPanelCityDetails {
         this.growthContainer = MustGetElement(".growth-container", oslot);
         this.connectionsContainer = MustGetElement(".connections-container", oslot);
         this.improvementsContainer = MustGetElement(".improvements-container", oslot);
+        this.townFocusContainer = MustGetElement(".town-focus-container", oslot);
         // enable navigation back to the left panel
         this.slots.forEach(slot => slot.removeAttribute("data-navrule-left"));
         // select tab
@@ -431,10 +432,9 @@ class bzPanelCityDetails {
         slot.innerHTML = `
         <fxs-scrollable class="w-full">
             <div class="growth-container flex flex-col ml-6"></div>
-            ${BZ_DIVIDER}
             <div class="connections-container flex flex-col ml-6"></div>
-            ${BZ_DIVIDER}
             <div class="improvements-container flex flex-col ml-6"></div>
+            <div class="town-focus-container flex flex-col ml-6"></div>
         </fxs-scrollable>
         `;
         this.component.slotGroup.appendChild(slot);
@@ -507,7 +507,16 @@ class bzPanelCityDetails {
         const overviewHasFocus = this.overviewSlot.contains(FocusManager.getFocus());
         this.renderGrowth(this.growthContainer);
         this.renderConnections(this.connectionsContainer);
-        this.renderImprovements(this.improvementsContainer);
+        this.renderTable(
+            this.improvementsContainer,
+            "LOC_BUILDING_PLACEMENT_WAREHOUSE_YIELDS_HEADER",
+            bzCityDetails.improvements,
+        );
+        this.renderTable(
+            this.townFocusContainer,
+            "LOC_UI_TOWN_FOCUS",
+            bzCityDetails.improvements,
+        );
         if (overviewHasFocus) FocusManager.setFocus(this.overviewSlot);
     }
     renderGrowth(container) {
@@ -584,7 +593,7 @@ class bzPanelCityDetails {
         container.appendChild(wrap);
     }
     renderConnections(container) {
-        container.innerHTML = "";
+        container.innerHTML = BZ_DIVIDER;
         container.style.lineHeight = metrics.table.ratio;
         // show settlement count in the title
         const total = bzCityDetails.connections?.settlements?.length ?? 0;
@@ -636,22 +645,20 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         container.appendChild(table);
     }
-    renderImprovements(container) {
-        container.innerHTML = "";
+    renderTable(container, title, data) {
+        container.classList.toggle("hidden", !data?.length);
+        if (!data?.length) return;
+        container.innerHTML = BZ_DIVIDER;
         container.style.lineHeight = metrics.table.ratio;
-        this.renderTitleHeading(container,
-            "LOC_BUILDING_PLACEMENT_WAREHOUSE_YIELDS_HEADER");
-        if (!bzCityDetails.improvements?.length) {
-            container.appendChild(docText("LOC_TERM_NONE"));
-            return;
-        }
+        this.renderTitleHeading(container, title);
         const size = metrics.table.spacing.css;
         const small = metrics.sizes(5/6 * metrics.table.spacing.rem).css;
         const table = document.createElement("div");
         table.classList.value = "flex-col justify-start text-base -mx-1";
-        table.style.marginBottom = metrics.table.margin.px;
+        table.style.marginBottom = data.length % 2 ?
+            metrics.margin.px : metrics.table.margin.px;
         table.style.minWidth = bzPanelCityDetails.tableWidth;
-        for (const [i, item] of bzCityDetails.improvements.entries()) {
+        for (const [i, item] of data.entries()) {
             const row = document.createElement("div");
             row.classList.value = "bz-overview-entry flex min-w-60 px-1";
             if (!(i % 2)) row.classList.add("bz-odd-row");

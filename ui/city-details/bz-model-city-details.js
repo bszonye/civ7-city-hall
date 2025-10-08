@@ -54,10 +54,15 @@ class bzCityDetailsModel {
             window.dispatchEvent(new bzUpdateCityDetailsEvent());
         });
         this.updateGate.call('constructor');
+        engine.on('CityGrowthModeChanged', this.onCityGrowthModeChanged, this);
+        engine.on('CityPopulationChanged', this.onCityPopulationChanged, this);
         engine.on('CitySelectionChanged', this.onCitySelectionChanged, this);
-        engine.on('CityPopulationChanged', this.onCityPopulationchanged, this);
     }
-    onCityPopulationchanged() {
+    onCityGrowthModeChanged() {
+        // catches Town Focus and Convert to City events
+        this.updateGate.call('onCityGrowthModeChanged');
+    }
+    onCityPopulationChanged() {
         this.updateGate.call('onCityPopulationChanged');
     }
     onCitySelectionChanged() {
