@@ -163,7 +163,7 @@ class bzCityDetailsModel {
             const fcinfo = GameInfo.Constructibles.lookup(fcid);
             // group all improvements with the same localized name
             // (like IMPROVEMENT_EXPEDITION_BASE & IMPROVEMENT_MOUNTAIN)
-            const key = Locale.compose(fcinfo.Name);
+            const key = fcinfo.Name;
             const imp = improvements.get(key) ?? { ...fcinfo, count: 0 };
             // count matching improvements
             if (!imp.count) improvements.set(key, imp);
@@ -213,9 +213,7 @@ class bzCityDetailsModel {
             .filter(info => info?.ConstructibleClass == "BUILDING")
             .map(info => info.ConstructibleType);
         const warehouseCount = (...types) => {
-            const counts = types
-                .map(type => Locale.compose(type))
-                .map(name => this.improvements.get(name)?.count ?? 0);
+            const counts = types.map(name => this.improvements.get(name)?.count ?? 0);
             return counts.reduce((a, v) => a + v, 0);
         }
         for (const info of GameInfo.Projects) {
