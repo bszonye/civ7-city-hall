@@ -257,12 +257,16 @@ class bzCityDetailsModel {
                     break;
                 }
                 case "PROJECT_TOWN_TEMPLE": {
-                    project.bonus = 0;  // TODO
+                    const buildings = city.Constructibles.getIds()
+                        ?.map(id => Constructibles.getByComponentID(id))
+                        ?.map(c => GameInfo.Constructibles.lookup(c.type))
+                        ?.filter(info => info.ConstructibleClass == "BUILDING");
+                    project.bonus = buildings?.length ?? 0;
                     project.bonusIcons = "YIELD_HAPPINESS";
                     break;
                 }
                 case "PROJECT_TOWN_INN": {
-                    project.bonus = 0;  // TODO: +1 per connection
+                    project.bonus = city.getConnectedCities()?.length ?? 0;
                     project.bonusIcons = "YIELD_DIPLOMACY";
                     break;
                 }

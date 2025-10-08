@@ -195,12 +195,6 @@ function docTimer(size, resize, ...style) {
     if (!style.length) style = ["-mx-1"];
     return docIcon(BZ_ICON_TIMER, size, resize, ...style);
 }
-function dotJoin(list) {
-    return localeJoin(list, BZ_DOT_JOINER);
-}
-function localeJoin(list, divider=" ") {
-    return list.map(s => s && Locale.compose(s)).filter(e => e).join(divider);
-}
 function getFontMetrics() {
     // TODO: remove unneeded stuff
     const sizes = (rem, round=Math.round) => {
@@ -600,8 +594,7 @@ class bzPanelCityDetails {
         container.innerHTML = BZ_DIVIDER;
         container.style.lineHeight = metrics.table.ratio;
         // show settlement count in the title
-        const title = dotJoin(["LOC_BZ_SETTLEMENT_CONNECTIONS", total.toFixed()]);
-        this.renderTitleHeading(container, title);
+        this.renderTitleHeading(container, "LOC_BZ_SETTLEMENT_CONNECTIONS");
         if (!total) return;
         const size = metrics.table.spacing.css;
         const small = metrics.sizes(2/3 * metrics.table.spacing.rem).css;
