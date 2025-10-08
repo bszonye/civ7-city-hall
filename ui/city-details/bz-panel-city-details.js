@@ -655,7 +655,7 @@ class bzPanelCityDetails {
             const row = document.createElement("div");
             row.classList.value = "bz-overview-entry flex min-w-72 px-1";
             row.classList.toggle("text-accent-4", item.disabled ?? false);
-            if (item.highlight) row.style.backgroundColor = `${BZ_COLOR.gold}55`;
+            if (item.highlight) row.style.backgroundColor = `${BZ_COLOR.gold}66`;
             if (!(i % 2)) row.classList.add("bz-odd-row");
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
