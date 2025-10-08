@@ -506,6 +506,7 @@ class bzPanelCityDetails {
             this.improvementsContainer,
             "LOC_BUILDING_PLACEMENT_WAREHOUSE_YIELDS_HEADER",
             bzCityDetails.warehouseTable,
+            true,  // small icons
         );
         this.renderTable(
             this.townFocusContainer,
@@ -568,7 +569,7 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-72 px-1";
+            row.classList.value = "bz-overview-entry flex min-w-60 px-1";
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
@@ -637,7 +638,7 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         container.appendChild(table);
     }
-    renderTable(container, title, data) {
+    renderTable(container, title, data, smallIcons) {
         container.classList.toggle("hidden", !data?.length);
         if (!data?.length) return;
         container.innerHTML = BZ_DIVIDER;
@@ -660,19 +661,13 @@ class bzPanelCityDetails {
             row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
-            row.appendChild(docIcon(item.icon, size, small, "-mx-1"));
+            const iconSize = smallIcons ? small : size;
+            row.appendChild(docIcon(item.icon, size, iconSize, "-mx-1"));
             row.appendChild(docText(item.name, "text-left flex-auto mx-2"));
-            const bonusIcons = typeof item.bonusIcons === "string" ?
-                [item.bonusIcons] : item.bonusIcons ?? [];
-            for (const icon of bonusIcons) {
-                row.appendChild(docIcon(icon, size, size, "-mr-1"));
-            }
-            if (item.bonus != null) {
-                const bonus = Locale.compose(
-                    "LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL",
-                    item.bonus
-                );
-                row.appendChild(docText(bonus, "mx-1 text-right"));
+            for (const detail of item.details ?? []) {
+                row.appendChild(docIcon(detail.icon, size, size, "ml-0"));
+                const bonus = `+${detail.bonus.toFixed()}`;
+                row.appendChild(docText(bonus, "mr-1 text-right"));
             }
             table.appendChild(row);
         }

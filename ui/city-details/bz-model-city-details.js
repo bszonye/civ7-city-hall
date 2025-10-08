@@ -170,15 +170,18 @@ class bzCityDetailsModel {
             imp.count += 1;
             // warehouse yield icons
             imp.bonusType = bonusTypes[fcinfo.Name] ?? -1;
-            imp.bonusIcons = GameInfo.Yields[imp.bonusType]?.YieldType;
+            imp.bonusIcon = GameInfo.Yields[imp.bonusType]?.YieldType;
             // Resort Town: natural Happiness yields
-            // TODO
+            const plot = GameplayMap.getIndexFromLocation(loc);
+            const yields = GameplayMap.getYields(plot, GameContext.localPlayerID);
+            for (const [type] of yields) {
+                if (type == YieldTypes.YIELD_HAPPINESS) improvements.appeal += 1;
+            };
             // Trade Outpost and Factory Town: resources
             const resourceType = GameplayMap.getResourceType(loc.x, loc.y);
             const resource = GameInfo.Resources.lookup(resourceType);
             if (resource) {
                 improvements.resources += 1;
-                console.warn(`TRIX RESOURCE ${JSON.stringify(resource)}`);
                 if (resource.ResourceClassType == "RESOURCECLASS_FACTORY") {
                     improvements.factoryResources += 1;
                 }
@@ -190,9 +193,8 @@ class bzCityDetailsModel {
         const warehouses = [...this.improvements.values()].map(info => ({
             icon: info.ConstructibleType,
             name: info.Name,
-            bonus: info.count,
             bonusType: info.bonusType,
-            bonusIcons: info.bonusIcons,
+            details: [{ bonus: info.count, icon: info.bonusIcon }],
         }));
         return warehouses.sort((a, b) =>
             a.bonusType - b.bonusType || bzNameSort(a.name, b.name));
@@ -205,6 +207,11 @@ class bzCityDetailsModel {
         const age = GameInfo.Ages.lookup(Game.age);
         const perAge = age.ChronologyIndex + 1;
         const projects = [];
+        const buildingTypes = () => city.Constructibles.getIds()
+            .map(id => Constructibles.getByComponentID(id))
+            .map(c => c && GameInfo.Constructibles.lookup(c.type))
+            .filter(info => info?.ConstructibleClass == "BUILDING")
+            .map(info => info.ConstructibleType);
         const warehouseCount = (...types) => {
             const counts = types
                 .map(type => Locale.compose(type))
@@ -219,19 +226,30 @@ class bzCityDetailsModel {
                 highlight: Game.getHash(info.ProjectType) == focus,
             };
             switch (info.ProjectType) {
-                case "PROJECT_TOWN_FORT": {
-                    project.bonus = 25;
-                    project.bonusIcons = "ACTION_FORTIFY";
+                case "PROJECT_TOWN_FORT":
+                    project.details = [{ bonus: 25, icon: "ACTION_FORTIFY" }];
                     break;
-                }
                 case "PROJECT_TOWN_URBAN_CENTER": {
-                    project.bonus = 0;  // TODO: +100% toward building maintenance
-                    project.bonusIcons = ["YIELD_GOLD", "YIELD_HAPPINESS"];
+                    const maint = buildingTypes()
+                        .map(type => city.Constructibles.getMaintenance(type));
+                    const igold = GameInfo.Yields.lookup(YieldTypes.YIELD_GOLD);
+                    const ihappy = GameInfo.Yields.lookup(YieldTypes.YIELD_HAPPINESS);
+                    const mgold = maint.map(m => m[igold.$index])
+                    const mhappy = maint.map(m => m[ihappy.$index])
+                    const gold = mgold.reduce((a, m) => a + m, 0) / 2;
+                    const happy = mhappy.reduce((a, m) => a + m, 0) / 2;
+                    project.details = [
+                        { bonus: gold, icon: "YIELD_GOLD" },
+                        { bonus: happy, icon: "YIELD_HAPPINESS" },
+                    ];
                     break;
                 }
                 case "PROJECT_TOWN_RESORT": {
-                    project.bonus = 0 * perAge;  // TODO: +1 per age per Happiness plot
-                    project.bonusIcons = ["YIELD_GOLD", "YIELD_HAPPINESS"];
+                    const bonus = this.improvements.appeal * perAge;
+                    project.details = [
+                        { bonus, icon: "YIELD_GOLD" },
+                        { bonus, icon: "YIELD_HAPPINESS" },
+                    ];
                     break;
                 }
                 case "PROJECT_TOWN_GRANARY":
@@ -245,8 +263,7 @@ class bzCityDetailsModel {
                         "LOC_IMPROVEMENT_PLANTATION_NAME",
                         "LOC_IMPROVEMENT_FISHING_BOAT_NAME",
                     );
-                    project.bonus = count * perAge;
-                    project.bonusIcons = "YIELD_FOOD";
+                    project.details = [{ bonus: count * perAge, icon: "YIELD_FOOD" }];
                     break;
                 }
                 case "PROJECT_TOWN_PRODUCTION": {
@@ -257,38 +274,37 @@ class bzCityDetailsModel {
                         "LOC_IMPROVEMENT_MINE_NAME",
                         "LOC_IMPROVEMENT_QUARRY_NAME",
                     );
-                    project.bonus = count * (perAge + 1);
-                    project.bonusIcons = "YIELD_PRODUCTION";
+                    project.details = [{
+                        bonus: count * (perAge + 1),
+                        icon: "YIELD_PRODUCTION",
+                    }];
                     break;
                 }
                 case "PROJECT_TOWN_TRADE": {
                     const isDistant = player?.isDistantLands(loc) ?? false;
                     if (age.ChronologyIndex == 1 && !isDistant) project.disabled = true;
-                    // TODO: +2 Happiness per resource
-                    project.bonus = 2 * this.improvements.resources;
-                    project.bonusIcons = "YIELD_HAPPINESS";
+                    project.details = [{
+                        bonus: 2 * this.improvements.resources,
+                        icon: "YIELD_HAPPINESS",
+                    }];
                     break;
                 }
-                case "PROJECT_TOWN_TEMPLE": {
-                    const buildings = city.Constructibles.getIds()
-                        .map(id => Constructibles.getByComponentID(id))
-                        .map(c => c && GameInfo.Constructibles.lookup(c.type))
-                        .filter(info => info?.ConstructibleClass == "BUILDING");
-                    project.bonus = buildings?.length ?? 0;
-                    project.bonusIcons = "YIELD_HAPPINESS";
+                case "PROJECT_TOWN_TEMPLE":
+                    project.details = [{
+                        bonus: buildingTypes().length,
+                        icon: "YIELD_HAPPINESS",
+                    }];
                     break;
-                }
-                case "PROJECT_TOWN_INN": {
-                    project.bonus = city.getConnectedCities()?.length ?? 0;
-                    project.bonusIcons = "YIELD_DIPLOMACY";
+                case "PROJECT_TOWN_INN":
+                    project.details = [{
+                        bonus: city.getConnectedCities()?.length ?? 0,
+                        icon: "YIELD_DIPLOMACY",
+                    }];
                     break;
-                }
-                case "PROJECT_TOWN_FACTORY": {
+                case "PROJECT_TOWN_FACTORY":
                     project.disabled = !this.improvements.factoryResources;
-                    project.bonus = 5;
-                    project.bonusIcons = "YIELD_TRADES";
+                    project.details = [{ bonus: 5, icon: "YIELD_TRADES" }];
                     break;
-                }
             }
             projects.push(project);
         }
