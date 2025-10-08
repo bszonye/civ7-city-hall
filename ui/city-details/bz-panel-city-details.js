@@ -159,8 +159,16 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-overview-entry.bz-odd-row {
     background-color: ${BZ_COLOR.bronze6}99;
 }
+.bz-overview-entry.bz-entry-disabled {
+    color: ${BZ_COLOR.accent4};
+}
 .bz-overview-entry:focus, .bz-overview-entry:hover, .bz-overview-entry.pressed {
     background: linear-gradient(90deg, #6b6250 0%, #545559 100%);
+}
+.bz-overview-entry:focus.bz-entry-disabled,
+.bz-overview-entry:hover.bz-entry-disabled,
+.bz-overview-entry.pressed.bz-entry-disabled {
+    color: ${BZ_COLOR.accent3};
 }
 `,
 ];
@@ -654,8 +662,11 @@ class bzPanelCityDetails {
         for (const [i, item] of data.entries()) {
             const row = document.createElement("div");
             row.classList.value = "bz-overview-entry flex min-w-72 px-1";
-            row.classList.toggle("text-accent-4", item.disabled ?? false);
-            if (item.highlight) row.style.backgroundColor = `${BZ_COLOR.gold}66`;
+            row.classList.toggle("bz-entry-disabled", item.disabled ?? false);
+            if (item.highlight) {
+                row.style.color = BZ_COLOR.accent1;
+                row.style.backgroundColor = `${BZ_COLOR.gold}66`;
+            }
             if (!(i % 2)) row.classList.add("bz-odd-row");
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
