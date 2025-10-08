@@ -302,6 +302,7 @@ class bzPanelCityDetails {
             const icons = [
                 BZ_ICON_CITY, BZ_ICON_TOWN, BZ_ICON_RURAL,
                 BZ_ICON_URBAN, BZ_ICON_SPECIAL, BZ_ICON_TIMER,
+                "ACTION_FORTIFY", "YIELD_TRADES", "YIELD_WAREHOUSE",
             ];
             for (const y of icons) preloadIcon(y);
         });

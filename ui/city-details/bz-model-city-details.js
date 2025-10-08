@@ -137,6 +137,9 @@ class bzCityDetailsModel {
     }
     modelImprovements(city) {
         const improvements = new Map();
+        improvements.appeal = 0;
+        improvements.resources = 0;
+        improvements.factoryResources = 0;
         const ids = city.Constructibles?.getIds() ?? [];
         const bonusTypes = {
             LOC_IMPROVEMENT_FARM_NAME: 0,
@@ -162,12 +165,24 @@ class bzCityDetailsModel {
             // (like IMPROVEMENT_EXPEDITION_BASE & IMPROVEMENT_MOUNTAIN)
             const key = Locale.compose(fcinfo.Name);
             const imp = improvements.get(key) ?? { ...fcinfo, count: 0 };
+            // count matching improvements
             if (!imp.count) improvements.set(key, imp);
             imp.count += 1;
+            // warehouse yield icons
             imp.bonusType = bonusTypes[fcinfo.Name] ?? -1;
-            imp.bonusIcons =
-                GameInfo.Yields[imp.bonusType]?.YieldType ?? "YIELD_WAREHOUSE";
-            // TODO: happiness, natural wonders, resources
+            imp.bonusIcons = GameInfo.Yields[imp.bonusType]?.YieldType;
+            // Resort Town: natural Happiness yields
+            // TODO
+            // Trade Outpost and Factory Town: resources
+            const resourceType = GameplayMap.getResourceType(loc.x, loc.y);
+            const resource = GameInfo.Resources.lookup(resourceType);
+            if (resource) {
+                improvements.resources += 1;
+                console.warn(`TRIX RESOURCE ${JSON.stringify(resource)}`);
+                if (resource.ResourceClassType == "RESOURCECLASS_FACTORY") {
+                    improvements.factoryResources += 1;
+                }
+            }
         }
         return improvements;
     }
@@ -185,7 +200,6 @@ class bzCityDetailsModel {
     modelTownFocus(city) {
         if (!city.isTown) return null;
         const focus = city.Growth?.projectType;
-        console.warn(`TRIX FOCUS ${JSON.stringify(focus)}`);
         const loc = city.location;
         const player = Players.get(GameContext.localObserverID);
         const age = GameInfo.Ages.lookup(Game.age);
@@ -216,7 +230,7 @@ class bzCityDetailsModel {
                     break;
                 }
                 case "PROJECT_TOWN_RESORT": {
-                    project.bonus = 0;  // TODO: +1 per age per Happiness plot
+                    project.bonus = 0 * perAge;  // TODO: +1 per age per Happiness plot
                     project.bonusIcons = ["YIELD_GOLD", "YIELD_HAPPINESS"];
                     break;
                 }
@@ -250,17 +264,16 @@ class bzCityDetailsModel {
                 case "PROJECT_TOWN_TRADE": {
                     const isDistant = player?.isDistantLands(loc) ?? false;
                     if (age.ChronologyIndex == 1 && !isDistant) project.disabled = true;
-                    // TODO: +5 trade route range
                     // TODO: +2 Happiness per resource
-                    project.bonus = 0;  // TODO
+                    project.bonus = 2 * this.improvements.resources;
                     project.bonusIcons = "YIELD_HAPPINESS";
                     break;
                 }
                 case "PROJECT_TOWN_TEMPLE": {
                     const buildings = city.Constructibles.getIds()
-                        ?.map(id => Constructibles.getByComponentID(id))
-                        ?.map(c => GameInfo.Constructibles.lookup(c.type))
-                        ?.filter(info => info.ConstructibleClass == "BUILDING");
+                        .map(id => Constructibles.getByComponentID(id))
+                        .map(c => c && GameInfo.Constructibles.lookup(c.type))
+                        .filter(info => info?.ConstructibleClass == "BUILDING");
                     project.bonus = buildings?.length ?? 0;
                     project.bonusIcons = "YIELD_HAPPINESS";
                     break;
@@ -271,16 +284,13 @@ class bzCityDetailsModel {
                     break;
                 }
                 case "PROJECT_TOWN_FACTORY": {
-                    // TODO: disabled without factory resource
+                    project.disabled = !this.improvements.factoryResources;
                     project.bonus = 5;
                     project.bonusIcons = "YIELD_TRADES";
                     break;
                 }
             }
-            // TODO
             projects.push(project);
-            // console.warn(`TRIX INFO ${JSON.stringify(info)}`);
-            console.warn(`TRIX PROJECT ${JSON.stringify(project)}`);
         }
         return projects;
     }
