@@ -665,7 +665,7 @@ class bzPanelCityDetails {
             row.appendChild(docIcon(item.icon, size, iconSize, "-mx-1"));
             row.appendChild(docText(item.name, "text-left flex-auto mx-2"));
             for (const detail of item.details ?? []) {
-                row.appendChild(docIcon(detail.icon, size, size, "ml-0"));
+                if (detail.icon) row.appendChild(docIcon(detail.icon, size, size));
                 const bonus = `+${detail.bonus.toFixed()}`;
                 row.appendChild(docText(bonus, "mr-1 text-right"));
             }
