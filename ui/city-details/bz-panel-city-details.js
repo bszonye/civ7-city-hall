@@ -510,12 +510,12 @@ class bzPanelCityDetails {
         this.renderTable(
             this.improvementsContainer,
             "LOC_BUILDING_PLACEMENT_WAREHOUSE_YIELDS_HEADER",
-            bzCityDetails.improvements,
+            bzCityDetails.warehouseTable,
         );
         this.renderTable(
             this.townFocusContainer,
             "LOC_UI_TOWN_FOCUS",
-            bzCityDetails.townFocus,
+            bzCityDetails.townFocusTable,
         );
         if (overviewHasFocus) FocusManager.setFocus(this.overviewSlot);
     }
@@ -573,7 +573,7 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-60 px-1";
+            row.classList.value = "bz-overview-entry flex min-w-72 px-1";
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
@@ -658,7 +658,9 @@ class bzPanelCityDetails {
         table.style.minWidth = bzPanelCityDetails.tableWidth;
         for (const [i, item] of data.entries()) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-60 px-1";
+            row.classList.value = "bz-overview-entry flex min-w-72 px-1";
+            row.classList.toggle("text-accent-4", item.disabled ?? false);
+            if (item.highlight) row.style.backgroundColor = `${BZ_COLOR.gold}55`;
             if (!(i % 2)) row.classList.add("bz-odd-row");
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
@@ -666,9 +668,15 @@ class bzPanelCityDetails {
             row.setAttribute("role", "paragraph");
             row.appendChild(docIcon(item.icon, size, small, "-mx-1"));
             row.appendChild(docText(item.name, "text-left flex-auto mx-2"));
-            const modifier = `+${item.count.toFixed()}`;
-            const value = docText(modifier, "mx-1 text-right");
-            row.appendChild(value);
+            const bonusIcons = typeof item.bonusIcons === "string" ?
+                [item.bonusIcons] : item.bonusIcons ?? [];
+            for (const icon of bonusIcons) {
+                row.appendChild(docIcon(icon, size, size, "-mr-1"));
+            }
+            if (item.bonus != null) {
+                const bonus = `+${item.bonus.toFixed()}`;
+                row.appendChild(docText(bonus, "mx-1 text-right"));
+            }
             table.appendChild(row);
         }
         // wrap table to keep it from expanding to full width
