@@ -515,7 +515,7 @@ class bzPanelCityDetails {
         this.renderTable(
             this.townFocusContainer,
             "LOC_UI_TOWN_FOCUS",
-            bzCityDetails.improvements,
+            bzCityDetails.townFocus,
         );
         if (overviewHasFocus) FocusManager.setFocus(this.overviewSlot);
     }
@@ -593,10 +593,13 @@ class bzPanelCityDetails {
         container.appendChild(wrap);
     }
     renderConnections(container) {
+        const data = bzCityDetails.connections;
+        const total = data?.settlements?.length;
+        container.classList.toggle("hidden", !total);
+        if (!total) return;
         container.innerHTML = BZ_DIVIDER;
         container.style.lineHeight = metrics.table.ratio;
         // show settlement count in the title
-        const total = bzCityDetails.connections?.settlements?.length ?? 0;
         const title = dotJoin(["LOC_BZ_SETTLEMENT_CONNECTIONS", total.toFixed()]);
         this.renderTitleHeading(container, title);
         if (!total) return;
@@ -605,12 +608,7 @@ class bzPanelCityDetails {
         const table = document.createElement("div");
         table.classList.value = "flex justify-start text-base -mx-1";
         const rows = [];
-        const connections = [
-            ...bzCityDetails.connections.cities,
-            ...bzCityDetails.connections.growing,
-            ...bzCityDetails.connections.focused,
-        ];
-        for (const conn of connections) {
+        for (const conn of [...data.cities, ...data.growing, ...data.focused]) {
             const row = document.createElement("fxs-activatable");
             row.classList.value = "bz-overview-entry bz-city-link relative flex justify-start items-center pr-1";
             row.style.minHeight = size;

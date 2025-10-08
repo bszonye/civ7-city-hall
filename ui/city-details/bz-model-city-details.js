@@ -31,28 +31,28 @@ class bzCityDetailsModel {
     set updateCallback(callback) {
         this.onUpdate = callback;
     }
+    growth = null;
+    connections = null;
+    improvements = null;
+    townFocus = null;
+    updateGate = new UpdateGate(() => {
+        const cityID = UI.Player.getHeadSelectedCity();
+        if (!cityID || ComponentID.isInvalid(cityID)) {
+            this.reset();
+            return;
+        }
+        const city = Cities.get(cityID);
+        if (!city) {
+            console.error(`bz-city-details-model: Failed to get city=${cityID}`);
+            return;
+        }
+        this.updateOverview(city);
+        // notifications
+        this.onUpdate?.(this);
+        window.dispatchEvent(new bzUpdateCityDetailsEvent());
+    });
     constructor() {
-        // overview
-        this.growth = null;
-        this.connections = null;
-        this.improvements = null;
         // update callback
-        this.updateGate = new UpdateGate(() => {
-            const cityID = UI.Player.getHeadSelectedCity();
-            if (!cityID || ComponentID.isInvalid(cityID)) {
-                this.reset();
-                return;
-            }
-            const city = Cities.get(cityID);
-            if (!city) {
-                console.error(`bz-city-details-model: Failed to get city=${cityID}`);
-                return;
-            }
-            this.updateOverview(city);
-            // notifications
-            this.onUpdate?.(this);
-            window.dispatchEvent(new bzUpdateCityDetailsEvent());
-        });
         this.updateGate.call('constructor');
         engine.on('CityGrowthModeChanged', this.onCityGrowthModeChanged, this);
         engine.on('CityPopulationChanged', this.onCityPopulationChanged, this);
@@ -73,6 +73,7 @@ class bzCityDetailsModel {
         this.growth = null;
         this.connections = null;
         this.improvements = null;
+        this.townFocus = null;
         // notifications
         this.onUpdate?.(this);
         window.dispatchEvent(new bzUpdateCityDetailsEvent());
@@ -81,6 +82,7 @@ class bzCityDetailsModel {
         this.growth = this.modelGrowth(city);
         this.connections = this.modelConnections(city);
         this.improvements = this.modelImprovements(city);
+        this.townFocus = this.modelTownFocus(city);
     }
     modelGrowth(city) {
         // food
@@ -151,6 +153,10 @@ class bzCityDetailsModel {
         const sorted = Object.values(imps);
         sorted.sort((a, b) => bzNameSort(a.name, b.name));
         return sorted;
+    }
+    modelTownFocus(city) {
+        if (!city.isTown) return null;
+        return this.improvements;  // TODO
     }
     sortConstructibles(buildings, improvements, wonders) {
         // sort buildings by population (walls last)
