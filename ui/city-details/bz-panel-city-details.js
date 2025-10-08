@@ -569,13 +569,13 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-60 px-1";
+            row.classList.value = "bz-overview-entry flex px-1";
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
             row.appendChild(docIcon(item.icon, size, small, "-mx-1"));
-            row.appendChild(docText(item.label, "text-left flex-auto mx-2"));
+            row.appendChild(docText(item.label, "text-left flex-auto min-w-40 mx-2"));
             const value = docText(item.value, "mx-1 text-right");
             // keep width stable when flipping through cities
             value.style.minWidth = metrics.table.digits(2).css;

@@ -281,10 +281,11 @@ class bzCityDetailsModel {
                 case "PROJECT_TOWN_TRADE": {
                     const isDistant = player?.isDistantLands(loc) ?? false;
                     if (age.ChronologyIndex == 1 && !isDistant) project.disabled = true;
-                    project.details = [{
-                        bonus: 2 * this.improvements.resources,
-                        icon: "YIELD_HAPPINESS",
-                    }];
+                    const bonus = 2 * this.improvements.resources;
+                    project.details = [
+                        { icon: "YIELD_TRADES", bonus: 5 },
+                        { icon: "YIELD_HAPPINESS", bonus },
+                    ];
                     break;
                 }
                 case "PROJECT_TOWN_TEMPLE":
