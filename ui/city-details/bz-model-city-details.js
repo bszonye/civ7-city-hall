@@ -206,8 +206,8 @@ class bzCityDetailsModel {
             };
             switch (info.ProjectType) {
                 case "PROJECT_TOWN_FORT": {
-                    // project.bonus = 25;
-                    // project.bonusIcons = "DEFAULT_MODIFIER";
+                    project.bonus = 25;
+                    project.bonusIcons = "ACTION_FORTIFY";
                     break;
                 }
                 case "PROJECT_TOWN_URBAN_CENTER": {

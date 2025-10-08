@@ -674,7 +674,10 @@ class bzPanelCityDetails {
                 row.appendChild(docIcon(icon, size, size, "-mr-1"));
             }
             if (item.bonus != null) {
-                const bonus = `+${item.bonus.toFixed()}`;
+                const bonus = Locale.compose(
+                    "LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL",
+                    item.bonus
+                );
                 row.appendChild(docText(bonus, "mx-1 text-right"));
             }
             table.appendChild(row);
