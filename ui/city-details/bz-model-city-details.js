@@ -233,11 +233,9 @@ class bzCityDetailsModel {
         const projects = [];
         for (const info of GameInfo.Projects) {
             if (info.CityOnly) continue;
-            const tooltip = Locale.compose(info.Description);
             const project = {
                 icon: info.ProjectType,
                 name: info.Name,
-                tooltip: `[style:leading-normal]${tooltip}[/style]`,
                 description: info.Description,
                 highlight: info.$hash == focusHash,
                 disabled: !enabled.has(info.$index),
