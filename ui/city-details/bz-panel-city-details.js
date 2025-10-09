@@ -585,10 +585,11 @@ class bzPanelCityDetails {
         }
         const table = document.createElement("div");
         table.classList.value = "flex-col justify-start text-base -mx-1";
+        table.style.minWidth = "13rem";
         table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-60 px-1";
+            row.classList.value = "bz-overview-entry flex px-1";
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
