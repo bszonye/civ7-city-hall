@@ -79,7 +79,10 @@ var CityDecorationSupport;
             const districts = city.Districts.getIds().map(id => Districts.get(id));
             for (const district of districts) {
                 const loc = district.location;
-                this.realizeBuildSlots(district, this.slotGrid, this.yieldGrid);
+                if (!LensManager.isLayerEnabled("fxs-yields-layer")) {
+                    // don't obscure Yields layer
+                    this.realizeBuildSlots(district, this.slotGrid, this.yieldGrid);
+                }
                 if (district.type == DistrictTypes.CITY_CENTER) {
                     // skip
                 } else if (district.type == DistrictTypes.URBAN) {

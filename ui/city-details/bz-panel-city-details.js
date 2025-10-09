@@ -160,7 +160,7 @@ const BZ_HEAD_STYLE = [
     background-color: ${BZ_COLOR.bronze6}99;
 }
 .bz-overview-entry.bz-entry-disabled {
-    color: ${BZ_COLOR.accent4};
+    color: ${BZ_COLOR.accent5};
 }
 .bz-overview-entry:focus, .bz-overview-entry:hover, .bz-overview-entry.pressed {
     background: linear-gradient(90deg, #6b6250 0%, #545559 100%);
