@@ -233,15 +233,15 @@ class bzCityDetailsModel {
                     project.details = [{ bonus: 25, icon: "ACTION_FORTIFY" }];
                     break;
                 case "PROJECT_TOWN_URBAN_CENTER": {
-                    const maint = buildingTypes()
+                    const maintenance = buildingTypes()
                         .map(type => city.Constructibles.getMaintenance(type));
-                    const mgold = maint.map(m => m[YIELD_GOLD_INFO.$index])
-                    const mhappy = maint.map(m => m[YIELD_HAPPINESS_INFO.$index])
-                    const gold = mgold.reduce((a, m) => a + m, 0) / 2;
-                    const happy = mhappy.reduce((a, m) => a + m, 0) / 2;
+                    const mGold = maintenance.map(m => m[YIELD_GOLD_INFO.$index])
+                    const mHappy = maintenance.map(m => m[YIELD_HAPPINESS_INFO.$index])
+                    const dGold = mGold.reduce((a, m) => a + m, 0) / 2;
+                    const dHappy = mHappy.reduce((a, m) => a + m, 0) / 2;
                     project.details = [
-                        { bonus: gold, icon: "YIELD_GOLD" },
-                        { bonus: happy, icon: "YIELD_HAPPINESS" },
+                        { bonus: dGold, icon: "YIELD_GOLD" },
+                        { bonus: dHappy, icon: "YIELD_HAPPINESS" },
                     ];
                     break;
                 }
