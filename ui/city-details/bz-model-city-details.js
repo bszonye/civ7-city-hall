@@ -34,7 +34,7 @@ class bzCityDetailsModel {
     growth = null;
     connections = null;
     improvements = new Map();
-    improvementTable = null;
+    warehouseTable = null;
     townFocusTable = null;
     updateGate = new UpdateGate(() => {
         const cityID = UI.Player.getHeadSelectedCity();
