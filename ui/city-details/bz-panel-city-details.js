@@ -440,12 +440,12 @@ class bzPanelCityDetails {
     }
     renderOverviewSlot() {
         const slot = document.createElement("fxs-vslot");
-        slot.classList.add("mt-3", "pr-4");
+        slot.classList.add("pr-4");
         // slot.setAttribute("data-navrule-right", "stop");
         slot.id = cityDetailTabID.overview;
         slot.innerHTML = `
         <fxs-scrollable class="w-full">
-            <div class="growth-container flex flex-col ml-6"></div>
+            <div class="growth-container flex flex-col ml-6 mt-3"></div>
             <div class="connections-container flex flex-col ml-6"></div>
             <div class="improvements-container flex flex-col ml-6"></div>
             <div class="town-focus-container flex flex-col ml-6"></div>
