@@ -122,6 +122,13 @@ const BZ_DOT_JOINER = metrics.isIdeographic ?
 // additional CSS definitions
 const BZ_HEAD_STYLE = [
 `
+.bz-city-hall .panel-city-details .subsystem-frame__content {
+    padding: 0.6666666667rem 0;
+}
+.bz-city-hall .panel-city-details .subsystem-frame__content .fxs-scrollbar__track--vertical {
+    margin: 1.6666666667rem 0 1.3333333333rem;
+    right: -0.7777777778rem;
+}
 .bz-city-hall .buildings-list .city-details-half-divider,
 .bz-city-hall .bz-buildings-list .city-details-half-divider {
     margin: -0.2222222222rem 0;
