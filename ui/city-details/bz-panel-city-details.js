@@ -122,6 +122,10 @@ const BZ_DOT_JOINER = metrics.isIdeographic ?
 // additional CSS definitions
 const BZ_HEAD_STYLE = [
 `
+.bz-city-hall .panel-city-details .subsystem-frame__content .fxs-scrollbar__track--vertical {
+    margin: 1.5555555556rem 0;
+    right: -0.7777777778rem;
+}
 .bz-city-hall .buildings-list .city-details-half-divider,
 .bz-city-hall .bz-buildings-list .city-details-half-divider {
     margin: -0.2222222222rem 0;
@@ -585,6 +589,7 @@ class bzPanelCityDetails {
         }
         const table = document.createElement("div");
         table.classList.value = "flex-col justify-start text-base -mx-1";
+        table.style.minWidth = "13.1666666667rem";
         table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
@@ -594,7 +599,7 @@ class bzPanelCityDetails {
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
             row.appendChild(docIcon(item.icon, size, small, "-mx-1"));
-            row.appendChild(docText(item.label, "text-left flex-auto min-w-40 mx-2"));
+            row.appendChild(docText(item.label, "text-left flex-auto mx-2"));
             const value = docText(item.value, "mx-1 text-right");
             // keep width stable when flipping through cities
             value.style.minWidth = metrics.table.digits(2).css;
@@ -638,13 +643,14 @@ class bzPanelCityDetails {
                 row.appendChild(docIcon(BZ_ICON_CITY, size, small));
             }
             const name = document.createElement("div");
-            name.classList.value = "mx-1 text-left w-40 font-fit-shrink";
+            name.classList.value = "mx-1 text-left font-fit-shrink";
+            name.style.width = "9.0555555556rem";
             name.setAttribute("data-l10n-id", conn.name);
             row.appendChild(name);
             rows.push(row);
         }
         const columns = [];
-        const half = rows.length < 5 ? rows.length : Math.ceil(rows.length / 2);
+        const half = rows.length < 3 ? rows.length : Math.ceil(rows.length / 2);
         columns.push(rows.slice(0, half));
         if (half < rows.length) columns.push(rows.slice(half));
         for (const [i, column] of columns.entries()) {
@@ -672,7 +678,8 @@ class bzPanelCityDetails {
         table.style.minWidth = bzPanelCityDetails.tableWidth;
         for (const [i, item] of data.entries()) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-72 px-1";
+            row.classList.value = "bz-overview-entry flex items-center px-1";
+            row.style.width = "22.8888888889rem";
             // row highlighting and dimming
             const disabled = item.disabled ?? false;
             const highlight = item.highlight ?? false;
@@ -690,7 +697,9 @@ class bzPanelCityDetails {
             row.appendChild(docText(item.name, "text-left flex-auto mx-2"));
             // bonus details (icon and value)
             for (const detail of item.details ?? []) {
-                if (detail.icon) row.appendChild(docIcon(detail.icon, size, size));
+                if (detail.icon) {
+                    row.appendChild(docIcon(detail.icon, size, size, "ml-1"));
+                }
                 const bonus = `+${detail.bonus.toFixed()}`;
                 row.appendChild(docText(bonus, "mr-1 text-right"));
             }
