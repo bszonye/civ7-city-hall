@@ -324,6 +324,7 @@ class bzPanelCityDetails {
                 "ACTION_FORTIFY", "YIELD_TRADES", "YIELD_WAREHOUSE",
             ];
             for (const y of icons) preloadIcon(y);
+            for (const f of GameInfo.Projects) preloadIcon(f.ProjectType);
         });
     }
     patchPrototypes(component) {
