@@ -156,7 +156,7 @@ const BZ_HEAD_STYLE = [
     top: 0.6111111111rem;
     left: 1rem;
 }
-.bz-city-hall .bz-overview-entry.bz-odd-row {
+.bz-overview-entry.bz-odd-row {
     background-color: ${BZ_COLOR.bronze6}99;
 }
 .bz-overview-entry.bz-entry-disabled {
