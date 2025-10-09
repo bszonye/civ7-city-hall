@@ -673,7 +673,8 @@ class bzPanelCityDetails {
         table.style.minWidth = bzPanelCityDetails.tableWidth;
         for (const [i, item] of data.entries()) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-72 px-1";
+            row.classList.value = "bz-overview-entry flex items-center px-1";
+            row.style.width = "22.5555555556rem";
             // row highlighting and dimming
             const disabled = item.disabled ?? false;
             const highlight = item.highlight ?? false;
