@@ -122,9 +122,6 @@ const BZ_DOT_JOINER = metrics.isIdeographic ?
 // additional CSS definitions
 const BZ_HEAD_STYLE = [
 `
-.bz-city-hall .panel-city-details .subsystem-frame__content {
-    padding: 0.6666666667rem 0;
-}
 .bz-city-hall .panel-city-details .subsystem-frame__content .fxs-scrollbar__track--vertical {
     margin: 1.5555555556rem 0;
     right: -0.7777777778rem;
