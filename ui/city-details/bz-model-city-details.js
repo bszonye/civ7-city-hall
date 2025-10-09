@@ -208,8 +208,10 @@ class bzCityDetailsModel {
         if (!city.isTown) return null;
         const focusHash = city.Growth?.projectType;
         const loc = city.location;
+        // get current ChronologyIndex and per-age multiplier
         const age = GameInfo.Ages.lookup(Game.age);
         const perAge = age.ChronologyIndex + 1;
+        // get the enabled Town Focus projects
         const canStart = Game.CityCommands.canStart(
             city.id,
             CityCommandTypes.CHANGE_GROWTH_MODE,
@@ -217,7 +219,7 @@ class bzCityDetailsModel {
             false
         );
         const enabled = new Set(canStart.Projects ?? []);
-        const projects = [];
+        // utility functions
         const buildingTypes = () => city.Constructibles.getIds()
             .map(id => Constructibles.getByComponentID(id))
             .map(c => c && GameInfo.Constructibles.lookup(c.type))
@@ -227,6 +229,8 @@ class bzCityDetailsModel {
             const counts = types.map(name => this.improvements.get(name)?.count ?? 0);
             return counts.reduce((a, v) => a + v, 0);
         }
+        // collect town focus entries
+        const projects = [];
         for (const info of GameInfo.Projects) {
             if (info.CityOnly) continue;
             const tooltip = Locale.compose(info.Description);
