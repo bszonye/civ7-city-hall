@@ -673,7 +673,6 @@ class bzPanelCityDetails {
         for (const [i, item] of data.entries()) {
             const row = document.createElement("div");
             row.classList.value = "bz-overview-entry flex min-w-72 px-1";
-            if (item.tooltip) row.setAttribute("data-tooltip-content", item.tooltip);
             const disabled = item.disabled ?? false;
             const highlight = item.highlight ?? false;
             row.classList.toggle("bz-focus-disabled", disabled && !highlight);
@@ -686,10 +685,17 @@ class bzPanelCityDetails {
             const iconSize = smallIcons ? small : size;
             row.appendChild(docIcon(item.icon, size, iconSize, "-mx-1"));
             row.appendChild(docText(item.name, "text-left flex-auto mx-2"));
+            // bonus details (icon and value)
             for (const detail of item.details ?? []) {
                 if (detail.icon) row.appendChild(docIcon(detail.icon, size, size));
                 const bonus = `+${detail.bonus.toFixed()}`;
                 row.appendChild(docText(bonus, "mr-1 text-right"));
+            }
+            // optional tooltips
+            if (item.description) {
+                const description = Locale.compose(item.description);
+                const tooltip = `[style:leading-normal]${description}[/style]`;
+                row.setAttribute("data-tooltip-content", tooltip);
             }
             table.appendChild(row);
         }

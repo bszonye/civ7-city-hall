@@ -238,6 +238,7 @@ class bzCityDetailsModel {
                 icon: info.ProjectType,
                 name: info.Name,
                 tooltip: `[style:leading-normal]${tooltip}[/style]`,
+                description: info.Description,
                 highlight: info.$hash == focusHash,
                 disabled: !enabled.has(info.$index),
             };
