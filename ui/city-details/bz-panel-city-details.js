@@ -178,6 +178,9 @@ const BZ_HEAD_STYLE = [
     color: ${BZ_COLOR.accent1};
     background-color: ${BZ_COLOR.gold}66;
 }
+.bz-overview-entry.bz-entry-disabled.bz-entry-highlight .shadow {
+    opacity: 1;
+}
 `,
 ];
 BZ_HEAD_STYLE.map(style => {
