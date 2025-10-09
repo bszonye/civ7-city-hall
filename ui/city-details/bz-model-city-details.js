@@ -229,10 +229,11 @@ class bzCityDetailsModel {
         const enabled = new Set(canStart.Projects ?? []);
         for (const info of GameInfo.Projects) {
             if (info.CityOnly) continue;
-            console.warn(`TRIX CAN-START ${JSON.stringify(canStart)}`);
+            const tooltip = Locale.compose(info.Description);
             const project = {
                 icon: info.ProjectType,
                 name: info.Name,
+                tooltip: `[style:leading-normal]${tooltip}[/style]`,
                 highlight: info.$hash == focusHash,
                 disabled: !enabled.has(info.$index),
             };

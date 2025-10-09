@@ -159,27 +159,26 @@ const BZ_HEAD_STYLE = [
 .bz-overview-entry.bz-odd-row {
     background-color: ${BZ_COLOR.bronze6}99;
 }
-.bz-overview-entry.bz-entry-disabled {
-    color: ${BZ_COLOR.accent5};
+.bz-overview-entry.bz-focus-disabled {
+    color: ${BZ_COLOR.accent4};
 }
-.bz-overview-entry.bz-entry-disabled .shadow {
-    opacity: 0.5;
+.bz-overview-entry.bz-focus-disabled .shadow {
+    opacity: 0.6;
 }
 .bz-overview-entry:focus, .bz-overview-entry:hover, .bz-overview-entry.pressed {
     background: linear-gradient(90deg, #6b6250 0%, #545559 100%);
 }
-.bz-overview-entry:focus.bz-entry-disabled,
-.bz-overview-entry:hover.bz-entry-disabled,
-.bz-overview-entry.pressed.bz-entry-disabled {
+.bz-overview-entry:focus.bz-focus-disabled,
+.bz-overview-entry:hover.bz-focus-disabled,
+.bz-overview-entry.pressed.bz-focus-disabled {
     color: ${BZ_COLOR.accent3};
 }
-.bz-overview-entry.bz-entry-highlight,
-.bz-overview-entry.bz-entry-disabled.bz-entry-highlight {
-    color: ${BZ_COLOR.accent1};
-    background-color: ${BZ_COLOR.gold}66;
+.bz-overview-entry.bz-growth-highlight,
+.bz-overview-entry.bz-focus-highlight {
+    background-color: ${BZ_COLOR.food}66;
 }
-.bz-overview-entry.bz-entry-disabled.bz-entry-highlight .shadow {
-    opacity: 1;
+.bz-overview-entry.bz-focus-highlight {
+    color: ${BZ_COLOR.accent1};
 }
 `,
 ];
@@ -567,8 +566,8 @@ class bzPanelCityDetails {
         const small = metrics.sizes(5/6 * metrics.table.spacing.rem).css;
         if (food.isGrowing) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry self-start flex px-1 -mx-1";
-            row.style.backgroundColor = `${BZ_COLOR.food}55`;
+            row.classList.value =
+                "bz-overview-entry bz-growth-highlight self-start flex px-1 -mx-1";
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
             row.style.marginTop = metrics.body.leading.half.px;
@@ -674,8 +673,11 @@ class bzPanelCityDetails {
         for (const [i, item] of data.entries()) {
             const row = document.createElement("div");
             row.classList.value = "bz-overview-entry flex min-w-72 px-1";
-            row.classList.toggle("bz-entry-disabled", item.disabled ?? false);
-            row.classList.toggle("bz-entry-highlight", item.highlight ?? false);
+            if (item.tooltip) row.setAttribute("data-tooltip-content", item.tooltip);
+            const disabled = item.disabled ?? false;
+            const highlight = item.highlight ?? false;
+            row.classList.toggle("bz-focus-disabled", disabled && !highlight);
+            row.classList.toggle("bz-focus-highlight", highlight);
             if (!(i % 2)) row.classList.add("bz-odd-row");
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
