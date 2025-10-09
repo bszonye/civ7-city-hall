@@ -585,6 +585,7 @@ class bzPanelCityDetails {
         }
         const table = document.createElement("div");
         table.classList.value = "flex-col justify-start text-base -mx-1";
+        table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
             row.classList.value = "bz-overview-entry flex px-1";
@@ -612,7 +613,6 @@ class bzPanelCityDetails {
         container.classList.toggle("hidden", !total);
         if (!total) return;
         container.innerHTML = BZ_DIVIDER;
-        container.firstChild.style.marginTop = metrics.table.margin.px;
         container.style.lineHeight = metrics.table.ratio;
         // show settlement count in the title
         this.renderTitleHeading(container, "LOC_BZ_SETTLEMENT_CONNECTIONS");
@@ -654,13 +654,13 @@ class bzPanelCityDetails {
             for (const row of column) col.appendChild(row);
             table.appendChild(col);
         }
+        table.style.marginBottom = metrics.table.margin.px;
         container.appendChild(table);
     }
     renderTable(container, title, data, smallIcons) {
         container.classList.toggle("hidden", !data?.length);
         if (!data?.length) return;
         container.innerHTML = BZ_DIVIDER;
-        container.firstChild.style.marginTop = metrics.table.margin.px;
         container.style.lineHeight = metrics.table.ratio;
         this.renderTitleHeading(container, title);
         const size = metrics.table.spacing.css;
@@ -668,7 +668,7 @@ class bzPanelCityDetails {
         const table = document.createElement("div");
         table.classList.value = "flex-col justify-start text-base -mx-1";
         table.style.marginBottom = data.length % 2 ?
-            metrics.table.leading.internal.px : 0;
+            metrics.margin.px : metrics.table.margin.px;
         table.style.minWidth = bzPanelCityDetails.tableWidth;
         for (const [i, item] of data.entries()) {
             const row = document.createElement("div");
