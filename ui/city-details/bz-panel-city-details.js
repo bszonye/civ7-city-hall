@@ -673,15 +673,18 @@ class bzPanelCityDetails {
         for (const [i, item] of data.entries()) {
             const row = document.createElement("div");
             row.classList.value = "bz-overview-entry flex min-w-72 px-1";
+            // row highlighting and dimming
             const disabled = item.disabled ?? false;
             const highlight = item.highlight ?? false;
             row.classList.toggle("bz-focus-disabled", disabled && !highlight);
             row.classList.toggle("bz-focus-highlight", highlight);
             if (!(i % 2)) row.classList.add("bz-odd-row");
+            // row shape, layout, and flow
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
+            // title (icon and name)
             const iconSize = smallIcons ? small : size;
             row.appendChild(docIcon(item.icon, size, iconSize, "-mx-1"));
             row.appendChild(docText(item.name, "text-left flex-auto mx-2"));
