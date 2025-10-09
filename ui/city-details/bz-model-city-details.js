@@ -8,7 +8,7 @@ class bzUpdateCityDetailsEvent extends CustomEvent {
     }
 }
 
-const IMPROVEMENT_BONUS_TYPES = {
+const IMPROVEMENT_BONUS_INDEXES = {
     LOC_IMPROVEMENT_EXPEDITION_BASE_NAME: -1,
     LOC_IMPROVEMENT_FARM_NAME: 0,
     LOC_IMPROVEMENT_FISHING_BOAT_NAME: 0,
@@ -174,7 +174,7 @@ class bzCityDetailsModel {
             if (!imp.count) improvements.set(key, imp);
             imp.count += 1;
             // warehouse yield icons
-            imp.bonusIndex = IMPROVEMENT_BONUS_TYPES[fcinfo.Name] ?? -1;
+            imp.bonusIndex = IMPROVEMENT_BONUS_INDEXES[fcinfo.Name] ?? -1;
             imp.bonusIcon = GameInfo.Yields[imp.bonusIndex]?.YieldType;
             // Resort Town: natural Happiness yields
             const plot = GameplayMap.getIndexFromLocation(loc);
