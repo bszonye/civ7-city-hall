@@ -174,8 +174,8 @@ class bzCityDetailsModel {
             // Resort Town: natural Happiness yields
             const plot = GameplayMap.getIndexFromLocation(loc);
             const yields = GameplayMap.getYields(plot, GameContext.localPlayerID);
-            for (const [type] of yields) {
-                if (type == YieldTypes.YIELD_HAPPINESS) improvements.appeal += 1;
+            for (const [type, v] of yields) {
+                if (v && type == YieldTypes.YIELD_HAPPINESS) improvements.appeal += 1;
             };
             // Trade Outpost and Factory Town: resources
             const resourceType = GameplayMap.getResourceType(loc.x, loc.y);
