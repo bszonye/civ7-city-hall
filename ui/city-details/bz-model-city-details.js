@@ -169,8 +169,8 @@ class bzCityDetailsModel {
             if (!imp.count) improvements.set(key, imp);
             imp.count += 1;
             // warehouse yield icons
-            imp.bonusType = this.IMPROVEMENT_BONUS_TYPES[fcinfo.Name] ?? -1;
-            imp.bonusIcon = GameInfo.Yields[imp.bonusType]?.YieldType;
+            imp.bonusIndex = this.IMPROVEMENT_BONUS_TYPES[fcinfo.Name] ?? -1;
+            imp.bonusIcon = GameInfo.Yields[imp.bonusIndex]?.YieldType;
             // Resort Town: natural Happiness yields
             const plot = GameplayMap.getIndexFromLocation(loc);
             const yields = GameplayMap.getYields(plot, GameContext.localPlayerID);
@@ -193,11 +193,11 @@ class bzCityDetailsModel {
         const warehouses = [...this.improvements.values()].map(info => ({
             icon: info.ConstructibleType,
             name: info.Name,
-            bonusType: info.bonusType,
+            bonusIndex: info.bonusIndex,
             details: [{ bonus: info.count, icon: info.bonusIcon }],
         }));
         return warehouses.sort((a, b) =>
-            a.bonusType - b.bonusType || bzNameSort(a.name, b.name));
+            a.bonusIndex - b.bonusIndex || bzNameSort(a.name, b.name));
     }
     modelTownFocus(city) {
         if (!city.isTown) return null;
