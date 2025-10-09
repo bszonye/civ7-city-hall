@@ -208,7 +208,6 @@ class bzCityDetailsModel {
         if (!city.isTown) return null;
         const focusHash = city.Growth?.projectType;
         const loc = city.location;
-        const player = Players.get(GameContext.localObserverID);
         const age = GameInfo.Ages.lookup(Game.age);
         const perAge = age.ChronologyIndex + 1;
         const projects = [];
@@ -221,12 +220,21 @@ class bzCityDetailsModel {
             const counts = types.map(name => this.improvements.get(name)?.count ?? 0);
             return counts.reduce((a, v) => a + v, 0);
         }
+        const canStart = Game.CityCommands.canStart(
+            city.id,
+            CityCommandTypes.CHANGE_GROWTH_MODE,
+            { Type: GrowthTypes.PROJECT },
+            false
+        );
+        const enabled = new Set(canStart.Projects ?? []);
         for (const info of GameInfo.Projects) {
             if (info.CityOnly) continue;
+            console.warn(`TRIX CAN-START ${JSON.stringify(canStart)}`);
             const project = {
                 icon: info.ProjectType,
                 name: info.Name,
                 highlight: info.$hash == focusHash,
+                disabled: !enabled.has(info.$index),
             };
             switch (info.ProjectType) {
                 case "PROJECT_TOWN_FORT":
@@ -282,8 +290,6 @@ class bzCityDetailsModel {
                     break;
                 }
                 case "PROJECT_TOWN_TRADE": {
-                    const isDistant = player?.isDistantLands(loc) ?? false;
-                    if (age.ChronologyIndex == 1 && !isDistant) project.disabled = true;
                     const bonus = 2 * this.improvements.resources;
                     project.details = [
                         { icon: "YIELD_TRADES", bonus: 5 },
@@ -304,7 +310,6 @@ class bzCityDetailsModel {
                     }];
                     break;
                 case "PROJECT_TOWN_FACTORY":
-                    project.disabled = !this.improvements.factoryResources;
                     project.details = [{ icon: "YIELD_TRADES", bonus: 5 }];
                     break;
             }
