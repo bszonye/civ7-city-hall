@@ -199,7 +199,7 @@ class bzCityDetailsModel {
             icon: info.ConstructibleType,
             name: info.Name,
             bonusIndex: info.bonusIndex,
-            details: [{ bonus: info.count, icon: info.bonusIcon }],
+            details: [{ icon: info.bonusIcon, bonus: info.count }],
         }));
         return warehouses.sort((a, b) =>
             a.bonusIndex - b.bonusIndex || bzNameSort(a.name, b.name));
@@ -230,7 +230,7 @@ class bzCityDetailsModel {
             };
             switch (info.ProjectType) {
                 case "PROJECT_TOWN_FORT":
-                    project.details = [{ bonus: 25, icon: "ACTION_FORTIFY" }];
+                    project.details = [{ icon: "ACTION_FORTIFY", bonus: 25 }];
                     break;
                 case "PROJECT_TOWN_URBAN_CENTER": {
                     const maintenance = buildingTypes()
@@ -240,16 +240,16 @@ class bzCityDetailsModel {
                     const dGold = mGold.reduce((a, m) => a + m, 0) / 2;
                     const dHappy = mHappy.reduce((a, m) => a + m, 0) / 2;
                     project.details = [
-                        { bonus: dGold, icon: "YIELD_GOLD" },
-                        { bonus: dHappy, icon: "YIELD_HAPPINESS" },
+                        { icon: "YIELD_GOLD", bonus: dGold },
+                        { icon: "YIELD_HAPPINESS", bonus: dHappy },
                     ];
                     break;
                 }
                 case "PROJECT_TOWN_RESORT": {
                     const bonus = this.improvements.appeal * perAge;
                     project.details = [
-                        { bonus, icon: "YIELD_GOLD" },
-                        { bonus, icon: "YIELD_HAPPINESS" },
+                        { icon: "YIELD_GOLD", bonus },
+                        { icon: "YIELD_HAPPINESS", bonus },
                     ];
                     break;
                 }
@@ -264,7 +264,7 @@ class bzCityDetailsModel {
                         "LOC_IMPROVEMENT_PLANTATION_NAME",
                         "LOC_IMPROVEMENT_FISHING_BOAT_NAME",
                     );
-                    project.details = [{ bonus: count * perAge, icon: "YIELD_FOOD" }];
+                    project.details = [{ icon: "YIELD_FOOD", bonus: count * perAge }];
                     break;
                 }
                 case "PROJECT_TOWN_PRODUCTION": {
@@ -276,8 +276,8 @@ class bzCityDetailsModel {
                         "LOC_IMPROVEMENT_QUARRY_NAME",
                     );
                     project.details = [{
-                        bonus: count * (perAge + 1),
                         icon: "YIELD_PRODUCTION",
+                        bonus: count * (perAge + 1),
                     }];
                     break;
                 }
@@ -293,19 +293,19 @@ class bzCityDetailsModel {
                 }
                 case "PROJECT_TOWN_TEMPLE":
                     project.details = [{
-                        bonus: buildingTypes().length,
                         icon: "YIELD_HAPPINESS",
+                        bonus: buildingTypes().length,
                     }];
                     break;
                 case "PROJECT_TOWN_INN":
                     project.details = [{
-                        bonus: city.getConnectedCities()?.length ?? 0,
                         icon: "YIELD_DIPLOMACY",
+                        bonus: city.getConnectedCities()?.length ?? 0,
                     }];
                     break;
                 case "PROJECT_TOWN_FACTORY":
                     project.disabled = !this.improvements.factoryResources;
-                    project.details = [{ bonus: 5, icon: "YIELD_TRADES" }];
+                    project.details = [{ icon: "YIELD_TRADES", bonus: 5 }];
                     break;
             }
             projects.push(project);
