@@ -162,6 +162,9 @@ const BZ_HEAD_STYLE = [
 .bz-overview-entry.bz-entry-disabled {
     color: ${BZ_COLOR.accent5};
 }
+.bz-overview-entry.bz-entry-disabled .shadow {
+    opacity: 0.5;
+}
 .bz-overview-entry:focus, .bz-overview-entry:hover, .bz-overview-entry.pressed {
     background: linear-gradient(90deg, #6b6250 0%, #545559 100%);
 }
@@ -169,6 +172,11 @@ const BZ_HEAD_STYLE = [
 .bz-overview-entry:hover.bz-entry-disabled,
 .bz-overview-entry.pressed.bz-entry-disabled {
     color: ${BZ_COLOR.accent3};
+}
+.bz-overview-entry.bz-entry-highlight,
+.bz-overview-entry.bz-entry-disabled.bz-entry-highlight {
+    color: ${BZ_COLOR.accent1};
+    background-color: ${BZ_COLOR.gold}66;
 }
 `,
 ];
@@ -663,10 +671,7 @@ class bzPanelCityDetails {
             const row = document.createElement("div");
             row.classList.value = "bz-overview-entry flex min-w-72 px-1";
             row.classList.toggle("bz-entry-disabled", item.disabled ?? false);
-            if (item.highlight) {
-                row.style.color = BZ_COLOR.accent1;
-                row.style.backgroundColor = `${BZ_COLOR.gold}66`;
-            }
+            row.classList.toggle("bz-entry-highlight", item.highlight ?? false);
             if (!(i % 2)) row.classList.add("bz-odd-row");
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
