@@ -8,8 +8,8 @@ import FocusManager from '/core/ui/input/focus-manager.js';
 // vertical separator
 const BZ_DIVIDER_STYLE = "flex w-96 self-center";
 const BZ_DIVIDER_LINE = `\
-<div class="w-1\\/2 h-5 bg-cover bg-no-repeat city-details-half-divider"></div>
-<div class="w-1\\/2 h-5 bg-cover bg-no-repeat city-details-half-divider -scale-x-100"></div>
+<div class="w-1\\/2 h-4 bg-cover bg-no-repeat city-details-half-divider"></div>
+<div class="w-1\\/2 h-4 bg-cover bg-no-repeat city-details-half-divider -scale-x-100"></div>
 `
 const BZ_DIVIDER = `<div class="${BZ_DIVIDER_STYLE}">${BZ_DIVIDER_LINE}</div>`
 
@@ -156,11 +156,29 @@ const BZ_HEAD_STYLE = [
     top: 0.6111111111rem;
     left: 1rem;
 }
-.bz-city-hall .bz-overview-entry.bz-odd-row {
+.bz-overview-entry.bz-odd-row {
     background-color: ${BZ_COLOR.bronze6}99;
+}
+.bz-overview-entry.bz-focus-disabled {
+    color: ${BZ_COLOR.accent4};
+}
+.bz-overview-entry.bz-focus-disabled .shadow {
+    opacity: 0.6;
 }
 .bz-overview-entry:focus, .bz-overview-entry:hover, .bz-overview-entry.pressed {
     background: linear-gradient(90deg, #6b6250 0%, #545559 100%);
+}
+.bz-overview-entry:focus.bz-focus-disabled,
+.bz-overview-entry:hover.bz-focus-disabled,
+.bz-overview-entry.pressed.bz-focus-disabled {
+    color: ${BZ_COLOR.accent3};
+}
+.bz-overview-entry.bz-growth-highlight,
+.bz-overview-entry.bz-focus-highlight {
+    background-color: ${BZ_COLOR.food}66;
+}
+.bz-overview-entry.bz-focus-highlight {
+    color: ${BZ_COLOR.accent1};
 }
 `,
 ];
@@ -194,12 +212,6 @@ function docText(text, style) {
 function docTimer(size, resize, ...style) {
     if (!style.length) style = ["-mx-1"];
     return docIcon(BZ_ICON_TIMER, size, resize, ...style);
-}
-function dotJoin(list) {
-    return localeJoin(list, BZ_DOT_JOINER);
-}
-function localeJoin(list, divider=" ") {
-    return list.map(s => s && Locale.compose(s)).filter(e => e).join(divider);
 }
 function getFontMetrics() {
     // TODO: remove unneeded stuff
@@ -308,8 +320,10 @@ class bzPanelCityDetails {
             const icons = [
                 BZ_ICON_CITY, BZ_ICON_TOWN, BZ_ICON_RURAL,
                 BZ_ICON_URBAN, BZ_ICON_SPECIAL, BZ_ICON_TIMER,
+                "ACTION_FORTIFY", "YIELD_TRADES", "YIELD_WAREHOUSE",
             ];
             for (const y of icons) preloadIcon(y);
+            for (const f of GameInfo.Projects) preloadIcon(f.ProjectType);
         });
     }
     patchPrototypes(component) {
@@ -401,6 +415,7 @@ class bzPanelCityDetails {
         this.growthContainer = MustGetElement(".growth-container", oslot);
         this.connectionsContainer = MustGetElement(".connections-container", oslot);
         this.improvementsContainer = MustGetElement(".improvements-container", oslot);
+        this.townFocusContainer = MustGetElement(".town-focus-container", oslot);
         // enable navigation back to the left panel
         this.slots.forEach(slot => slot.removeAttribute("data-navrule-left"));
         // select tab
@@ -425,16 +440,15 @@ class bzPanelCityDetails {
     }
     renderOverviewSlot() {
         const slot = document.createElement("fxs-vslot");
-        slot.classList.add("mt-3", "pr-4");
+        slot.classList.add("pr-4");
         // slot.setAttribute("data-navrule-right", "stop");
         slot.id = cityDetailTabID.overview;
         slot.innerHTML = `
         <fxs-scrollable class="w-full">
-            <div class="growth-container flex flex-col ml-6"></div>
-            ${BZ_DIVIDER}
+            <div class="growth-container flex flex-col ml-6 mt-3"></div>
             <div class="connections-container flex flex-col ml-6"></div>
-            ${BZ_DIVIDER}
             <div class="improvements-container flex flex-col ml-6"></div>
+            <div class="town-focus-container flex flex-col ml-6"></div>
         </fxs-scrollable>
         `;
         this.component.slotGroup.appendChild(slot);
@@ -507,7 +521,17 @@ class bzPanelCityDetails {
         const overviewHasFocus = this.overviewSlot.contains(FocusManager.getFocus());
         this.renderGrowth(this.growthContainer);
         this.renderConnections(this.connectionsContainer);
-        this.renderImprovements(this.improvementsContainer);
+        this.renderTable(
+            this.improvementsContainer,
+            "LOC_BUILDING_PLACEMENT_WAREHOUSE_YIELDS_HEADER",
+            bzCityDetails.warehouseTable,
+            true,  // small icons
+        );
+        this.renderTable(
+            this.townFocusContainer,
+            "LOC_UI_TOWN_FOCUS",
+            bzCityDetails.townFocusTable,
+        );
         if (overviewHasFocus) FocusManager.setFocus(this.overviewSlot);
     }
     renderGrowth(container) {
@@ -542,8 +566,8 @@ class bzPanelCityDetails {
         const small = metrics.sizes(5/6 * metrics.table.spacing.rem).css;
         if (food.isGrowing) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry self-start flex px-1 -mx-1";
-            row.style.backgroundColor = `${BZ_COLOR.food}55`;
+            row.classList.value =
+                "bz-overview-entry bz-growth-highlight self-start flex px-1 -mx-1";
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
             row.style.marginTop = metrics.body.leading.half.px;
@@ -564,13 +588,13 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         for (const item of layout) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-60 px-1";
+            row.classList.value = "bz-overview-entry flex px-1";
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
             row.appendChild(docIcon(item.icon, size, small, "-mx-1"));
-            row.appendChild(docText(item.label, "text-left flex-auto mx-2"));
+            row.appendChild(docText(item.label, "text-left flex-auto min-w-40 mx-2"));
             const value = docText(item.value, "mx-1 text-right");
             // keep width stable when flipping through cities
             value.style.minWidth = metrics.table.digits(2).css;
@@ -584,24 +608,21 @@ class bzPanelCityDetails {
         container.appendChild(wrap);
     }
     renderConnections(container) {
-        container.innerHTML = "";
+        const data = bzCityDetails.connections;
+        const total = data?.settlements?.length;
+        container.classList.toggle("hidden", !total);
+        if (!total) return;
+        container.innerHTML = BZ_DIVIDER;
         container.style.lineHeight = metrics.table.ratio;
         // show settlement count in the title
-        const total = bzCityDetails.connections?.settlements?.length ?? 0;
-        const title = dotJoin(["LOC_BZ_SETTLEMENT_CONNECTIONS", total.toFixed()]);
-        this.renderTitleHeading(container, title);
+        this.renderTitleHeading(container, "LOC_BZ_SETTLEMENT_CONNECTIONS");
         if (!total) return;
         const size = metrics.table.spacing.css;
         const small = metrics.sizes(2/3 * metrics.table.spacing.rem).css;
         const table = document.createElement("div");
         table.classList.value = "flex justify-start text-base -mx-1";
         const rows = [];
-        const connections = [
-            ...bzCityDetails.connections.cities,
-            ...bzCityDetails.connections.growing,
-            ...bzCityDetails.connections.focused,
-        ];
-        for (const conn of connections) {
+        for (const conn of [...data.cities, ...data.growing, ...data.focused]) {
             const row = document.createElement("fxs-activatable");
             row.classList.value = "bz-overview-entry bz-city-link relative flex justify-start items-center pr-1";
             row.style.minHeight = size;
@@ -636,34 +657,49 @@ class bzPanelCityDetails {
         table.style.marginBottom = metrics.table.margin.px;
         container.appendChild(table);
     }
-    renderImprovements(container) {
-        container.innerHTML = "";
+    renderTable(container, title, data, smallIcons) {
+        container.classList.toggle("hidden", !data?.length);
+        if (!data?.length) return;
+        container.innerHTML = BZ_DIVIDER;
         container.style.lineHeight = metrics.table.ratio;
-        this.renderTitleHeading(container,
-            "LOC_BUILDING_PLACEMENT_WAREHOUSE_YIELDS_HEADER");
-        if (!bzCityDetails.improvements?.length) {
-            container.appendChild(docText("LOC_TERM_NONE"));
-            return;
-        }
+        this.renderTitleHeading(container, title);
         const size = metrics.table.spacing.css;
         const small = metrics.sizes(5/6 * metrics.table.spacing.rem).css;
         const table = document.createElement("div");
         table.classList.value = "flex-col justify-start text-base -mx-1";
-        table.style.marginBottom = metrics.table.margin.px;
+        table.style.marginBottom = data.length % 2 ?
+            metrics.margin.px : metrics.table.margin.px;
         table.style.minWidth = bzPanelCityDetails.tableWidth;
-        for (const [i, item] of bzCityDetails.improvements.entries()) {
+        for (const [i, item] of data.entries()) {
             const row = document.createElement("div");
-            row.classList.value = "bz-overview-entry flex min-w-60 px-1";
+            row.classList.value = "bz-overview-entry flex min-w-72 px-1";
+            // row highlighting and dimming
+            const disabled = item.disabled ?? false;
+            const highlight = item.highlight ?? false;
+            row.classList.toggle("bz-focus-disabled", disabled && !highlight);
+            row.classList.toggle("bz-focus-highlight", highlight);
             if (!(i % 2)) row.classList.add("bz-odd-row");
+            // row shape, layout, and flow
             row.style.minHeight = size;
             row.style.borderRadius = `${size} / 100%`;
             row.setAttribute("tabindex", "-1");
             row.setAttribute("role", "paragraph");
-            row.appendChild(docIcon(item.icon, size, small, "-mx-1"));
+            // title (icon and name)
+            const iconSize = smallIcons ? small : size;
+            row.appendChild(docIcon(item.icon, size, iconSize, "-mx-1"));
             row.appendChild(docText(item.name, "text-left flex-auto mx-2"));
-            const modifier = `+${item.count.toFixed()}`;
-            const value = docText(modifier, "mx-1 text-right");
-            row.appendChild(value);
+            // bonus details (icon and value)
+            for (const detail of item.details ?? []) {
+                if (detail.icon) row.appendChild(docIcon(detail.icon, size, size));
+                const bonus = `+${detail.bonus.toFixed()}`;
+                row.appendChild(docText(bonus, "mr-1 text-right"));
+            }
+            // optional tooltips
+            if (item.description) {
+                const description = Locale.compose(item.description);
+                const tooltip = `[style:leading-normal]${description}[/style]`;
+                row.setAttribute("data-tooltip-content", tooltip);
+            }
             table.appendChild(row);
         }
         // wrap table to keep it from expanding to full width

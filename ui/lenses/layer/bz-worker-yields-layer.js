@@ -29,6 +29,19 @@ WYLL.realizeBuildSlots = function(district) {
     ];
     return realizeBuildSlots.apply(this, args);
 }
+WYLL.realizeGrowthPlots = function() {
+    const width = GameplayMap.getGridWidth();
+    const height = GameplayMap.getGridHeight();
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+            const revealedState = GameplayMap.getRevealedState(GameContext.localPlayerID, x, y);
+            if (revealedState != RevealedStates.HIDDEN) {
+                const plotIndex = GameplayMap.getIndexFromXY(x, y);
+                this.updatePlot(plotIndex);
+            }
+        }
+    }
+}
 WYLL.updateSpecialistPlot = function(info) {
     const yieldsToAdd = [];
     const maintenancesToAdd = [];
@@ -129,4 +142,29 @@ WYLL.getSpecialistPipOffsetsAndScale = function(index, pips) {
     const xOffset = (xOrigin + rowIndex * SPECIALIST_DX) * scale;
     const yOffset = yOrigin - colIndex * SPECIALIST_DY * scale;
     return { xOffset, yOffset, scale };
+}
+const WYLL_updatePlot = WYLL.updatePlot;
+WYLL.updatePlot = function(...args) {
+    WYLL_updatePlot.apply(this, args);
+    // show yield previews for unclaimed plots
+    const [plot] = args;
+    const loc = GameplayMap.getLocationFromIndex(plot);
+    if (GameplayMap.getOwner(loc.x, loc.y) != PlayerIds.NO_PLAYER) return;
+    const yields = GameplayMap.getYields(plot, GameContext.localPlayerID);
+    const position = { x: 0, y: 0, z: 5 };
+    const groupWidth = (yields.length - 1) * this.yieldSpritePadding;
+    const groupOffset = (1 - groupWidth) / 2;
+    this.yieldVisualizer.clearPlot(plot);
+    for (const [i, [yieldType, yieldAmount]] of yields.entries()) {
+        position.x = groupOffset + i * this.yieldSpritePadding;
+        const icons = this.yieldIcons.get(yieldType);
+        if (!icons) continue;
+        if (4.5 <= yieldAmount) {
+            this.yieldVisualizer.addSprite(plot, icons[4], position);
+            this.yieldVisualizer.addText(plot, yieldAmount.toString(), position);
+        } else if (0 <= yieldAmount) {
+            const value = Math.round(yieldAmount) || 1;
+            this.yieldVisualizer.addSprite(plot, icons[value - 1], position);
+        }
+    }
 }
