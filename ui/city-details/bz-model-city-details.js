@@ -208,7 +208,7 @@ class bzCityDetailsModel {
         if (!city.isTown) return null;
         const focusHash = city.Growth?.projectType;
         const loc = city.location;
-        // get current ChronologyIndex and per-age multiplier
+        // get current age and per-age multiplier
         const age = GameInfo.Ages.lookup(Game.age);
         const perAge = age.ChronologyIndex + 1;
         // get the enabled Town Focus projects
