@@ -201,7 +201,7 @@ class bzCityDetailsModel {
     }
     modelTownFocus(city) {
         if (!city.isTown) return null;
-        const focus = city.Growth?.projectType;
+        const focusHash = city.Growth?.projectType;
         const loc = city.location;
         const player = Players.get(GameContext.localObserverID);
         const age = GameInfo.Ages.lookup(Game.age);
@@ -221,7 +221,7 @@ class bzCityDetailsModel {
             const project = {
                 icon: info.ProjectType,
                 name: info.Name,
-                highlight: Game.getHash(info.ProjectType) == focus,
+                highlight: info.$hash == focusHash,
             };
             switch (info.ProjectType) {
                 case "PROJECT_TOWN_FORT":
