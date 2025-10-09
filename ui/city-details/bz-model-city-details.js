@@ -1,11 +1,29 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
 export const bzUpdateCityDetailsEventName = 'bz-update-city-details';
+
 class bzUpdateCityDetailsEvent extends CustomEvent {
     constructor() {
         super(bzUpdateCityDetailsEventName, { bubbles: false });
     }
 }
+
+const IMPROVEMENT_BONUS_TYPES = {
+    LOC_IMPROVEMENT_EXPEDITION_BASE_NAME: -1,
+    LOC_IMPROVEMENT_FARM_NAME: 0,
+    LOC_IMPROVEMENT_FISHING_BOAT_NAME: 0,
+    LOC_IMPROVEMENT_PASTURE_NAME: 0,
+    LOC_IMPROVEMENT_PLANTATION_NAME: 0,
+    LOC_IMPROVEMENT_CAMP_NAME: 1,
+    LOC_IMPROVEMENT_CLAY_PIT_NAME: 1,
+    LOC_IMPROVEMENT_MINE_NAME: 1,
+    LOC_IMPROVEMENT_OIL_RIG_NAME: 1,
+    LOC_IMPROVEMENT_QUARRY_NAME: 1,
+    LOC_IMPROVEMENT_WOODCUTTER_NAME: 1,
+};
+const YIELD_GOLD_INFO = GameInfo.Yields.lookup(YieldTypes.YIELD_GOLD);
+const YIELD_HAPPINESS_INFO = GameInfo.Yields.lookup(YieldTypes.YIELD_HAPPINESS);
+
 const bzNameSort = (a, b) => {
     const aname = Locale.compose(a).toUpperCase();
     const bname = Locale.compose(b).toUpperCase();
@@ -135,19 +153,6 @@ class bzCityDetailsModel {
         }
         return { settlements, cities, towns, focused, growing, };
     }
-    IMPROVEMENT_BONUS_TYPES = {
-        LOC_IMPROVEMENT_EXPEDITION_BASE_NAME: -1,
-        LOC_IMPROVEMENT_FARM_NAME: 0,
-        LOC_IMPROVEMENT_FISHING_BOAT_NAME: 0,
-        LOC_IMPROVEMENT_PASTURE_NAME: 0,
-        LOC_IMPROVEMENT_PLANTATION_NAME: 0,
-        LOC_IMPROVEMENT_CAMP_NAME: 1,
-        LOC_IMPROVEMENT_CLAY_PIT_NAME: 1,
-        LOC_IMPROVEMENT_MINE_NAME: 1,
-        LOC_IMPROVEMENT_OIL_RIG_NAME: 1,
-        LOC_IMPROVEMENT_QUARRY_NAME: 1,
-        LOC_IMPROVEMENT_WOODCUTTER_NAME: 1,
-    };
     modelImprovements(city) {
         const improvements = new Map();
         improvements.appeal = 0;
@@ -169,7 +174,7 @@ class bzCityDetailsModel {
             if (!imp.count) improvements.set(key, imp);
             imp.count += 1;
             // warehouse yield icons
-            imp.bonusIndex = this.IMPROVEMENT_BONUS_TYPES[fcinfo.Name] ?? -1;
+            imp.bonusIndex = IMPROVEMENT_BONUS_TYPES[fcinfo.Name] ?? -1;
             imp.bonusIcon = GameInfo.Yields[imp.bonusIndex]?.YieldType;
             // Resort Town: natural Happiness yields
             const plot = GameplayMap.getIndexFromLocation(loc);
@@ -230,10 +235,8 @@ class bzCityDetailsModel {
                 case "PROJECT_TOWN_URBAN_CENTER": {
                     const maint = buildingTypes()
                         .map(type => city.Constructibles.getMaintenance(type));
-                    const igold = GameInfo.Yields.lookup(YieldTypes.YIELD_GOLD);
-                    const ihappy = GameInfo.Yields.lookup(YieldTypes.YIELD_HAPPINESS);
-                    const mgold = maint.map(m => m[igold.$index])
-                    const mhappy = maint.map(m => m[ihappy.$index])
+                    const mgold = maint.map(m => m[YIELD_GOLD_INFO.$index])
+                    const mhappy = maint.map(m => m[YIELD_HAPPINESS_INFO.$index])
                     const gold = mgold.reduce((a, m) => a + m, 0) / 2;
                     const happy = mhappy.reduce((a, m) => a + m, 0) / 2;
                     project.details = [
