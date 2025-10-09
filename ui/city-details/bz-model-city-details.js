@@ -135,25 +135,25 @@ class bzCityDetailsModel {
         }
         return { settlements, cities, towns, focused, growing, };
     }
+    IMPROVEMENT_BONUS_TYPES = {
+        LOC_IMPROVEMENT_EXPEDITION_BASE_NAME: -1,
+        LOC_IMPROVEMENT_FARM_NAME: 0,
+        LOC_IMPROVEMENT_FISHING_BOAT_NAME: 0,
+        LOC_IMPROVEMENT_PASTURE_NAME: 0,
+        LOC_IMPROVEMENT_PLANTATION_NAME: 0,
+        LOC_IMPROVEMENT_CAMP_NAME: 1,
+        LOC_IMPROVEMENT_CLAY_PIT_NAME: 1,
+        LOC_IMPROVEMENT_MINE_NAME: 1,
+        LOC_IMPROVEMENT_OIL_RIG_NAME: 1,
+        LOC_IMPROVEMENT_QUARRY_NAME: 1,
+        LOC_IMPROVEMENT_WOODCUTTER_NAME: 1,
+    };
     modelImprovements(city) {
         const improvements = new Map();
         improvements.appeal = 0;
         improvements.resources = 0;
         improvements.factoryResources = 0;
         const ids = city.Constructibles?.getIds() ?? [];
-        const bonusTypes = {
-            LOC_IMPROVEMENT_EXPEDITION_BASE_NAME: -1,
-            LOC_IMPROVEMENT_FARM_NAME: 0,
-            LOC_IMPROVEMENT_FISHING_BOAT_NAME: 0,
-            LOC_IMPROVEMENT_PASTURE_NAME: 0,
-            LOC_IMPROVEMENT_PLANTATION_NAME: 0,
-            LOC_IMPROVEMENT_CAMP_NAME: 1,
-            LOC_IMPROVEMENT_CLAY_PIT_NAME: 1,
-            LOC_IMPROVEMENT_MINE_NAME: 1,
-            LOC_IMPROVEMENT_OIL_RIG_NAME: 1,
-            LOC_IMPROVEMENT_QUARRY_NAME: 1,
-            LOC_IMPROVEMENT_WOODCUTTER_NAME: 1,
-        };
         for (const id of ids) {
             const item = Constructibles.getByComponentID(id);
             const cinfo = item && GameInfo.Constructibles.lookup(item.type);
@@ -169,7 +169,7 @@ class bzCityDetailsModel {
             if (!imp.count) improvements.set(key, imp);
             imp.count += 1;
             // warehouse yield icons
-            imp.bonusType = bonusTypes[fcinfo.Name] ?? -1;
+            imp.bonusType = this.IMPROVEMENT_BONUS_TYPES[fcinfo.Name] ?? -1;
             imp.bonusIcon = GameInfo.Yields[imp.bonusType]?.YieldType;
             // Resort Town: natural Happiness yields
             const plot = GameplayMap.getIndexFromLocation(loc);
