@@ -366,7 +366,7 @@ class ProductionProjectTooltipType {
         const city = Cities.get(cityID);
         if (!city) return;
         const productionCost = city.Production?.getProjectProductionCost(projectType);
-        this.productionCost.classList.toggle("hidden", !productionCost);
+        this.productionCost.classList.toggle("hidden", (productionCost ?? 0) <= 0);
         this.productionCost.innerHTML = Locale.stylize(
             "LOC_UI_PRODUCTION_CONSTRUCTIBLE_COST",
             productionCost,
