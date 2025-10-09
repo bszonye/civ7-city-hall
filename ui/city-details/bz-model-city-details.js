@@ -210,6 +210,13 @@ class bzCityDetailsModel {
         const loc = city.location;
         const age = GameInfo.Ages.lookup(Game.age);
         const perAge = age.ChronologyIndex + 1;
+        const canStart = Game.CityCommands.canStart(
+            city.id,
+            CityCommandTypes.CHANGE_GROWTH_MODE,
+            { Type: GrowthTypes.PROJECT },
+            false
+        );
+        const enabled = new Set(canStart.Projects ?? []);
         const projects = [];
         const buildingTypes = () => city.Constructibles.getIds()
             .map(id => Constructibles.getByComponentID(id))
@@ -220,13 +227,6 @@ class bzCityDetailsModel {
             const counts = types.map(name => this.improvements.get(name)?.count ?? 0);
             return counts.reduce((a, v) => a + v, 0);
         }
-        const canStart = Game.CityCommands.canStart(
-            city.id,
-            CityCommandTypes.CHANGE_GROWTH_MODE,
-            { Type: GrowthTypes.PROJECT },
-            false
-        );
-        const enabled = new Set(canStart.Projects ?? []);
         for (const info of GameInfo.Projects) {
             if (info.CityOnly) continue;
             const tooltip = Locale.compose(info.Description);
