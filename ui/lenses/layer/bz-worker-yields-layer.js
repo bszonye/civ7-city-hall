@@ -16,10 +16,10 @@ const SPECIALIST_SHRINK_LIMIT = 4;
 const SPECIALIST_SHRINK_SCALE = 0.7;
 const ICON_Z_OFFSET = 5;
 const YIELD_CHANGE_OFFSET = { x: 0, y: -10, z: 0 };
+WYLL.bzGridAngle = Math.PI / 6;  // 30°
+WYLL.bzGridSpritePosition = { x: 0, y: 0, z: ICON_Z_OFFSET };
+WYLL.bzGridSpriteScale = 0.625;
 WYLL.buildSlotSpritePadding = 15 * 0.7;
-WYLL.buildSlotSpritePosition = { x: 0, y: 0, z: ICON_Z_OFFSET };
-WYLL.buildSlotSpriteScale = 0.625;
-WYLL.buildSlotAngle = Math.PI / 6;  // 30°
 WYLL.realizeBuildSlots = function(district) {
     const args = [
         district,
@@ -119,7 +119,7 @@ WYLL.updateSpecialistPlot = function(info) {
         });
     }
     const topOffset = this.getSpecialistPipOffsetsAndScale(-1, workerCap);
-    this.buildSlotSpritePosition.y = topOffset.yOffset;
+    this.bzGridSpritePosition.y = topOffset.yOffset;
     const districtID = MapCities.getDistrict(location.x, location.y);
     const district = Districts.get(districtID);
     this.realizeBuildSlots(district);

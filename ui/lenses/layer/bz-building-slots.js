@@ -64,8 +64,8 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
         const isBuilding = info.ConstructibleClass == "BUILDING";
         slots.push({ iconURL, baseYields, bonusYields, isBuilding });
     }
-    const origin = this.buildSlotSpritePosition ?? { x: 0, y: 24, z: 0 };
-    const scale = this.buildSlotSpriteScale ?? 0.9;
+    const origin = this.bzGridSpritePosition ?? { x: 0, y: 24, z: 0 };
+    const scale = this.bzGridSpriteScale ?? 0.9;
     const padding = this.buildSlotSpritePadding;
     // show specialists
     const city = Cities.get(district.cityId);
@@ -75,6 +75,7 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
     if (workers && showBase) {
         console.warn(`TRIX WORKERS ${workers}`);
         const p = { ...origin };
+        // TODO: tighter padding on building placement screen
         p.y += padding;
         const params = { scale: scale * 3/4 };
         slotGrid.addSprite(loc, "specialist_tile_pip_full", p, params);
@@ -111,8 +112,8 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
                 const dx = scale * r * Math.sin(a) * (mirror ? -1 : 1);
                 const dy = -scale * r * Math.cos(a);
                 p.x += dx;
-                p.y += dy * Math.cos(this.buildSlotAngle);
-                p.z += dy * Math.sin(this.buildSlotAngle);
+                p.y += dy * Math.cos(this.bzGridAngle);
+                p.z += dy * Math.sin(this.bzGridAngle);
                 yieldGrid.addSprite(loc, icon, p, params);
             }
         }

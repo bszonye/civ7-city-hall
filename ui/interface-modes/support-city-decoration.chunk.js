@@ -29,11 +29,10 @@ var CityDecorationSupport;
         };
         onPlotChange = () => this.updateGate.call('onPlotChange');
         updateGate = new UpdateGate(this.updatePlots.bind(this));
+        bzGridAngle = Math.PI / 4;  // 45°
+        bzGridSpritePosition = { x: 0, y: 0, z: 10 };
+        bzGridSpriteScale = 1.2;
         buildSlotSpritePadding = 20;
-        buildSlotSpritePosition = { x: 0, y: 0, z: 10 };
-        buildSlotSpriteScale = 1.2;
-        buildSlotAngle = Math.PI / 4;  // 45°
-        yieldSpritePadding = 11;
         OUTER_REGION_OVERLAY_FILTER = { brightness: 4/9 }; // darken outside plots
         cityID = null;
         filtered = false;
