@@ -1,6 +1,13 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
 
+const WORKER_TEXT_PARAMS = {
+    fonts: ["TitleFont"],
+    fill: 0xff000000,
+    stroke: 0,
+    fontSize: 4,
+    faceCamera: true,
+};
 const YIELD_ORDER = new Map([...GameInfo.Yields].map(y => [y.YieldType, y.$index]));
 const yieldSort = (a, b) => YIELD_ORDER.get(a.YieldType) - YIELD_ORDER.get(b.YieldType);
 const yieldChangeSort = (a, b) => (b.YieldChange - a.YieldChange) || yieldSort(a, b);
@@ -60,6 +67,25 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
     const origin = this.buildSlotSpritePosition ?? { x: 0, y: 24, z: 0 };
     const scale = this.buildSlotSpriteScale ?? 0.9;
     const padding = this.buildSlotSpritePadding;
+    // show specialists
+    const city = Cities.get(district.cityId);
+    const plotIndex = GameplayMap.getIndexFromLocation(loc);
+    const workers = city.Workers.GetAllPlacementInfo()
+        .find(p => p.PlotIndex == plotIndex)?.NumWorkers;
+    if (workers && showBase) {
+        console.warn(`TRIX WORKERS ${workers}`);
+        const p = { ...origin };
+        p.y += padding;
+        const params = { scale: scale * 3/4 };
+        slotGrid.addSprite(loc, "specialist_tile_pip_full", p, params);
+        const fontSize = WORKER_TEXT_PARAMS.fontSize * scale;
+        slotGrid.addText(loc, workers.toString(), p, {
+            ...WORKER_TEXT_PARAMS,
+            fontSize,
+            offset: { x: 0, y: -fontSize * 3/4 },
+        });
+    }
+    // show building slots
     for (let i = 0; i < maxSlots; ++i) {
         const slot = slots[i];  // undefined => BUILDING_EMPTY
         // get coordinates
