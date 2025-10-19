@@ -64,7 +64,7 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
         const isBuilding = info.ConstructibleClass == "BUILDING";
         slots.push({ iconURL, baseYields, bonusYields, isBuilding });
     }
-    const origin = this.bzGridSpritePosition ?? { x: 0, y: 24, z: 0 };
+    const position = this.bzGridSpritePosition ?? { x: 0, y: 24, z: 0 };
     const scale = this.bzGridSpriteScale ?? 0.9;
     const padding = this.buildSlotSpritePadding;
     // show specialists
@@ -76,9 +76,9 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
         const y = 4/5 * padding;
         const offset = { x: 0, y };
         const params = { offset, scale: 4/5 * scale };
-        slotGrid.addSprite(loc, "specialist_tile_pip_full", origin, params);
+        slotGrid.addSprite(loc, "specialist_tile_pip_full", position, params);
         const fontSize = WORKER_TEXT_PARAMS.fontSize * scale;
-        slotGrid.addText(loc, workers.toString(), origin, {
+        slotGrid.addText(loc, workers.toString(), position, {
             ...WORKER_TEXT_PARAMS,
             fontSize,
             offset: { x: 0, y: y - 3 * scale },
@@ -89,11 +89,11 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
         const slot = slots[i];  // undefined => BUILDING_EMPTY
         // get coordinates
         const groupWidth = (maxSlots - 1) * padding;
-        const position = { ...origin };
-        position.x = origin.x + i * padding - groupWidth / 2;
+        const x = i * padding - groupWidth / 2;
+        const offset = { x, y: 0 };
         // show constructible icon (or empty slot)
         const icon = slot ? slot.iconURL : UI.getIconBLP("BUILDING_EMPTY");
-        const params = { scale: slot ? scale : 8/9 * scale };
+        const params = { offset, scale: slot ? scale : 8/9 * scale };
         slotGrid.addSprite(loc, icon, position, params);
         if (!slot) continue;
         // show constructible yields
@@ -106,7 +106,7 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
                 const r = 7 * scale;
                 const a = (j + start) * 2/7 * Math.PI;
                 const offset = {
-                    x: r * Math.sin(a) * (mirror ? -1 : 1),
+                    x: x + r * Math.sin(a) * (mirror ? -1 : 1),
                     y: -r * Math.cos(a),
                 }
                 const params = { offset, scale: scale / 2 };
