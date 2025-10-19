@@ -73,7 +73,7 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
     const workers = city.Workers.GetAllPlacementInfo()
         .find(p => p.PlotIndex == plotIndex)?.NumWorkers;
     if (workers && showBase) {
-        const y = Math.sin(Math.PI / 4) * padding;
+        const y = 4/5 * padding;
         const offset = { x: 0, y };
         const params = { offset, scale: 4/5 * scale };
         slotGrid.addSprite(loc, "specialist_tile_pip_full", origin, params);
