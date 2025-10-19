@@ -47,7 +47,7 @@ const BZ_ICON_CITY = "YIELD_CITIES";  // total city population
 const BZ_ICON_TOWN = "YIELD_TOWNS";  // total city population
 const BZ_ICON_RURAL = "CITY_RURAL";  // urban population/yield
 const BZ_ICON_URBAN = "CITY_URBAN";  // rural population/yield
-const BZ_ICON_SPECIAL = "CITY_SPECIAL_BASE";  // specialists
+const BZ_ICON_SPECIAL = "url('specialist_tile_pip_full')";  // specialists
 const BZ_ICON_TIMER = "url('hud_turn-timer')";
 // color palette
 const BZ_COLOR = {
