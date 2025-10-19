@@ -16,7 +16,6 @@ const SPECIALIST_SHRINK_LIMIT = 4;
 const SPECIALIST_SHRINK_SCALE = 0.7;
 const ICON_Z_OFFSET = 5;
 const YIELD_CHANGE_OFFSET = { x: 0, y: -10, z: 0 };
-WYLL.bzGridAngle = Math.PI / 6;  // 30°
 WYLL.bzGridSpritePosition = { x: 0, y: 0, z: ICON_Z_OFFSET };
 WYLL.bzGridSpriteScale = 0.625;
 WYLL.buildSlotSpritePadding = 15 * 0.7;

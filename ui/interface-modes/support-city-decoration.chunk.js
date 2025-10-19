@@ -29,7 +29,6 @@ var CityDecorationSupport;
         };
         onPlotChange = () => this.updateGate.call('onPlotChange');
         updateGate = new UpdateGate(this.updatePlots.bind(this));
-        bzGridAngle = Math.PI / 4;  // 45°
         bzGridSpritePosition = { x: 0, y: 0, z: 10 };
         bzGridSpriteScale = 1.2;
         buildSlotSpritePadding = 20;

@@ -73,17 +73,15 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
     const workers = city.Workers.GetAllPlacementInfo()
         .find(p => p.PlotIndex == plotIndex)?.NumWorkers;
     if (workers && showBase) {
-        console.warn(`TRIX WORKERS ${workers}`);
-        const p = { ...origin };
-        // TODO: tighter padding on building placement screen
-        p.y += padding;
-        const params = { scale: scale * 3/4 };
-        slotGrid.addSprite(loc, "specialist_tile_pip_full", p, params);
+        const y = Math.sin(Math.PI / 4) * padding;
+        const offset = { x: 0, y };
+        const params = { offset, scale: 4/5 * scale };
+        slotGrid.addSprite(loc, "specialist_tile_pip_full", origin, params);
         const fontSize = WORKER_TEXT_PARAMS.fontSize * scale;
-        slotGrid.addText(loc, workers.toString(), p, {
+        slotGrid.addText(loc, workers.toString(), origin, {
             ...WORKER_TEXT_PARAMS,
             fontSize,
-            offset: { x: 0, y: -fontSize * 3/4 },
+            offset: { x: 0, y: y - 3 * scale },
         });
     }
     // show building slots
@@ -102,19 +100,17 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
         // const yields = getYields(info).map(y => UI.getIconBLP(y + "_5"));
         const addBadges = (yields, mirror) => {
             const list = [...yields];
-            const params = { scale: scale / 2 };
             const start = (1 - list.length) / 2;
             for (const [j, type] of list.entries()) {
                 const icon = UI.getIconBLP(type + "_5");
-                const p = { ...position };
+                const r = 7 * scale;
                 const a = (j + start) * 2/7 * Math.PI;
-                const r = 7;
-                const dx = scale * r * Math.sin(a) * (mirror ? -1 : 1);
-                const dy = -scale * r * Math.cos(a);
-                p.x += dx;
-                p.y += dy * Math.cos(this.bzGridAngle);
-                p.z += dy * Math.sin(this.bzGridAngle);
-                yieldGrid.addSprite(loc, icon, p, params);
+                const offset = {
+                    x: r * Math.sin(a) * (mirror ? -1 : 1),
+                    y: -r * Math.cos(a),
+                }
+                const params = { offset, scale: scale / 2 };
+                yieldGrid.addSprite(loc, icon, position, params);
             }
         }
         const base = slot.baseYields;
