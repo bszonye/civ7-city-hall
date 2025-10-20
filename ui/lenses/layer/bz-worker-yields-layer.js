@@ -15,7 +15,6 @@ const SPECIALIST_DY = 18;
 const SPECIALIST_SHRINK_LIMIT = 4;
 const SPECIALIST_SHRINK_SCALE = 0.7;
 const ICON_Z_OFFSET = 5;
-const YIELD_CHANGE_OFFSET = { x: 0, y: -10, z: 0 };
 WYLL.bzGridSpritePosition = { x: 0, y: 0, z: ICON_Z_OFFSET };
 WYLL.bzGridSpriteScale = 0.625;
 WYLL.buildSlotSpritePadding = 15 * 0.7;
@@ -41,89 +40,21 @@ WYLL.realizeGrowthPlots = function() {
         }
     }
 }
-WYLL.updateSpecialistPlot = function(info) {
-    const yieldsToAdd = [];
-    const maintenancesToAdd = [];
-    info.NextYields.forEach((yieldNum, i) => {
-        const yieldDefinition = GameInfo.Yields[i];
-        const netYieldChange = Math.round((yieldNum - info.CurrentYields[i]) * 10) / 10;
-        if (netYieldChange != 0 && yieldDefinition) {
-            yieldsToAdd.push({ yieldDelta: netYieldChange, yieldType: yieldDefinition.YieldType });
-        }
-    });
-    info.NextMaintenance.forEach((yieldNum, i) => {
-        const yieldDefinition = GameInfo.Yields[i];
-        const netYieldChange = Math.round((-yieldNum + info.CurrentMaintenance[i]) * 10) / 10;
-        if (netYieldChange != 0 && yieldDefinition) {
-            maintenancesToAdd.push({ yieldDelta: netYieldChange, yieldType: yieldDefinition.YieldType });
-        }
-    });
-    const currentWorkers = info.NumWorkers;
+const WYLL_updateSpecialistPlot = WYLL.updateSpecialistPlot;
+WYLL.updateSpecialistPlot = function(...args) {
+    WYLL_updateSpecialistPlot.apply(this, args);
+    // show building slots
+    const [info] = args;
     const workerCap = PlotWorkersManager.cityWorkerCap;
-    const location = GameplayMap.getLocationFromIndex(info.PlotIndex);
-    if (currentWorkers > 0) {
-        for (let i = 0; i < workerCap; i++) {
-            const offsetAndScale = this.getSpecialistPipOffsetsAndScale(i, workerCap);
-            if (i < currentWorkers) {
-                const texture = "specialist_tile_pip_full";
-                this.yieldVisualizer.addSprite(
-                    location,
-                    texture,
-                    {
-                        x: offsetAndScale.xOffset,
-                        y: offsetAndScale.yOffset,
-                        z: ICON_Z_OFFSET
-                    },
-                    { scale: offsetAndScale.scale }
-                );
-            } else {
-                const texture = "specialist_tile_pip_empty";
-                this.yieldVisualizer.addSprite(
-                    location,
-                    texture,
-                    {
-                        x: offsetAndScale.xOffset,
-                        y: offsetAndScale.yOffset,
-                        z: ICON_Z_OFFSET
-                    },
-                    { scale: offsetAndScale.scale }
-                );
-            }
-        }
-    } else {
-        for (let i = 0; i < workerCap; i++) {
-            const offsetAndScale = this.getSpecialistPipOffsetsAndScale(i, workerCap);
-            this.yieldVisualizer.addSprite(
-                location,
-                "specialist_tile_pip_empty",
-                {
-                    x: offsetAndScale.xOffset,
-                    y: offsetAndScale.yOffset,
-                    z: ICON_Z_OFFSET
-                },
-                { scale: offsetAndScale.scale }
-            );
-        }
-    }
-    if (!info.IsBlocked) {
-        yieldsToAdd.forEach((yieldPillData, i) => {
-            const groupWidth = (yieldsToAdd.length - 1) * this.yieldSpritePadding;
-            const offset = { x: i * this.yieldSpritePadding + groupWidth / 2 - groupWidth, y: 6 };
-            this.yieldVisualizer.addYieldChange(yieldPillData, location, offset, 4294967295, YIELD_CHANGE_OFFSET);
-        });
-        maintenancesToAdd.forEach((yieldPillData, i) => {
-            const groupWidth = (maintenancesToAdd.length - 1) * this.yieldSpritePadding;
-            const offset = { x: i * this.yieldSpritePadding + groupWidth / 2 - groupWidth, y: -10 };
-            this.yieldVisualizer.addYieldChange(yieldPillData, location, offset, 4294967295, YIELD_CHANGE_OFFSET);
-        });
-    }
-    const topOffset = this.getSpecialistPipOffsetsAndScale(-1, workerCap);
+    const topOffset = this.getSpecialistPipOffsetsAndScale(-1, workerCap - 1);
     this.bzGridSpritePosition.y = topOffset.yOffset;
-    const districtID = MapCities.getDistrict(location.x, location.y);
+    const loc = GameplayMap.getLocationFromIndex(info.PlotIndex);
+    const districtID = MapCities.getDistrict(loc.x, loc.y);
     const district = Districts.get(districtID);
     this.realizeBuildSlots(district);
 }
-WYLL.getSpecialistPipOffsetsAndScale = function(index, pips) {
+WYLL.getSpecialistPipOffsetsAndScale = function(index, maxIndex) {
+    const pips = maxIndex + 1;
     const scale = SPECIALIST_SHRINK_LIMIT < pips ? SPECIALIST_SHRINK_SCALE : 0.9;
     const rows = Math.ceil(pips / SPECIALIST_COLUMNS);
     const yOrigin = SPECIALIST_Y + (rows - 1/2) * SPECIALIST_DY * scale;
