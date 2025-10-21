@@ -73,15 +73,13 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
     const workers = city.Workers.GetAllPlacementInfo()
         .find(p => p.PlotIndex == plotIndex)?.NumWorkers;
     if (workers && showBase) {
-        const y = 4/5 * padding;
-        const offset = { x: 0, y };
+        const offset = { x: 0, y: 4/5 * padding };
         const params = { offset, scale: 4/5 * scale };
         slotGrid.addSprite(loc, "specialist_tile_pip_full", position, params);
         const fontSize = WORKER_TEXT_PARAMS.fontSize * scale;
+        offset.y -= 3/4 * fontSize;  // shift text to bottom of icon
         slotGrid.addText(loc, workers.toString(), position, {
-            ...WORKER_TEXT_PARAMS,
-            fontSize,
-            offset: { x: 0, y: y - 3 * scale },
+            ...WORKER_TEXT_PARAMS, fontSize, offset
         });
     }
     // show building slots
