@@ -15,9 +15,11 @@ const SPECIALIST_DY = 18;
 const SPECIALIST_SHRINK_LIMIT = 4;
 const SPECIALIST_SHRINK_SCALE = 0.7;
 const ICON_Z_OFFSET = 5;
+WYLL.buildSlotSpritePadding = 15 * 0.7;
 WYLL.bzGridSpritePosition = { x: 0, y: 0, z: ICON_Z_OFFSET };
 WYLL.bzGridSpriteScale = 0.625;
-WYLL.buildSlotSpritePadding = 15 * 0.7;
+
+// add WYLL.realizeBuildSlots method
 WYLL.realizeBuildSlots = function(district) {
     const args = [
         district,
@@ -40,6 +42,7 @@ WYLL.realizeGrowthPlots = function() {
         }
     }
 }
+// patch WYLL.updateSpecialistPlot to add building slots
 const WYLL_updateSpecialistPlot = WYLL.updateSpecialistPlot;
 WYLL.updateSpecialistPlot = function(...args) {
     WYLL_updateSpecialistPlot.apply(this, args);
@@ -53,6 +56,7 @@ WYLL.updateSpecialistPlot = function(...args) {
     const district = Districts.get(districtID);
     this.realizeBuildSlots(district);
 }
+// patch WYLL.getSpecialistPipOffsetAndScale to improve pip layout
 WYLL.getSpecialistPipOffsetsAndScale = function(index, maxIndex) {
     const pips = maxIndex + 1;
     const scale = SPECIALIST_SHRINK_LIMIT < pips ? SPECIALIST_SHRINK_SCALE : 0.9;
@@ -73,6 +77,7 @@ WYLL.getSpecialistPipOffsetsAndScale = function(index, maxIndex) {
     const yOffset = yOrigin - colIndex * SPECIALIST_DY * scale;
     return { xOffset, yOffset, scale };
 }
+// patch WYLL.updatePlot to show previews for unclaimed plots
 const WYLL_updatePlot = WYLL.updatePlot;
 WYLL.updatePlot = function(...args) {
     WYLL_updatePlot.apply(this, args);
