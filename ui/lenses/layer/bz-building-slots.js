@@ -1,6 +1,13 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
 
+const WORKER_TEXT_PARAMS = {
+    fonts: ["TitleFont"],
+    fill: 0xff000000,
+    stroke: 0,
+    fontSize: 4,
+    faceCamera: true,
+};
 const YIELD_ORDER = new Map([...GameInfo.Yields].map(y => [y.YieldType, y.$index]));
 const yieldSort = (a, b) => YIELD_ORDER.get(a.YieldType) - YIELD_ORDER.get(b.YieldType);
 const yieldChangeSort = (a, b) => (b.YieldChange - a.YieldChange) || yieldSort(a, b);
@@ -57,37 +64,51 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
         const isBuilding = info.ConstructibleClass == "BUILDING";
         slots.push({ iconURL, baseYields, bonusYields, isBuilding });
     }
-    const origin = this.buildSlotSpritePosition ?? { x: 0, y: 24, z: 0 };
-    const scale = this.buildSlotSpriteScale ?? 0.9;
+    const position = this.bzGridSpritePosition ?? { x: 0, y: 24, z: 0 };
+    const scale = this.bzGridSpriteScale ?? 0.9;
     const padding = this.buildSlotSpritePadding;
+    // show specialists
+    const city = Cities.get(district.cityId);
+    const plotIndex = GameplayMap.getIndexFromLocation(loc);
+    const workers = city.Workers.GetAllPlacementInfo()
+        .find(p => p.PlotIndex == plotIndex)?.NumWorkers;
+    if (workers && showBase) {
+        const offset = { x: 0, y: 4/5 * padding };
+        const params = { offset, scale: 4/5 * scale };
+        slotGrid.addSprite(loc, "specialist_tile_pip_full", position, params);
+        const fontSize = WORKER_TEXT_PARAMS.fontSize * scale;
+        offset.y -= 3/4 * fontSize;  // shift text to bottom of icon
+        slotGrid.addText(loc, workers.toString(), position, {
+            ...WORKER_TEXT_PARAMS, fontSize, offset
+        });
+    }
+    // show building slots
     for (let i = 0; i < maxSlots; ++i) {
         const slot = slots[i];  // undefined => BUILDING_EMPTY
         // get coordinates
         const groupWidth = (maxSlots - 1) * padding;
-        const position = { ...origin };
-        position.x = origin.x + i * padding - groupWidth / 2;
+        const x = i * padding - groupWidth / 2;
+        const offset = { x, y: 0 };
         // show constructible icon (or empty slot)
         const icon = slot ? slot.iconURL : UI.getIconBLP("BUILDING_EMPTY");
-        const params = { scale: slot ? scale : 8/9 * scale };
+        const params = { offset, scale: slot ? scale : 8/9 * scale };
         slotGrid.addSprite(loc, icon, position, params);
         if (!slot) continue;
         // show constructible yields
         // const yields = getYields(info).map(y => UI.getIconBLP(y + "_5"));
         const addBadges = (yields, mirror) => {
             const list = [...yields];
-            const params = { scale: scale / 2 };
             const start = (1 - list.length) / 2;
             for (const [j, type] of list.entries()) {
                 const icon = UI.getIconBLP(type + "_5");
-                const p = { ...position };
+                const r = 7 * scale;
                 const a = (j + start) * 2/7 * Math.PI;
-                const r = 7;
-                const dx = scale * r * Math.sin(a) * (mirror ? -1 : 1);
-                const dy = -scale * r * Math.cos(a);
-                p.x += dx;
-                p.y += dy * Math.cos(this.buildSlotAngle);
-                p.z += dy * Math.sin(this.buildSlotAngle);
-                yieldGrid.addSprite(loc, icon, p, params);
+                const offset = {
+                    x: x + r * Math.sin(a) * (mirror ? -1 : 1),
+                    y: -r * Math.cos(a),
+                }
+                const params = { offset, scale: scale / 2 };
+                yieldGrid.addSprite(loc, icon, position, params);
             }
         }
         const base = slot.baseYields;

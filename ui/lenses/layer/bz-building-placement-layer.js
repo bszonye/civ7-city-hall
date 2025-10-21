@@ -7,7 +7,6 @@ import '/base-standard/ui/lenses/layer/building-placement-layer.js';
 const BPL = LensManager.layers.get("fxs-building-placement-layer");
 
 // modify build slot rendering
-BPL.buildSlotAngle = Math.PI / 6;  // 30°
 BPL.realizeBuildSlots = function(district) {
     const args = [
         district,
