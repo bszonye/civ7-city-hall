@@ -7,7 +7,7 @@ import '/base-standard/ui/lenses/layer/worker-yields-layer.js';
 // get registered lens layer
 const WYLL = LensManager.layers.get("fxs-worker-yields-layer");
 
-// modify build slot rendering
+// modified layout constants
 const SPECIALIST_COLUMNS = 5;
 const SPECIALIST_DX = 15;
 const SPECIALIST_Y = 3;
@@ -15,11 +15,10 @@ const SPECIALIST_DY = 18;
 const SPECIALIST_SHRINK_LIMIT = 4;
 const SPECIALIST_SHRINK_SCALE = 0.7;
 const ICON_Z_OFFSET = 5;
+// add WYLL.realizeBuildSlots method
 WYLL.buildSlotSpritePadding = 15 * 0.7;
 WYLL.bzGridSpritePosition = { x: 0, y: 0, z: ICON_Z_OFFSET };
 WYLL.bzGridSpriteScale = 0.625;
-
-// add WYLL.realizeBuildSlots method
 WYLL.realizeBuildSlots = function(district) {
     const args = [
         district,
