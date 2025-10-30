@@ -20,7 +20,7 @@
             <Text>Streamlines the city production panel.</Text>
         </Replace>
         <Replace Tag="LOC_OPTIONS_GROUP_BZ_MODS">
-            <Text>trixie's mods</Text>
+            <Text>trixie’s mods</Text>
         </Replace>
     </EnglishText>
 </Database>
