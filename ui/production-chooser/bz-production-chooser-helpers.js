@@ -367,12 +367,16 @@ const getProjectItems = (city, isPurchase) => {
     return projects;
 };
 const ShouldShowUniqueQuarter = (...results) => {
+    const allCompleted = results.every((result) => result.AlreadyExists);
+    if (allCompleted) {
+        return false;
+    }
     return results.some((result) =>
         result.Success ||
-        result.AlreadyExists ||
-        result.InProgress ||
         result.InQueue ||
-        result.InsufficientFunds
+        result.InProgress ||
+        result.InsufficientFunds ||
+        result.AlreadyExists
     );
 };
 const GetProductionItems = (city, recs, goldBalance, isPurchase, viewHidden, uqInfo) => {
@@ -433,11 +437,9 @@ const GetProductionItems = (city, recs, goldBalance, isPurchase, viewHidden, uqI
             { ConstructibleType: uq2index },
             false
         );
-        if (!uq1status.AlreadyExists || !uq2status.AlreadyExists) {
-            if (!uq1result) results.push({ index: uq1index, result: uq1status });
-            if (!uq2result) results.push({ index: uq2index, result: uq2status });
-        }
-        shouldShowUniqueQuarter = ShouldShowUniqueQuarter(uq1status, uq2status);
+        if (!uq1result) results.push({ index: uq1index, result: uq1status });
+        if (!uq2result) results.push({ index: uq2index, result: uq2status });
+        shouldShowUniqueQuarter = viewHidden || ShouldShowUniqueQuarter(uq1status, uq2status);
     }
     const repairItems = [];
     for (const { index, result } of results) {
