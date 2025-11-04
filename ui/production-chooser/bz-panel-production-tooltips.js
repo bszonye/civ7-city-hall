@@ -1,6 +1,4 @@
 import TooltipManager from '/core/ui/tooltips/tooltip-manager.js';
-import { IsElement } from '/core/ui/utilities/utilities-dom.chunk.js';
-import { c as GetTownFocusBlp } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
 import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
 import '/core/ui/input/action-handler.js';
 import '/core/ui/framework.chunk.js';
@@ -221,7 +219,7 @@ class ProductionUnitTooltipType {
           return;
         }
         this.header.setAttribute("title", definition.Name);
-        // FIX: always show production cost (with progress)
+        // FIX: always show production cost
         const productionCost = city.Production?.getUnitProductionCost(definition.UnitType);
         this.productionCost.classList.toggle("hidden", productionCost === void 0);
         this.productionCost.innerHTML = Locale.stylize(
@@ -258,136 +256,4 @@ class ProductionUnitTooltipType {
     }
 }
 TooltipManager.registerType("production-unit-tooltip", new ProductionUnitTooltipType());
-class ProductionProjectTooltipType {
-    _target = null;
-    get target() {
-      return this._target?.deref() ?? null;
-    }
-    set target(value) {
-      this._target = value ? new WeakRef(value) : null;
-    }
-    // #region Element References
-    tooltip = document.createElement("fxs-tooltip");
-    icon = document.createElement("fxs-icon");
-    header = document.createElement("fxs-header");
-    description = document.createElement("p");
-    requirementsContainer = document.createElement("div");
-    requirementsText = document.createElement("div");
-    gemsContainer = document.createElement("div");
-    productionCost = document.createElement("div");
-    // #endregion
-    constructor() {
-        this.tooltip.className = "flex w-96 text-accent-2 font-body text-sm";
-        // FIX: better fit
-        this.header.setAttribute("filigree-style", "small");
-        this.header.setAttribute("header-bg-glow", "true");
-        this.header.classList.add("mt-1");
-        this.requirementsContainer.className = "flex justify-center mt-0\\.5 -mx-1\\.5 p-2 production-chooser-tooltip__subtext-bg";
-        this.requirementsContainer.append(this.requirementsText);
-        this.productionCost.className = "mt-1";
-        this.gemsContainer.className = "mt-1";
-        this.tooltip.append(
-            this.header,
-            this.description,
-            this.requirementsContainer,
-            this.productionCost,
-            this.gemsContainer
-        );
-    }
-    getHTML() {
-        return this.tooltip;
-    }
-    reset() {
-        return;
-    }
-    isUpdateNeeded(target) {
-        const newTarget = target.closest("town-focus-chooser-item, production-chooser-item");
-        if (this.target === newTarget) {
-            return false;
-        }
-        this.target = newTarget;
-        if (!this.target) {
-            return false;
-        }
-        return true;
-    }
-    getProjectType() {
-        if (!this.target) {
-            return null;
-        }
-        // for town-focus-chooser-item (already hashed)
-        if (this.target.hasAttribute("data-project-type")) {
-            return Number(this.target.dataset.projectType);
-        }
-        // for production-chooser-item (string name)
-        if (this.target.hasAttribute("data-type")) {
-            return Game.getHash(this.target.dataset.type);
-        }
-        return null;
-    }
-    getDescription() {
-        if (!this.target) return null;
-        if (IsElement(this.target, "town-focus-chooser-item")) {
-            return this.target.dataset.tooltipDescription ?? null;
-        }
-        return this.target.dataset.description ?? null;
-    }
-    update() {
-        if (!this.target) {
-            console.error("ProductionProjectTooltipType.update: update triggered with no valid target");
-            return;
-        }
-        const name = this.target.dataset.name ?? "";
-        const description = (this.target.dataset.tooltipDescription || this.target.dataset.description) ?? "";
-        const growthType = Number(this.target.dataset.growthType);
-        const projectType = this.getProjectType();
-        this.header.setAttribute("title", name);
-        this.description.setAttribute("data-l10n-id", description);
-        const iconBlp = GetTownFocusBlp(growthType, projectType);
-        this.icon.style.backgroundImage = `url(${iconBlp})`;
-        const requirementsText = this.getRequirementsText();
-        if (requirementsText) {
-            this.requirementsText.innerHTML = requirementsText;
-            this.requirementsContainer.classList.remove("hidden");
-        } else {
-            this.requirementsContainer.classList.add("hidden");
-        }
-        const recommendations = this.target?.dataset.recommendations;
-        if (recommendations) {
-            const parsedRecommendations = JSON.parse(recommendations);
-            const advisorList = parsedRecommendations.map((rec) => rec.class);
-            const recommendationTooltipContent = AdvisorUtilities.createAdvisorRecommendationTooltip(advisorList);
-            this.gemsContainer.appendChild(recommendationTooltipContent);
-        }
-        this.gemsContainer.classList.toggle("hidden", !recommendations);
-        // FIX: show production cost (with progress)
-        const cityID = UI.Player.getHeadSelectedCity();
-        if (!cityID) return;
-        const city = Cities.get(cityID);
-        if (!city) return;
-        const productionCost = city.Production?.getProjectProductionCost(projectType);
-        this.productionCost.classList.toggle("hidden", (productionCost ?? 0) <= 0);
-        this.productionCost.innerHTML = Locale.stylize(
-            "LOC_UI_PRODUCTION_CONSTRUCTIBLE_COST",
-            productionCost,
-            "YIELD_PRODUCTION"
-        );
-    }
-    getRequirementsText() {
-        const projectType = Number(this.target?.dataset.projectType);
-        const project = GameInfo.Projects.lookup(projectType);
-        if (!project) {
-            return void 0;
-        }
-        if (project.PrereqPopulation)
-            return Locale.compose("LOC_UI_PRODUCTION_REQUIRES_POPULATION", project.PrereqPopulation);
-        if (project.PrereqConstructible)
-            return Locale.compose("LOC_UI_PRODUCTION_REQUIRES_BUILDING", Locale.compose(project.PrereqConstructible));
-        return void 0;
-    }
-    isBlank() {
-        return !this.target;
-    }
-}
-TooltipManager.registerType("production-project-tooltip", new ProductionProjectTooltipType());
 //# sourceMappingURL=panel-production-tooltips.js.map

@@ -11,7 +11,7 @@
             <Text>Liaisons</Text>
         </Replace>
         <Replace Tag="LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB" Language="fr_FR">
-            <Text>Vue d'ensemble</Text>
+            <Text>Vue d’ensemble</Text>
         </Replace>
         <Replace Tag="LOC_OPTIONS_BZ_CITY_COMPACT" Language="fr_FR">
             <Text>City Hall • fenêtre de production compacte</Text>
