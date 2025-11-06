@@ -26,7 +26,7 @@ proto.update = function(...args) {
         Locale.compose("LOC_UI_CITY_GROWTH_TITLE");
     // calculate total yield changes
     const sum = (list) => list.reduce((acc, value) => acc + value, 0);
-    if (this.hoveredPlotWorkerIndex) {
+    if (this.hoveredPlotWorkerIndex && this.hoveredPlotWorkerPlacementInfo) {
         const info = this.hoveredPlotWorkerPlacementInfo;
         const totalYields = sum(info.NextYields) - sum(info.CurrentYields);
         const totalMaintenance =
