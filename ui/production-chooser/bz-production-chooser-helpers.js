@@ -35,7 +35,7 @@ const GetUnitStatsFromDefinition = (definition) => {
     }
     const statsDefinition = GameInfo.Unit_Stats.lookup(definition.UnitType);
     if (statsDefinition) {
-        if (statsDefinition.RangedCombat > 0) {
+        if (statsDefinition.RangedCombat > 0 && statsDefinition.Range > 1) {
             stats.push({
                 name: "LOC_UNIT_INFO_RANGED_STRENGTH",
                 icon: "Action_Ranged",
