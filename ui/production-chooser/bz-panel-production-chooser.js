@@ -671,7 +671,7 @@ class bzProductionChooserItem {
             "bz-pci-ageless hidden flex items-center absolute right-20 top-1\\/2 -translate-y-1\\/2";
         c.agelessContainer.innerHTML = `
         <div class="img-hud-production-pill flex text-2xs items-center">
-            <div class="px-2 uppercase leading-none" data-l10n-id="LOC_UI_PRODUCTION_AGELESS"></div>
+            <div class="px-2 uppercase leading-none truncate" data-l10n-id="LOC_UI_PRODUCTION_AGELESS"></div>
         </div>
         `;
         costColumn.appendChild(c.agelessContainer);

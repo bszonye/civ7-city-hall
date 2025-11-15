@@ -643,7 +643,7 @@ class bzPanelCityDetails {
                 row.appendChild(docIcon(BZ_ICON_CITY, size, small));
             }
             const name = document.createElement("div");
-            name.classList.value = "mx-1 text-left font-fit-shrink";
+            name.classList.value = "mx-1 text-left font-fit-shrink truncate";
             name.style.width = "9.0555555556rem";
             name.setAttribute("data-l10n-id", conn.name);
             row.appendChild(name);

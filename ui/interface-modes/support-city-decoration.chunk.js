@@ -90,7 +90,8 @@ var CityDecorationSupport;
                     const ttype = GameInfo.Terrains.lookup(ttypeID);
                     const isWater =
                         ttype.TerrainType == "TERRAIN_COAST" ||
-                        ttype.TerrainType == "TERRAIN_NAVIGABLE_RIVER";
+                        ttype.TerrainType == "TERRAIN_NAVIGABLE_RIVER" ||
+                        ttype.TerrainType == "TERRAIN_OCEAN";
                     (isWater ? coastal : rural).push(loc);
                 }
             }
