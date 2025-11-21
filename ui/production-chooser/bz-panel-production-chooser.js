@@ -300,16 +300,25 @@ class bzProductionChooserScreen {
         // replace event handlers to fix nav-help glitches
         this.component.onCityDetailsClosedListener = this.onCityDetailsClosed.bind(this);
         engine.on("input-source-changed", this.onActiveDeviceTypeChanged, this);
+        // replace name change handler to allow mixed-case names
+        this.component.onSettlementNameChangedListener =
+            this.onSettlementNameChanged.bind(this);
     }
     afterAttach() {
         const c = this.component;
         engine.on("ConstructibleChanged", c.onConstructibleAddedToMap, this.component);
-        requestAnimationFrame(() => this.viewHiddenActiveLabel.addEventListener(
-            "engine-input", c.viewHiddenCheckbox.component.engineInputListener));
         // restore the city details panel if it was open previously
         if (bzProductionChooserScreen.isCDPanelOpen && !this.component.isSmallScreen()) {
             this.component.showCityDetails();
         }
+        requestAnimationFrame(() => {
+            // make the View Hidden label clickable
+            this.viewHiddenActiveLabel.addEventListener(
+                "engine-input", c.viewHiddenCheckbox.component.engineInputListener
+            );
+            // show mixed case while editing settlement names
+            c.cityNameElement.component.editableTextBox.classList.add("normal-case");
+        });
     }
     beforeDetach() {
         const c = this.component;
@@ -470,6 +479,39 @@ class bzProductionChooserScreen {
             FocusManager.setFocus(this.component.productionAccordion);
             this.component.frame.classList.add("trigger-nav-help");
             this.component.cityNameElement.classList.add("trigger-nav-help");
+        }
+    }
+    onSettlementNameChanged(event) {
+        const c = this.component;
+        if (!c._cityID) {
+            console.error(
+                `panel-production-chooser: onSettlementNameChanged - cityID was null during name change operation!`
+            );
+            c.realizeProductionFocus();
+            return;
+        }
+        const Name = event.detail.newStr;
+        if (Name.trim().length == 0) {
+            const city = Cities.get(c._cityID);
+            if (city) c.cityNameElement.setAttribute("title", city.name);
+            return;
+        }
+        const locName = Locale.compose(c.city.name);
+        if (Name == locName) {
+            // no change:  switch back to static header text
+            c.cityNameElement.component.editableTextBox.classList.add("hidden");
+            c.cityNameElement.component.staticText.classList.remove("hidden");
+            return;
+        }
+        const args = { Name };
+        const result = Game.CityCommands.canStart(c._cityID, CityCommandTypes.NAME_CITY, args, false);
+        if (result.Success) {
+            Game.CityCommands.sendRequest(c._cityID, CityCommandTypes.NAME_CITY, args);
+        } else {
+            console.error(
+                "panel-production-chooser: onSettlementNameChanged - city name change operation failed!",
+                result.FailureReasons
+            );
         }
     }
 }
