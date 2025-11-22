@@ -82,6 +82,8 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
             ...WORKER_TEXT_PARAMS, fontSize, offset
         });
     }
+    // show all buildings present because AI sometimes exceeds the max
+    if (maxSlots < slots.length) maxSlots = slots.length;
     // show building slots
     for (let i = 0; i < maxSlots; ++i) {
         const slot = slots[i];  // undefined => BUILDING_EMPTY
