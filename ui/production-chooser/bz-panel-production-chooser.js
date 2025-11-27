@@ -731,7 +731,7 @@ class bzProductionChooserItem {
         const dataInfoDisplayType = e.getAttribute("data-info-display-type");
         // interpret attributes
         const isRepair = this.isRepair = (() => {
-            if (dataCategory == "units") return false;
+            if (dataCategory != "buildings" && dataCategory != "wonders") return false;
             if (e.getAttribute("data-repair-all") === "true") return true;
             const type = Game.getHash(dataType);
             const info = GameInfo.Constructibles.lookup(type);
