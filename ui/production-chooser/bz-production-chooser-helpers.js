@@ -165,8 +165,10 @@ const GetBaseYieldsHTML = (items) => {
     }, "");
 }
 const GetSecondaryDetailsHTML = (items) => {
+    const outer = items.length < 5 ? "mr-2" : "mr-0\\.5";
+    const inner = items.length < 5 ? "mr-0" : "-mr-0\\.5";
     return items.reduce((acc, { icon, value, name }) => {
-        return acc + `<div class="flex items-center mr-2"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-6" />${value}</div>`;
+        return acc + `<div class="flex items-center ${outer}"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-6 ${inner}" />${value}</div>`;
     }, "");
 };
 const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidden) => {
