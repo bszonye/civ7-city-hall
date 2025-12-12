@@ -1,6 +1,13 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
 
+const BUILDING_TEXT_PARAMS = {
+    fonts: ["TitleFont"],
+    fill: 0xffffffff,
+    stroke: 0,
+    fontSize: 6,
+    faceCamera: true,
+};
 const WORKER_TEXT_PARAMS = {
     fonts: ["TitleFont"],
     fill: 0xff000000,
@@ -58,11 +65,16 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
         // large buildings take up an extra slot
         if (ConstructibleHasTagType(info.ConstructibleType, "FULL_TILE")) maxSlots -= 1;
         // building icon
-        const iconURL = UI.getIconBLP(info.ConstructibleType) || "";
+        const blp = UI.getIconBLP(info.ConstructibleType);
+        const url = UI.getIconURL(info.ConstructibleType);
+        const fallback = UI.getIconBLP("BUILDING_OPEN");
+        // sprites only support built-in BLPs, for now
+        const icon = url == `blp:${blp}` || url == `fs://game/${blp}` ? blp : fallback;
+        const label = icon == fallback ? Locale.compose(info.Name ?? "?") : null;
         // building yield type flag
         const { baseYields, bonusYields } = getYields(info);
         const isBuilding = info.ConstructibleClass == "BUILDING";
-        slots.push({ iconURL, baseYields, bonusYields, isBuilding });
+        slots.push({ icon, label, baseYields, bonusYields, isBuilding });
     }
     const position = this.bzGridSpritePosition ?? { x: 0, y: 24, z: 0 };
     const scale = this.bzGridSpriteScale ?? 0.9;
@@ -92,12 +104,19 @@ function realizeBuildSlots(district, slotGrid, yieldGrid, showBase=true) {
         const x = i * padding - groupWidth / 2;
         const offset = { x, y: 0 };
         // show constructible icon (or empty slot)
-        const icon = slot ? slot.iconURL : UI.getIconBLP("BUILDING_EMPTY");
+        const icon = slot ? slot.icon : UI.getIconBLP("BUILDING_EMPTY");
         const params = { offset, scale: slot ? scale : 8/9 * scale };
         slotGrid.addSprite(loc, icon, position, params);
         if (!slot) continue;
+        // show label on fallback icons
+        if (slot.label) {
+            const text = slot.label.toUpperCase().at(0);
+            const fontSize = BUILDING_TEXT_PARAMS.fontSize * scale;
+            slotGrid.addText(loc, text, position, {
+                ...BUILDING_TEXT_PARAMS, fontSize, offset
+            });
+        }
         // show constructible yields
-        // const yields = getYields(info).map(y => UI.getIconBLP(y + "_5"));
         const addBadges = (yields, mirror) => {
             const list = [...yields];
             const start = (1 - list.length) / 2;
