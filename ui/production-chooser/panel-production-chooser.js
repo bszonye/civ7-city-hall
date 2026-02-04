@@ -101,7 +101,8 @@ const ConvertToCity = (townID) => {
   return false;
 };
 
-var _tmpl$$3 = /* @__PURE__ */ template(`<div class="production-chooser-item flex items-stretch mb-2 ml-2 hover\\\\:text-accent-1 focus\\\\:text-accent-1"><div class="flex-auto flex flex-col"><div class="font-title text-base tracking-100 uppercase transition-color"></div><div class="font-body text-sm transition-color"data-l10n-id=LOC_UI_PRODUCTION_UNIQUE_QUARTER></div></div><div class="font-body text-sm self-end transition-color"></div></div>`);
+var _tmpl$$3 = /* @__PURE__ */ template(`<div class="production-chooser-item text-xs leading-tight flex items-center mb-2 mx-2 hover\\:text-secondary-1 focus\\:text-secondary-1"><div class="flex-auto flex flex-col ml-1"><div class="font-title text-sm tracking-25 uppercase text-gradient-secondary transition-color"></div><div class="font-body transition-color" data-l10n-id=LOC_UI_PRODUCTION_UNIQUE_QUARTER></div></div><div class="font-body self-end transition-color"></div></div>`);
+// var _tmpl$$3 = /* @__PURE__ */ template(`<div class="production-chooser-item flex items-center mb-2 ml-2 hover\\\\:text-accent-1 focus\\\\:text-accent-1"><div class="flex-auto flex flex-col"><div class="font-title text-base tracking-100 uppercase transition-color"></div><div class="font-body text-sm transition-color"data-l10n-id=LOC_UI_PRODUCTION_UNIQUE_QUARTER></div></div><div class="font-body text-sm self-end transition-color"></div></div>`);
 const ProductionChooserUniqueQuarterItemComponent = (props) => {
   return createComponent(Tooltip.Text, {
     get initialVPosition() {
@@ -117,7 +118,7 @@ const ProductionChooserUniqueQuarterItemComponent = (props) => {
     get children() {
       var _el$ = _tmpl$$3(), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$2.nextSibling;
       insert(_el$, createComponent(Icon, {
-        "class": "size-10 mr-2",
+        "class": "size-10 ml-2\\.5 mr-2",
         name: "CITY_UNIQUE_QUARTER"
       }), _el$2);
       insert(_el$4, createComponent(L10n.Compose, {
@@ -170,7 +171,7 @@ class UniqueQuarter {
   }
   constructor() {
     this.root.className = "production-chooser__unique-quarter relative flex flex-col pointer-events-auto";
-    this.buildingContainer.className = "flex flex-col";
+    this.buildingContainer.className = "flex flex-col pl-2\\.5";
     const uqBarDecor = document.createElement("div");
     uqBarDecor.className = "absolute -left-px h-full w-1\\.5 img-city-tab-line-vert";
     const uqDivider = document.createElement("div");
@@ -1131,10 +1132,10 @@ var
   _tmpl$2 = /* @__PURE__ */ template(`<div class="flex items-center text-xs -ml-1"></div>`),
   _tmpl$3 = /* @__PURE__ */ template(`<div class="flex items-center"></div>`),
   _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
-  _tmpl$5 = /* @__PURE__ */ template(`<div class="flex items-center text-xs leading-normal"></div>`),
+  _tmpl$5 = /* @__PURE__ */ template(`<div class="flex items-center text-xs -mb-0\\.5 leading-normal"></div>`),
   _tmpl$6 = /* @__PURE__ */ template(`<div class="flex items-center justify-center mr-2"></div>`),
   _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end"><span></span><span class="size-8 bg-contain bg-center bg-no-repeat mr-1"></span></div>`),
-  _tmpl$8 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-stretch"><div class="relative flex flex-col flex-auto justify-center ml-1"><span class="font-title text-accent-2 uppercase tracking-25 z-1"></span></div><div class="flex flex-col items-end justify-between"><div class="flex flex-auto self-end"></div></div></div>`);
+  _tmpl$8 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1"><span class="font-title text-accent-2 uppercase tracking-25 z-1"></span></div><div class="flex flex-col items-end justify-between"><div class="flex flex-auto self-end"></div></div></div>`);
 // TRIX
 // var _tmpl$ = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`), _tmpl$2 = /* @__PURE__ */ template(`<div class="flex text-sm"></div>`), _tmpl$3 = /* @__PURE__ */ template(`<div class="flex items-center"></div>`), _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`), _tmpl$5 = /* @__PURE__ */ template(`<div class="flex items-center text-sm production-chooser__font-icon-positioning"></div>`), _tmpl$6 = /* @__PURE__ */ template(`<div class="flex items-center justify-center mr-2"></div>`), _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end"><span></span><span class="size-8 bg-contain bg-center bg-no-repeat mr-1"></span></div>`), _tmpl$8 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-stretch"><div class="relative flex flex-col flex-auto justify-between pt-2 pb-1.5"><span class="font-title text-accent-2 uppercase"></span></div><div class="flex flex-col items-end justify-between"><div class="flex flex-auto self-end"></div></div></div>`);
 const parseJSON = (value, fallback) => {
@@ -1293,7 +1294,7 @@ const ProductionChooserItemContent = (props) => {
           insert(_el$, createComponent(Icon, {
             // TRIX
             // "class": "size-16 bg-contain bg-center bg-no-repeat mr-2 flex-shrink-0 pointer-events-none",
-            "class": "size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none self-center",
+            "class": "size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
             get name() {
               return itemType();
             }
