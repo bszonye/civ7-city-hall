@@ -1320,7 +1320,7 @@ const ProductionChooserItemContent = (props) => {
           }));
           insert(_el$bzTitle, createComponent(Show, {
             get when() {
-              return isAgeless();
+              return isAgeless() && !isRepair();
             },
             get children() {
               // TRIX: compact Ageless pill
