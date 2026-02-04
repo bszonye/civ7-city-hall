@@ -1134,8 +1134,9 @@ var
   _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
   _tmpl$5 = /* @__PURE__ */ template(`<div class="flex items-center text-xs -mb-0\\.5 leading-normal"></div>`),
   _tmpl$6 = /* @__PURE__ */ template(`<div class="flex items-center justify-center mr-2"></div>`),
-  _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end"><span></span><span class="size-8 bg-contain bg-center bg-no-repeat mr-1"></span></div>`),
-  _tmpl$8 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1"><span class="font-title text-accent-2 uppercase tracking-25 z-1"></span></div><div class="flex flex-col items-end justify-between"><div class="flex flex-auto self-end"></div></div></div>`);
+  _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-1"><span></span><span class="bz-pci-icon size-8 bg-contain bg-center bg-no-repeat"></span></div>`),
+  _tmpl$7p = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end text-accent-4 mr-1 -mb-1"><span></span><span class="bz-pci-icon size-6 bg-contain bg-center bg-no-repeat mr-1"></span></div>`),
+  _tmpl$8 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1"><div class="flex flex-row items-center"><span class="font-title text-accent-2 uppercase tracking-25 z-1"></span></div></div><div class="flex flex-col items-end justify-between"><div class="flex flex-auto self-end text-sm"></div></div></div>`);
 // TRIX
 // var _tmpl$ = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`), _tmpl$2 = /* @__PURE__ */ template(`<div class="flex text-sm"></div>`), _tmpl$3 = /* @__PURE__ */ template(`<div class="flex items-center"></div>`), _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`), _tmpl$5 = /* @__PURE__ */ template(`<div class="flex items-center text-sm production-chooser__font-icon-positioning"></div>`), _tmpl$6 = /* @__PURE__ */ template(`<div class="flex items-center justify-center mr-2"></div>`), _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end"><span></span><span class="size-8 bg-contain bg-center bg-no-repeat mr-1"></span></div>`), _tmpl$8 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-stretch"><div class="relative flex flex-col flex-auto justify-between pt-2 pb-1.5"><span class="font-title text-accent-2 uppercase"></span></div><div class="flex flex-col items-end justify-between"><div class="flex flex-auto self-end"></div></div></div>`);
 const parseJSON = (value, fallback) => {
@@ -1181,12 +1182,12 @@ const ProductionChooserItemContent = (props) => {
   const category = createMemo(() => normalizeCategory(attrs()["data-category"]));
   const itemType = createMemo(() => attrs()["data-type"] ?? void 0);
   const isRepairAll = createMemo(() => attrs()["data-repair-all"] === "true");
+  const isRepair = createMemo(() => attrs()["data-is-repair"] === "true");  // TRIX
   const nameKey = createMemo(() => attrs()["data-name"] ?? void 0);
   const descriptionKey = createMemo(() => attrs()["data-description"] ?? void 0);
   const isPurchase = createMemo(() => attrs()["data-is-purchase"] === "true");
   const isDisabled = createMemo(() => attrs()["data-disabled"] === "true");
   const disableFocus = createMemo(() => attrs()["data-disable-focus"] === "true");
-  const isRepair = createMemo(() => attrs()["data-is-repair"] === "true");
   const isAgeless = createMemo(() => attrs()["data-is-ageless"] === "true");
   const infoDisplayType = createMemo(() => attrs()["data-info-display-type"] ?? void 0);
   const showAlternateYields = createMemo(() => infoDisplayType() === "base-yield");
@@ -1212,6 +1213,12 @@ const ProductionChooserItemContent = (props) => {
   });
   const costIcon = createMemo(() => isPurchase() ? "Yield_Gold" : "hud_turn-timer");
   const costIconLabel = createMemo(() => Locale.compose(isPurchase() ? "LOC_YIELD_GOLD" : "LOC_UI_CITY_INSPECTOR_TURNS"));
+  const productionCost = createMemo(() => attrs()["data-production-cost"] ?? "");
+  const productionProgress = createMemo(() => attrs()["data-production-progress"] ?? "");
+  const showProgress = createMemo(() => {
+    const progress = Number(productionProgress());
+    return 0 < progress;
+  });
   const audio = createMemo(() => {
     const group = attrs()["data-audio-group-ref"] ?? void 0;
     const onActivate = attrs()["data-audio-activate-ref"] ?? void 0;
@@ -1291,19 +1298,19 @@ const ProductionChooserItemContent = (props) => {
           return isRepairAll() ? "true" : void 0;
         },
         get children() {
-          var _el$ = _tmpl$8(), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$14 = _el$2.nextSibling, _el$15 = _el$14.firstChild;
+          var _el$ = _tmpl$8(), _el$2 = _el$.firstChild, _el$bzTitle = _el$2.firstChild, _el$3 = _el$bzTitle.firstChild, _el$14 = _el$2.nextSibling, _el$15 = _el$14.firstChild;
           insert(_el$, createComponent(Icon, {
-            // TRIX
+            // TRIX: resize and realign item icon
+            "class": "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
             // "class": "size-16 bg-contain bg-center bg-no-repeat mr-2 flex-shrink-0 pointer-events-none",
-            "class": "size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
             get name() {
               return itemType();
             }
           }), _el$2);
-          // TRIX
-          // insert(_el$3, createComponent(L10n.Compose, {
+          // TRIX: style item names
           insert(_el$3, createComponent(L10n.Stylize, {
             get ["class"]() {
+              // TRIX: repairs in yellow, ageless in gold
               return isRepairAll() || isRepair() ? "bz-city-repair" :
                 isAgeless() ? "text-gradient-secondary" : "";
             },
@@ -1311,6 +1318,20 @@ const ProductionChooserItemContent = (props) => {
               return nameKey() ?? "";
             }
           }));
+          insert(_el$bzTitle, createComponent(Show, {
+            get when() {
+              return isAgeless();
+            },
+            get children() {
+              // TRIX: compact Ageless pill
+              const pill = createComponent(PillText, {
+                "class": "text-xs leading-none ml-1 -my-1",
+                text: "LOC_UI_PRODUCTION_AGELESS"
+              });
+              pill.classList.remove("h-9", "text-sm");
+              return pill;
+            }
+          }), null);
           insert(_el$2, createComponent(Show, {
             get when() {
               return errorKey();
@@ -1327,6 +1348,7 @@ const ProductionChooserItemContent = (props) => {
           }), null);
           insert(_el$2, createComponent(Show, {
             get when() {
+              // TRIX: hide details for repairs
               return showSecondaryDetails() && !isRepair();
             },
             get children() {
@@ -1345,11 +1367,11 @@ const ProductionChooserItemContent = (props) => {
           }), null);
           insert(_el$2, createComponent(Show, {
             get when() {
+              // TRIX: hide details for repairs
               return showAlternateYields() && !isRepair();
             },
             get children() {
               var _el$6 = _tmpl$5();
-              console.warn(`TRIX EL6 ${_el$6.classList.value}`);
               insert(_el$6, createComponent(Show, {
                 get when() {
                   return showBaseYields();
@@ -1408,16 +1430,21 @@ const ProductionChooserItemContent = (props) => {
           }), null);
           insert(_el$14, createComponent(Show, {
             get when() {
-              return isAgeless();
+              return showProgress();
             },
             get children() {
-              // TRIX: compact Ageless pill
-              const pill = createComponent(PillText, {
-                "class": "text-xs leading-normal mt-1 mx-1",
-                text: "LOC_UI_PRODUCTION_AGELESS"
+              var _el$16 = _tmpl$7p(), _el$18 = _el$16.firstChild, _el$19 = _el$18.nextSibling;
+              insert(_el$18, productionCost);
+              createRenderEffect((_p$) => {
+                var _v$3 = `url(Yield_Production)`, _v$4 = "LOC_YIELD_PRODUCTION";
+                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? _el$19.style.setProperty("background-image", _v$3) : _el$19.style.removeProperty("background-image"));
+                _v$4 !== _p$.t && setAttribute(_el$19, "aria-label", _p$.t = _v$4);
+                return _p$;
+              }, {
+                e: void 0,
+                t: void 0
               });
-              pill.classList.remove("h-9", "text-sm");
-              return pill;
+              return _el$16;
             }
           }), _el$15);
           insert(_el$15, createComponent(Show, {
@@ -1469,6 +1496,8 @@ defineLegacyComponent("production-chooser-item", {
     "data-name": null,
     "data-type": null,
     "data-cost": null,
+    "data-production-cost": null,
+    "data-production-progress": null,
     "data-prereq": null,
     "data-description": null,
     "data-error": null,
@@ -2139,7 +2168,6 @@ const productionAccordionCategoryStates = {
   "production-category-projects": true
 };
 const updateProductionChooserItemElement = (element, data, isPurchase) => {
-  console.warn(`TRIX DATA ${data.name} ${data.repairDamaged}`);
   const infoDisplayType = data.infoDisplayType ?? null;
   element.setAttribute("data-name", data.name);
   element.setAttribute("data-type", data.type);
@@ -2180,6 +2208,8 @@ const updateProductionChooserItemElement = (element, data, isPurchase) => {
   }
   const cost = isPurchase ? data.cost : data.turns;
   element.setAttribute("data-cost", cost.toString());
+  element.setAttribute("data-production-cost", (data.productionCost ?? 0).toString());
+  element.setAttribute("data-production-progress", (data.productionProgress ?? 0).toString());
   if (data.canGetWarehouseBonuses) {
     element.setAttribute("data-can-get-warehouse", "true");
     element.setAttribute("data-warehouse-count", (data.warehouseCount ?? 0).toString());
