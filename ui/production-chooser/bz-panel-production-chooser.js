@@ -390,7 +390,7 @@ class bzProductionChooserScreen {
     }
     afterUpdateCategories() {
         const uq = this.component.uniqueQuarter;
-        if (uq) {
+        if (uq && !uq) {  // TODO
             uq.uqInfoCols.className = "production-chooser-item flex items-center mx-2 mb-2 hover\\:text-secondary-1 focus\\:text-secondary-1";
             const uqCol1 = uq.uqInfoCols.firstChild;
             uqCol1.className = "size-10 ml-2\\.5 mr-3";

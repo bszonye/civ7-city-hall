@@ -54,6 +54,7 @@
             <Actions>
                 <ImportFiles>
                     <Item>ui/interface-modes/support-city-decoration.chunk.js</Item>
+                    <Item>ui/production-chooser/panel-production-chooser.js</Item>
                 </ImportFiles>
                 <UIScripts>
                     <Item>ui/building-placement/bz-building-placement-manager.js</Item>

@@ -4,7 +4,25 @@ import { Icon } from '/core/ui/utilities/utilities-image.chunk.js';
 import { BuildingPlacementManager as BPM } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
 import { C as ConstructibleHasTagType, g as getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
-import { c as getNodeName } from '/base-standard/ui/utilities/utilities-textprovider.chunk.js';
+
+// import { c as getNodeName } from '/base-standard/ui/utilities/utilities-textprovider.chunk.js';
+function getNodeName(nodeData) {
+    if (!nodeData) {
+        return "";
+    }
+    const nodeInfo = GameInfo.ProgressionTreeNodes.lookup(nodeData.nodeType);
+    if (!nodeInfo) {
+        return "";
+    }
+    let nodeName = Locale.compose(nodeInfo.Name ?? nodeInfo.ProgressionTreeNodeType);
+    if (nodeData.depthUnlocked >= 1) {
+        const depthNumeral = Locale.toRomanNumeral(nodeData.depthUnlocked + 1);
+        if (depthNumeral) {
+            nodeName += " " + depthNumeral;
+        }
+    }
+    return nodeName;
+}
 
 const isUnlockable = (playerID, nodeType) => {
     if (nodeType == null) return false;  // null or undefined
