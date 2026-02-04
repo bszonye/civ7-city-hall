@@ -129,7 +129,7 @@ const BZ_HEAD_STYLE = [
     line-height: 1.625;
     border-radius: 1rem;
     padding: 0 0.5rem;
-    margin: 0.2777777778rem 0 0.3333333333rem;
+    margin: 0.2777777778rem 0 0.3333333333rem -0.1111111111rem;
 }
 .bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
     width: 1.1111111111rem;
@@ -202,15 +202,20 @@ const BZ_HEAD_STYLE = [
 `
 .bz-city-hall .production-chooser__city-details-button {
     position: fixed;
-    top: 3rem;
-    right: 1.2222222222rem;
-    width: 2.5rem;
-    height: 2.5rem;
+    top: 2.7777777778rem;
+    right: 1rem;
+    width: 2.8888888889rem;
+    height: 2.8888888889rem;
+}
+.bz-city-hall .production-chooser__city-details-button {
+    box-shadow: #0009 0 0 0.2222222222rem 0.1111111111rem;
 }
 .bz-city-hall .production-chooser__city-details-button:focus .city-details-highlight,
 .bz-city-hall .production-chooser__city-details-button:hover .city-details-highlight,
-.bz-city-hall .production-chooser__city-details-button.pressed .city-details-highlight {
-    box-shadow: #e5d2ac 0 0 0.2222222222rem 0.3333333333rem;
+.bz-city-hall .production-chooser__city-details-button.pressed .city-details-highlight,
+.bz-city-hall .production-chooser__city-details-button .city-details-highlight {
+    background: linear-gradient(180deg, #e5d2ac00 0%, #e5d2accc 100%);
+    animation-direction: alternate-reverse;
 }
 .bz-city-hall .img-city-details {
     width: 2.6666666667rem;
