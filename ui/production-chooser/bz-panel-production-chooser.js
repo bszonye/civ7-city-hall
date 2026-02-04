@@ -257,14 +257,6 @@ class bzProductionChooserScreen {
             const after_rv = after_render.apply(this.bzComponent, args);
             return after_rv ?? c_rv;
         }
-        // wrap updateCategories method to extend it
-        const c_updateCategories = proto.updateCategories;
-        const after_updateCategories = this.afterUpdateCategories;
-        proto.updateCategories = function(...args) {
-            const c_rv = c_updateCategories.apply(this, args);
-            const after_rv = after_updateCategories.apply(this.bzComponent, args);
-            return after_rv ?? c_rv;
-        }
         // override doOrConfirmConstruction method to patch Construct
         bzProductionChooserScreen.c_doOrConfirmConstruction =
             proto.doOrConfirmConstruction;
@@ -392,19 +384,6 @@ class bzProductionChooserScreen {
         // make room between checkbox and Convert to City button
         c.upgradeToCityButton.classList.add("mt-0\\.5", "mb-1\\.5");
         c.frame.dataset.footerClass = "px-5 pb-1 mx-0\\.5";
-    }
-    afterUpdateCategories() {
-        const uq = this.component.uniqueQuarter;
-        if (uq && !uq) {  // TODO
-            uq.uqInfoCols.className = "production-chooser-item flex items-center mx-2 mb-2 hover\\:text-secondary-1 focus\\:text-secondary-1";
-            const uqCol1 = uq.uqInfoCols.firstChild;
-            uqCol1.className = "size-10 ml-2\\.5 mr-3";
-            uq.nameElement.className = "font-title-sm leading-tight uppercase text-gradient-secondary transition-color";
-            const labelElement = uq.nameElement.nextSibling;
-            labelElement.className = "font-body-xs leading-tight transition-color";
-            uq.completionStatusText.className = "font-body text-xs leading-tight transition-color";
-            uq.buildingContainer.className = "flex flex-col pl-2\\.5";
-        }
     }
     updateItems() {
         const c = this.component;

@@ -1186,6 +1186,7 @@ const ProductionChooserItemContent = (props) => {
   const isPurchase = createMemo(() => attrs()["data-is-purchase"] === "true");
   const isDisabled = createMemo(() => attrs()["data-disabled"] === "true");
   const disableFocus = createMemo(() => attrs()["data-disable-focus"] === "true");
+  const isRepair = createMemo(() => attrs()["data-is-repair"] === "true");
   const isAgeless = createMemo(() => attrs()["data-is-ageless"] === "true");
   const infoDisplayType = createMemo(() => attrs()["data-info-display-type"] ?? void 0);
   const showAlternateYields = createMemo(() => infoDisplayType() === "base-yield");
@@ -1303,7 +1304,8 @@ const ProductionChooserItemContent = (props) => {
           // insert(_el$3, createComponent(L10n.Compose, {
           insert(_el$3, createComponent(L10n.Stylize, {
             get ["class"]() {
-              return isAgeless() ? "text-secondary" : "";
+              return isRepairAll() || isRepair() ? "bz-city-repair" :
+                isAgeless() ? "text-gradient-secondary" : "";
             },
             get text() {
               return nameKey() ?? "";
@@ -1325,7 +1327,7 @@ const ProductionChooserItemContent = (props) => {
           }), null);
           insert(_el$2, createComponent(Show, {
             get when() {
-              return showSecondaryDetails();
+              return showSecondaryDetails() && !isRepair();
             },
             get children() {
               var _el$5 = _tmpl$2();
@@ -1343,7 +1345,7 @@ const ProductionChooserItemContent = (props) => {
           }), null);
           insert(_el$2, createComponent(Show, {
             get when() {
-              return showAlternateYields();
+              return showAlternateYields() && !isRepair();
             },
             get children() {
               var _el$6 = _tmpl$5();
@@ -1471,6 +1473,7 @@ defineLegacyComponent("production-chooser-item", {
     "data-description": null,
     "data-error": null,
     "data-is-purchase": null,
+    "data-is-repair": null,
     "data-is-ageless": null,
     "data-secondary-details": null,
     "data-recommendations": null,
@@ -2136,11 +2139,13 @@ const productionAccordionCategoryStates = {
   "production-category-projects": true
 };
 const updateProductionChooserItemElement = (element, data, isPurchase) => {
+  console.warn(`TRIX DATA ${data.name} ${data.repairDamaged}`);
   const infoDisplayType = data.infoDisplayType ?? null;
   element.setAttribute("data-name", data.name);
   element.setAttribute("data-type", data.type);
   element.setAttribute("data-category", data.category);
   element.setAttribute("data-is-purchase", isPurchase ? "true" : "false");
+  element.setAttribute("data-is-repair", data.repairDamaged ? "true" : "false");
   element.setAttribute("data-is-ageless", data.ageless ? "true" : "false");
   element.setAttribute("data-disabled", (!!data.disabled).toString());
   if (infoDisplayType) {
