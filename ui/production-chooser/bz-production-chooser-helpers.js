@@ -575,6 +575,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         if (locked && !unlockable) continue;
         const cost = city.Gold.getUnitPurchaseCost(YieldTypes.YIELD_GOLD, info.UnitType);
         const turns = city.BuildQueue.getTurnsLeft(hash);
+        const productionCost = city.Production.getUnitProductionCost(hash);
         const unitDetails = GetUnitStatsFromDefinition(info);
         const secondaryDetails = GetSecondaryDetailsHTML(unitDetails);
         const recommendations = AdvisorUtilities.getBuildRecommendationIcons(recs, type);
@@ -619,6 +620,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
             turns,
             showTurns: false,
             showCost: cost > 0,
+            productionCost,
             // data-error
             insufficientFunds: cost > goldBalance,
             error,

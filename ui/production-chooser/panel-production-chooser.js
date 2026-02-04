@@ -1134,8 +1134,8 @@ var
   _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
   _tmpl$5 = /* @__PURE__ */ template(`<div class="flex items-center text-xs -mb-0\\.5 leading-normal"></div>`),
   _tmpl$6 = /* @__PURE__ */ template(`<div class="flex items-center justify-center mr-2"></div>`),
-  _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-1"><span></span><span class="bz-pci-icon size-8 bg-contain bg-center bg-no-repeat"></span></div>`),
-  _tmpl$7p = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end text-accent-4 mr-1 -mb-1"><span></span><span class="bz-pci-icon size-6 bg-contain bg-center bg-no-repeat ml-0\\.5 mr-1\\.5"></span></div>`),
+  _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-0\\.5"><span></span><span class="bz-pci-icon size-8 bg-contain bg-center bg-no-repeat"></span></div>`),
+  _tmpl$7p = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-0\\.5 -mb-1"><span class="text-accent-4"></span><span class="bz-pci-icon size-6 bg-contain bg-center bg-no-repeat mx-1"></span></div>`),
   _tmpl$8 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1"><div class="flex flex-row items-center"><span class="font-title text-accent-2 uppercase tracking-25 z-1"></span></div></div><div class="flex flex-col items-end justify-between"><div class="flex flex-auto self-end text-sm"></div></div></div>`);
 // TRIX
 // var _tmpl$ = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`), _tmpl$2 = /* @__PURE__ */ template(`<div class="flex text-sm"></div>`), _tmpl$3 = /* @__PURE__ */ template(`<div class="flex items-center"></div>`), _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`), _tmpl$5 = /* @__PURE__ */ template(`<div class="flex items-center text-sm production-chooser__font-icon-positioning"></div>`), _tmpl$6 = /* @__PURE__ */ template(`<div class="flex items-center justify-center mr-2"></div>`), _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end"><span></span><span class="size-8 bg-contain bg-center bg-no-repeat mr-1"></span></div>`), _tmpl$8 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-stretch"><div class="relative flex flex-col flex-auto justify-between pt-2 pb-1.5"><span class="font-title text-accent-2 uppercase"></span></div><div class="flex flex-col items-end justify-between"><div class="flex flex-auto self-end"></div></div></div>`);
@@ -1430,11 +1430,14 @@ const ProductionChooserItemContent = (props) => {
           }), null);
           insert(_el$14, createComponent(Show, {
             get when() {
-              return hasProgress();
+              return !hideCost();
             },
             get children() {
               var _el$16 = _tmpl$7p(), _el$18 = _el$16.firstChild, _el$19 = _el$18.nextSibling;
-              insert(_el$18, createComponent(L10n.Compose, {
+              insert(_el$18, createComponent(L10n.Stylize, {
+                get ["class"]() {
+                  return hasProgress() ? "text-positive" : "";
+                },
                 text: "LOC_BZ_GROUPED_DIGITS",
                 get args() {
                   return [Number(productionCost())];
@@ -1474,7 +1477,10 @@ const ProductionChooserItemContent = (props) => {
                   return _el$17;
                 }
               }), _el$18);
-              insert(_el$18, createComponent(L10n.Compose, {
+              insert(_el$18, createComponent(L10n.Stylize, {
+                get ["class"]() {
+                  return hasProgress() ? "text-positive" : "";
+                },
                 text: "LOC_BZ_GROUPED_DIGITS",
                 get args() {
                   return [Number(costValue())];
