@@ -1136,7 +1136,7 @@ var
   tmplRecs = /* @__PURE__ */ template(`<div class="bz-pci-recs flex items-center justify-center ml-2 -my-1"></div>`),
   tmplPCost = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-0\\.5"><span class="text-accent-4 text-xs"></span><span class="bz-pci-icon size-6 -my-0\\.5 bg-contain bg-center bg-no-repeat mx-1"></span></div>`),
   tmplCost = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-0\\.5"><span class="text-sm"></span><span class="bz-pci-icon size-8 -my-1 bg-contain bg-center bg-no-repeat"></span></div>`),
-  tmplPBar = /* @__PURE__ */ template(`<div class="flex justify-end items-center absolute h-full"><div class="bz-pci-progress build-queue__item-progress-bar flex flex-col-reverse relative h-10 w-4 p-0\\.5 right-2"><div class="build-queue__progress-bar-fill bg-contain w-3"></div></div></div>`),
+  tmplPBar = /* @__PURE__ */ template(`<div class="flex justify-end items-center absolute h-full"><div class="bz-pci-progress build-queue__item-progress-bar flex flex-col-reverse relative h-10 w-4 p-0\\.5 right-2\\.5"><div class="build-queue__progress-bar-fill bg-contain w-3"></div></div></div>`),
   tmplItem = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1 mr-3"><div class="flex flex-row items-center"><div class="shrink font-title text-accent-2 uppercase tracking-25 z-1"></div></div></div><div class="flex flex-row items-center justify-end"><div class="flex flex-col flex-auto items-end leading-normal relative"></div></div></div>`);
 const parseJSON = (value, fallback) => {
   if (!value) {
