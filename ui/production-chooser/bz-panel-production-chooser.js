@@ -190,10 +190,11 @@ const BZ_HEAD_STYLE = [
     height: 2.3333333333rem;
 }
 .bz-city-hall .production-chooser__city-details-button {
-    margin-left: -0.5555555556rem;
-    margin-right: 1.2222222222rem;
+    position: relative;
+    left: -0.1111111111rem;
+    margin-right: 0.6666666667rem;
     width: 2.3333333333rem;
-    height: 3.5555555556rem;
+    height: 2.6666666667rem;
     border-image-width: 0.6666666667rem;
 }
 `,
