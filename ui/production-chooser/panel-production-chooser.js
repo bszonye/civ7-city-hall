@@ -1133,11 +1133,11 @@ var
   _tmpl$3 = /* @__PURE__ */ template(`<div class="flex items-center"></div>`),
   _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
   tmplYields = /* @__PURE__ */ template(`<div class="flex items-center text-xs -mb-0\\.5 leading-normal"></div>`),
-  tmplRecs = /* @__PURE__ */ template(`<div class="flex items-center justify-center mr-2"></div>`),
+  tmplRecs = /* @__PURE__ */ template(`<div class="bz-pci-recs flex items-center justify-center ml-2 -my-1"></div>`),
   tmplPCost = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-0\\.5"><span class="text-accent-4 text-xs"></span><span class="bz-pci-icon size-6 -my-0\\.5 bg-contain bg-center bg-no-repeat mx-1"></span></div>`),
   tmplCost = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-0\\.5"><span class="text-sm"></span><span class="bz-pci-icon size-8 -my-1 bg-contain bg-center bg-no-repeat"></span></div>`),
   tmplPBar = /* @__PURE__ */ template(`<div class="flex justify-end items-center absolute h-full"><div class="bz-pci-progress build-queue__item-progress-bar flex flex-col-reverse relative h-10 w-4 p-0\\.5 right-2"><div class="build-queue__progress-bar-fill bg-contain w-3"></div></div></div>`),
-  tmplItem = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1"><div class="flex flex-row items-center"><span class="font-title text-accent-2 uppercase tracking-25 z-1"></span></div></div><div class="flex flex-row items-center justify-end"><div class="flex flex-col flex-auto items-end leading-normal relative"></div></div></div>`);
+  tmplItem = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1 mr-3"><div class="flex flex-row items-center"><div class="shrink font-title text-accent-2 uppercase tracking-25 z-1"></div></div></div><div class="flex flex-row items-center justify-end"><div class="flex flex-col flex-auto items-end leading-normal relative"></div></div></div>`);
 const parseJSON = (value, fallback) => {
   if (!value) {
     return fallback;
@@ -1296,7 +1296,7 @@ const ProductionChooserItemContent = (props) => {
           return isRepairAll() ? "true" : void 0;
         },
         get children() {
-          var _el$ = tmplItem(), _el$2 = _el$.firstChild, _el$bzTitle = _el$2.firstChild, _el$3 = _el$bzTitle.firstChild, _el$14 = _el$2.nextSibling, _el$15 = _el$14.firstChild;
+          var _el$ = tmplItem(), _el$2 = _el$.firstChild, elTitle = _el$2.firstChild, _el$3 = elTitle.firstChild, _el$14 = _el$2.nextSibling, _el$15 = _el$14.firstChild;
           insert(_el$, createComponent(Icon, {
             // TRIX: resize and realign item icon
             "class": "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
@@ -1315,18 +1315,34 @@ const ProductionChooserItemContent = (props) => {
               return nameKey() ?? "";
             }
           }));
-          insert(_el$bzTitle, createComponent(Show, {
+          insert(elTitle, createComponent(Show, {
             get when() {
               return isAgeless() && !isRepair();
             },
             get children() {
               // TRIX: compact Ageless pill
               const pill = createComponent(PillText, {
-                "class": "text-xs leading-none ml-1 -my-1",
+                "class": "text-xs leading-none ml-2 -my-1",
                 text: "LOC_UI_PRODUCTION_AGELESS"
               });
               pill.classList.remove("h-9", "text-sm");
               return pill;
+            }
+          }), null);
+          insert(elTitle, createComponent(Show, {
+            get when() {
+              return showRecommendations();
+            },
+            get children() {
+              var _el$17 = tmplRecs();
+              insert(_el$17, createComponent(AdvisorRecommendationsList, {
+                get recommendations() {
+                  return recommendations();
+                },
+                direction: "horizontal",
+                iconOnly: true
+              }));
+              return _el$17;
             }
           }), null);
           insert(_el$2, createComponent(Show, {
@@ -1425,23 +1441,6 @@ const ProductionChooserItemContent = (props) => {
               return _el$6;
             }
           }), null);
-          insert(_el$14, createComponent(Show, {
-            get when() {
-              return showRecommendations();
-            },
-            get children() {
-              var _el$17 = tmplRecs();
-              insert(_el$17, createComponent(AdvisorRecommendationsList, {
-                "class": "bz-pci-icon",
-                get recommendations() {
-                  return recommendations();
-                },
-                direction: "horizontal",
-                iconOnly: true
-              }));
-              return _el$17;
-            }
-          }), _el$15);
           insert(_el$15, createComponent(Show, {
             get when() {
               return 0 < Number(productionCost());

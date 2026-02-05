@@ -131,9 +131,10 @@ const BZ_HEAD_STYLE = [
     padding: 0 0.5rem;
     margin: 0.2777777778rem 0 0.3333333333rem -0.1111111111rem;
 }
-.bz-city-hall .advisor-recommendation__container .advisor-recommendation__icon {
+.bz-city-hall .bz-pci-recs .size-6 {
     width: 1.1111111111rem;
     height: 1.1111111111rem;
+    margin: 0 0.1111111111rem;
 }
 .bz-city-hall .bz-show-progress .bz-pci-pcost-icon,
 .bz-city-hall .bz-show-progress .bz-pci-cost-icon {
