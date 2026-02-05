@@ -71,7 +71,6 @@
                     <Item>ui/place-population/bz-place-population.js</Item>
                     <Item>ui/plot-workers/bz-plot-workers-manager.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
-                    <Item>ui/production-chooser/bz-panel-production-tooltips.js</Item>
                     <Item>ui/production-chooser/bz-production-chooser-helpers.js</Item>
                 </UIScripts>
                 <UpdateText>
