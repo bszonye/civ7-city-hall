@@ -166,6 +166,11 @@ class bzCityDetailsModel {
             const loc = item.location;
             const fcid = Districts.getFreeConstructible(loc, GameContext.localPlayerID);
             const fcinfo = GameInfo.Constructibles.lookup(fcid);
+            if (!fcinfo) {
+                const name = Locale.compose(cinfo.Name);
+                console.warn(`bz-model-city-details: no free constructible for ${name}`);
+                continue;
+            }
             // group all improvements with the same localized name
             // (like IMPROVEMENT_EXPEDITION_BASE & IMPROVEMENT_MOUNTAIN)
             const key = fcinfo.Name;

@@ -4,7 +4,25 @@ import { Icon } from '/core/ui/utilities/utilities-image.chunk.js';
 import { BuildingPlacementManager as BPM } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
 import { C as ConstructibleHasTagType, g as getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
-import { c as getNodeName } from '/base-standard/ui/utilities/utilities-textprovider.chunk.js';
+
+// import { c as getNodeName } from '/base-standard/ui/utilities/utilities-textprovider.chunk.js';
+function getNodeName(nodeData) {
+    if (!nodeData) {
+        return "";
+    }
+    const nodeInfo = GameInfo.ProgressionTreeNodes.lookup(nodeData.nodeType);
+    if (!nodeInfo) {
+        return "";
+    }
+    let nodeName = Locale.compose(nodeInfo.Name ?? nodeInfo.ProgressionTreeNodeType);
+    if (nodeData.depthUnlocked >= 1) {
+        const depthNumeral = Locale.toRomanNumeral(nodeData.depthUnlocked + 1);
+        if (depthNumeral) {
+            nodeName += " " + depthNumeral;
+        }
+    }
+    return nodeName;
+}
 
 const isUnlockable = (playerID, nodeType) => {
     if (nodeType == null) return false;  // null or undefined
@@ -157,13 +175,6 @@ const GetCurrentBestTotalYieldForConstructible = (city, constructibleType) => {
     }
     return results;
 };
-const GetBaseYieldsHTML = (items) => {
-    return items.reduce((acc, { yieldType, value }) => {
-        const icon = UI.getIconURL(yieldType);
-        const text = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", value);
-        return acc + `<div class="flex items-center ml-1">${text}<img src="${icon}" class="size-6" /></div>`;
-    }, "");
-}
 const GetSecondaryDetailsHTML = (items) => {
     const outer = items.length < 5 ? "mr-2" : "mr-0\\.5";
     const inner = items.length < 5 ? "mr-0" : "-mr-0\\.5";
@@ -214,6 +225,11 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const cost = result.Cost ??
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
+        const productionPercent = city.BuildQueue.getPercentComplete(hash) ?? 0;
+        const productionProgress = city.BuildQueue.getProgress(hash) ?? 0;
+        const productionCost = city.Production.getConstructibleProductionCost(hash) -
+            productionProgress;
+        const isInProgress = 0 < productionProgress || inQueue;
         // error handling
         const disableQueued = result.InQueue && !buyout;
         const disabled = !result.Success || !plots.length || disableQueued;
@@ -279,6 +295,10 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             turns,
             showTurns: turns > -1,
             showCost: cost > 0,
+            productionCost,
+            productionPercent,
+            productionProgress,
+            isInProgress,
             // data-error
             insufficientFunds,
             error,
@@ -329,13 +349,18 @@ const getProjectItems = (city, isPurchase) => {
         const hash = info.$hash;
         const turns = city.BuildQueue.getTurnsLeft(hash);
         const cost = city.Production.getProjectProductionCost(hash);
+        const productionPercent = city.BuildQueue.getPercentComplete(hash) ?? 0;
+        const productionProgress = city.BuildQueue.getProgress(hash) ?? 0;
+        const productionCost = cost - productionProgress;
+        const qindex = city.BuildQueue.getQueuedPositionOfType(hash);
+        const isInProgress = 0 < productionProgress || qindex != -1;
         // limit queuing to MaxPlayerInstances
         const queue = city.BuildQueue.getQueue();
         const inQueue = queue.filter(i => i.type == hash)?.length ?? 0;
         const limited = (info.MaxPlayerInstances ?? 999) <= inQueue;
         const error = limited ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : void 0;
         // sort projects
-        const sortTier = city.BuildQueue.getProgress(hash) ? 9 : 0;
+        const sortTier = productionProgress ? 9 : 0;
         const sortValue = cost;
         const projectItem = {
             sortTier,
@@ -353,6 +378,10 @@ const getProjectItems = (city, isPurchase) => {
             turns,
             showTurns: info.UpgradeToCity && info.TownOnly,
             showCost: false,
+            productionCost,
+            productionPercent,
+            productionProgress,
+            isInProgress,
             // data-prereq
             // data-description
             description: info.Description,
@@ -548,6 +577,8 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         if (locked && !unlockable) continue;
         const cost = city.Gold.getUnitPurchaseCost(YieldTypes.YIELD_GOLD, info.UnitType);
         const turns = city.BuildQueue.getTurnsLeft(hash);
+        const productionCost = city.Production.getUnitProductionCost(hash);
+        const isInProgress = city.BuildQueue.getQueuedPositionOfType(hash) != -1;
         const unitDetails = GetUnitStatsFromDefinition(info);
         const secondaryDetails = GetSecondaryDetailsHTML(unitDetails);
         const recommendations = AdvisorUtilities.getBuildRecommendationIcons(recs, type);
@@ -592,6 +623,8 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
             turns,
             showTurns: false,
             showCost: cost > 0,
+            productionCost,
+            isInProgress,
             // data-error
             insufficientFunds: cost > goldBalance,
             error,
@@ -704,5 +737,5 @@ function bzSortProductionItems(list) {
     });
 }
 
-export { GetBaseYieldsHTML, GetProductionItems as g, Construct as h };
+export { GetProductionItems as g, Construct as h };
 //# sourceMappingURL=production-chooser-helpers.chunk.js.map
