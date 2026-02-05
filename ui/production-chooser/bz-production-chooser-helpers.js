@@ -175,13 +175,6 @@ const GetCurrentBestTotalYieldForConstructible = (city, constructibleType) => {
     }
     return results;
 };
-const GetBaseYieldsHTML = (items) => {
-    return items.reduce((acc, { yieldType, value }) => {
-        const icon = UI.getIconURL(yieldType);
-        const text = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", value);
-        return acc + `<div class="flex items-center ml-1">${text}<img src="${icon}" class="size-6" /></div>`;
-    }, "");
-}
 const GetSecondaryDetailsHTML = (items) => {
     const outer = items.length < 5 ? "mr-2" : "mr-0\\.5";
     const inner = items.length < 5 ? "mr-0" : "-mr-0\\.5";
@@ -744,5 +737,5 @@ function bzSortProductionItems(list) {
     });
 }
 
-export { GetBaseYieldsHTML, GetProductionItems as g, Construct as h };
+export { GetProductionItems as g, Construct as h };
 //# sourceMappingURL=production-chooser-helpers.chunk.js.map
