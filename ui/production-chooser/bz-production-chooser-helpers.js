@@ -578,6 +578,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         const cost = city.Gold.getUnitPurchaseCost(YieldTypes.YIELD_GOLD, info.UnitType);
         const turns = city.BuildQueue.getTurnsLeft(hash);
         const productionCost = city.Production.getUnitProductionCost(hash);
+        const productionPercent = city.BuildQueue.getPercentComplete(hash) ?? 0;
         const isInProgress = city.BuildQueue.getQueuedPositionOfType(hash) != -1;
         const unitDetails = GetUnitStatsFromDefinition(info);
         const secondaryDetails = GetSecondaryDetailsHTML(unitDetails);
@@ -624,6 +625,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
             showTurns: false,
             showCost: cost > 0,
             productionCost,
+            productionPercent,
             isInProgress,
             // data-error
             insufficientFunds: cost > goldBalance,
