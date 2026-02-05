@@ -191,7 +191,7 @@ const BZ_HEAD_STYLE = [
 }
 .bz-city-hall .production-chooser__city-details-button {
     position: relative;
-    left: -0.1111111111rem;
+    left: -0.1666666667rem;
     margin-right: 0.6666666667rem;
     width: 2.3333333333rem;
     height: 2.6666666667rem;
