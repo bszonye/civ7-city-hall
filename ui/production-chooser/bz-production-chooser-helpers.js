@@ -232,9 +232,11 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const cost = result.Cost ??
             city.Gold?.getBuildingPurchaseCost(YieldTypes.YIELD_GOLD, hash) ?? 0;
         const turns = city.BuildQueue.getTurnsLeft(hash);
-        const productionProgress = city.BuildQueue.getProgress(type) ?? 0;
+        const productionPercent = city.BuildQueue.getPercentComplete(hash) ?? 0;
+        const productionProgress = city.BuildQueue.getProgress(hash) ?? 0;
         const productionCost = city.Production.getConstructibleProductionCost(hash) -
             productionProgress;
+        const isInProgress = 0 < productionProgress || inQueue;
         // error handling
         const disableQueued = result.InQueue && !buyout;
         const disabled = !result.Success || !plots.length || disableQueued;
@@ -300,8 +302,10 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
             turns,
             showTurns: turns > -1,
             showCost: cost > 0,
-            productionProgress,
             productionCost,
+            productionPercent,
+            productionProgress,
+            isInProgress,
             // data-error
             insufficientFunds,
             error,
@@ -352,15 +356,18 @@ const getProjectItems = (city, isPurchase) => {
         const hash = info.$hash;
         const turns = city.BuildQueue.getTurnsLeft(hash);
         const cost = city.Production.getProjectProductionCost(hash);
-        const productionProgress = city.BuildQueue.getProgress(type) ?? 0;
+        const productionPercent = city.BuildQueue.getPercentComplete(hash) ?? 0;
+        const productionProgress = city.BuildQueue.getProgress(hash) ?? 0;
         const productionCost = cost - productionProgress;
+        const qindex = city.BuildQueue.getQueuedPositionOfType(hash);
+        const isInProgress = 0 < productionProgress || qindex != -1;
         // limit queuing to MaxPlayerInstances
         const queue = city.BuildQueue.getQueue();
         const inQueue = queue.filter(i => i.type == hash)?.length ?? 0;
         const limited = (info.MaxPlayerInstances ?? 999) <= inQueue;
         const error = limited ? "LOC_UI_PRODUCTION_ALREADY_IN_QUEUE" : void 0;
         // sort projects
-        const sortTier = city.BuildQueue.getProgress(hash) ? 9 : 0;
+        const sortTier = productionProgress ? 9 : 0;
         const sortValue = cost;
         const projectItem = {
             sortTier,
@@ -378,8 +385,10 @@ const getProjectItems = (city, isPurchase) => {
             turns,
             showTurns: info.UpgradeToCity && info.TownOnly,
             showCost: false,
-            productionProgress,
             productionCost,
+            productionPercent,
+            productionProgress,
+            isInProgress,
             // data-prereq
             // data-description
             description: info.Description,
@@ -576,6 +585,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         const cost = city.Gold.getUnitPurchaseCost(YieldTypes.YIELD_GOLD, info.UnitType);
         const turns = city.BuildQueue.getTurnsLeft(hash);
         const productionCost = city.Production.getUnitProductionCost(hash);
+        const isInProgress = city.BuildQueue.getQueuedPositionOfType(hash) != -1;
         const unitDetails = GetUnitStatsFromDefinition(info);
         const secondaryDetails = GetSecondaryDetailsHTML(unitDetails);
         const recommendations = AdvisorUtilities.getBuildRecommendationIcons(recs, type);
@@ -621,6 +631,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
             showTurns: false,
             showCost: cost > 0,
             productionCost,
+            isInProgress,
             // data-error
             insufficientFunds: cost > goldBalance,
             error,

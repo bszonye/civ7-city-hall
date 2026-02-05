@@ -1129,16 +1129,15 @@ const ProductionTooltip = ComponentRegistry.register({
 
 var
   _tmpl$ = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`),
-  _tmpl$2 = /* @__PURE__ */ template(`<div class="flex items-center text-xs -ml-1"></div>`),
+  tmplDetails = /* @__PURE__ */ template(`<div class="flex items-center text-xs -ml-1"></div>`),
   _tmpl$3 = /* @__PURE__ */ template(`<div class="flex items-center"></div>`),
   _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
-  _tmpl$5 = /* @__PURE__ */ template(`<div class="flex items-center text-xs -mb-0\\.5 leading-normal"></div>`),
-  _tmpl$6 = /* @__PURE__ */ template(`<div class="flex items-center justify-center mr-2"></div>`),
-  _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-0\\.5"><span></span><span class="bz-pci-icon size-8 bg-contain bg-center bg-no-repeat"></span></div>`),
-  _tmpl$7p = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-0\\.5 -mb-1"><span class="text-accent-4"></span><span class="bz-pci-icon size-6 bg-contain bg-center bg-no-repeat mx-1"></span></div>`),
-  _tmpl$8 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1"><div class="flex flex-row items-center"><span class="font-title text-accent-2 uppercase tracking-25 z-1"></span></div></div><div class="flex flex-col items-end justify-center leading-normal"><div class="flex flex-auto self-end text-sm"></div></div></div>`);
-// TRIX
-// var _tmpl$ = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`), _tmpl$2 = /* @__PURE__ */ template(`<div class="flex text-sm"></div>`), _tmpl$3 = /* @__PURE__ */ template(`<div class="flex items-center"></div>`), _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`), _tmpl$5 = /* @__PURE__ */ template(`<div class="flex items-center text-sm production-chooser__font-icon-positioning"></div>`), _tmpl$6 = /* @__PURE__ */ template(`<div class="flex items-center justify-center mr-2"></div>`), _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end"><span></span><span class="size-8 bg-contain bg-center bg-no-repeat mr-1"></span></div>`), _tmpl$8 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-stretch"><div class="relative flex flex-col flex-auto justify-between pt-2 pb-1.5"><span class="font-title text-accent-2 uppercase"></span></div><div class="flex flex-col items-end justify-between"><div class="flex flex-auto self-end"></div></div></div>`);
+  tmplYields = /* @__PURE__ */ template(`<div class="flex items-center text-xs -mb-0\\.5 leading-normal"></div>`),
+  tmplRecs = /* @__PURE__ */ template(`<div class="flex items-center justify-center mr-2"></div>`),
+  tmplPCost = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-0\\.5"><span class="text-accent-4 text-xs"></span><span class="bz-pci-icon size-6 -my-0\\.5 bg-contain bg-center bg-no-repeat mx-1"></span></div>`),
+  tmplCost = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end mr-0\\.5"><span class="text-sm"></span><span class="bz-pci-icon size-8 -my-1 bg-contain bg-center bg-no-repeat"></span></div>`),
+  tmplPBar = /* @__PURE__ */ template(`<div class="flex justify-end items-center absolute h-full"><div class="bz-pci-progress build-queue__item-progress-bar flex flex-col-reverse relative h-10 w-4 p-0\\.5 right-2"><div class="build-queue__progress-bar-fill bg-contain w-3"></div></div></div>`),
+  tmplItem = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1"><div class="flex flex-row items-center"><span class="font-title text-accent-2 uppercase tracking-25 z-1"></span></div></div><div class="flex flex-row items-center justify-end"><div class="flex flex-col flex-auto items-end leading-normal relative"></div></div></div>`);
 const parseJSON = (value, fallback) => {
   if (!value) {
     return fallback;
@@ -1213,12 +1212,11 @@ const ProductionChooserItemContent = (props) => {
   });
   const costIcon = createMemo(() => isPurchase() ? "Yield_Gold" : "hud_turn-timer");
   const costIconLabel = createMemo(() => Locale.compose(isPurchase() ? "LOC_YIELD_GOLD" : "LOC_UI_CITY_INSPECTOR_TURNS"));
+  // TRIX: production cost and progress
   const productionCost = createMemo(() => attrs()["data-production-cost"] ?? "");
+  const productionPercent = createMemo(() => attrs()["data-production-percent"] ?? "");
   const productionProgress = createMemo(() => attrs()["data-production-progress"] ?? "");
-  const hasProgress = createMemo(() => {
-    const progress = Number(productionProgress());
-    return 0 < progress;
-  });
+  const isInProgress = createMemo(() => attrs()["data-is-in-progress"] === "true");
   const audio = createMemo(() => {
     const group = attrs()["data-audio-group-ref"] ?? void 0;
     const onActivate = attrs()["data-audio-activate-ref"] ?? void 0;
@@ -1298,11 +1296,10 @@ const ProductionChooserItemContent = (props) => {
           return isRepairAll() ? "true" : void 0;
         },
         get children() {
-          var _el$ = _tmpl$8(), _el$2 = _el$.firstChild, _el$bzTitle = _el$2.firstChild, _el$3 = _el$bzTitle.firstChild, _el$14 = _el$2.nextSibling, _el$15 = _el$14.firstChild;
+          var _el$ = tmplItem(), _el$2 = _el$.firstChild, _el$bzTitle = _el$2.firstChild, _el$3 = _el$bzTitle.firstChild, _el$14 = _el$2.nextSibling, _el$15 = _el$14.firstChild;
           insert(_el$, createComponent(Icon, {
             // TRIX: resize and realign item icon
             "class": "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
-            // "class": "size-16 bg-contain bg-center bg-no-repeat mr-2 flex-shrink-0 pointer-events-none",
             get name() {
               return itemType();
             }
@@ -1352,7 +1349,7 @@ const ProductionChooserItemContent = (props) => {
               return showSecondaryDetails() && !isRepair();
             },
             get children() {
-              var _el$5 = _tmpl$2();
+              var _el$5 = tmplDetails();
               createRenderEffect((_p$) => {
                 var _v$ = !!isUnitType(), _v$2 = secondaryDetails();
                 _v$ !== _p$.e && _el$5.classList.toggle("-ml-1.5", _p$.e = _v$);
@@ -1371,7 +1368,7 @@ const ProductionChooserItemContent = (props) => {
               return showAlternateYields() && !isRepair();
             },
             get children() {
-              var _el$6 = _tmpl$5();
+              var _el$6 = tmplYields();
               insert(_el$6, createComponent(Show, {
                 get when() {
                   return showBaseYields();
@@ -1430,13 +1427,30 @@ const ProductionChooserItemContent = (props) => {
           }), null);
           insert(_el$14, createComponent(Show, {
             get when() {
+              return showRecommendations();
+            },
+            get children() {
+              var _el$17 = tmplRecs();
+              insert(_el$17, createComponent(AdvisorRecommendationsList, {
+                "class": "bz-pci-icon",
+                get recommendations() {
+                  return recommendations();
+                },
+                direction: "horizontal",
+                iconOnly: true
+              }));
+              return _el$17;
+            }
+          }), _el$15);
+          insert(_el$15, createComponent(Show, {
+            get when() {
               return 0 < Number(productionCost());
             },
             get children() {
-              var _el$16 = _tmpl$7p(), _el$18 = _el$16.firstChild, _el$19 = _el$18.nextSibling;
+              var _el$16 = tmplPCost(), _el$18 = _el$16.firstChild, _el$19 = _el$18.nextSibling;
               insert(_el$18, createComponent(L10n.Stylize, {
                 get ["class"]() {
-                  return hasProgress() ? "text-positive" : "";
+                  return 0 < productionProgress() ? "text-positive" : "";
                 },
                 text: "LOC_BZ_GROUPED_DIGITS",
                 get args() {
@@ -1447,6 +1461,7 @@ const ProductionChooserItemContent = (props) => {
                 var _v$3 = `url(Yield_Production)`, _v$4 = "LOC_YIELD_PRODUCTION";
                 _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? _el$19.style.setProperty("background-image", _v$3) : _el$19.style.removeProperty("background-image"));
                 _v$4 !== _p$.t && setAttribute(_el$19, "aria-label", _p$.t = _v$4);
+                _el$19.classList.toggle("invisible", isInProgress());
                 return _p$;
               }, {
                 e: void 0,
@@ -1454,32 +1469,16 @@ const ProductionChooserItemContent = (props) => {
               });
               return _el$16;
             }
-          }), _el$15);
+          }));
           insert(_el$15, createComponent(Show, {
             get when() {
               return !hideCost();
             },
             get children() {
-              var _el$16 = _tmpl$7(), _el$18 = _el$16.firstChild, _el$19 = _el$18.nextSibling;
-              insert(_el$16, createComponent(Show, {
-                get when() {
-                  return showRecommendations();
-                },
-                get children() {
-                  var _el$17 = _tmpl$6();
-                  insert(_el$17, createComponent(AdvisorRecommendationsList, {
-                    get recommendations() {
-                      return recommendations();
-                    },
-                    direction: "horizontal",
-                    iconOnly: true
-                  }));
-                  return _el$17;
-                }
-              }), _el$18);
+              var _el$16 = tmplCost(), _el$18 = _el$16.firstChild, _el$19 = _el$18.nextSibling;
               insert(_el$18, createComponent(L10n.Stylize, {
                 get ["class"]() {
-                  return hasProgress() ? "text-positive" : "";
+                  return 0 < productionProgress() ? "text-positive" : "";
                 },
                 text: "LOC_BZ_GROUPED_DIGITS",
                 get args() {
@@ -1490,6 +1489,7 @@ const ProductionChooserItemContent = (props) => {
                 var _v$3 = `url(${costIcon()})`, _v$4 = costIconLabel();
                 _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? _el$19.style.setProperty("background-image", _v$3) : _el$19.style.removeProperty("background-image"));
                 _v$4 !== _p$.t && setAttribute(_el$19, "aria-label", _p$.t = _v$4);
+                _el$19.classList.toggle("invisible", isInProgress());
                 return _p$;
               }, {
                 e: void 0,
@@ -1497,6 +1497,16 @@ const ProductionChooserItemContent = (props) => {
               });
               return _el$16;
             }
+          }));
+          insert(_el$15, createComponent(Show, {
+            get when() {
+              return isInProgress();
+            },
+            get children() {
+              var elPBar = tmplPBar();
+              elPBar.firstChild.firstChild.style.heightPERCENT = productionPercent();
+              return elPBar;
+            },
           }));
           return _el$;
         }
@@ -1513,7 +1523,9 @@ defineLegacyComponent("production-chooser-item", {
     "data-type": null,
     "data-cost": null,
     "data-production-cost": null,
+    "data-production-percent": null,
     "data-production-progress": null,
+    "data-is-in-progress": null,
     "data-prereq": null,
     "data-description": null,
     "data-error": null,
@@ -2225,7 +2237,9 @@ const updateProductionChooserItemElement = (element, data, isPurchase) => {
   const cost = isPurchase ? data.cost : data.turns;
   element.setAttribute("data-cost", cost.toString());
   element.setAttribute("data-production-cost", (data.productionCost ?? 0).toString());
+  element.setAttribute("data-production-percent", (data.productionPercent ?? 0).toString());
   element.setAttribute("data-production-progress", (data.productionProgress ?? 0).toString());
+  element.setAttribute("data-is-in-progress", (data.isInProgress ? "true" : "false"));
   if (data.canGetWarehouseBonuses) {
     element.setAttribute("data-can-get-warehouse", "true");
     element.setAttribute("data-warehouse-count", (data.warehouseCount ?? 0).toString());
