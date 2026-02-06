@@ -1128,16 +1128,16 @@ const ProductionTooltip = ComponentRegistry.register({
 });
 
 var
-  _tmpl$ = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`),
+  tmplError = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`),
   tmplDetails = /* @__PURE__ */ template(`<div class="bz-pci-details flex items-center text-xs -ml-1"></div>`),
-  _tmpl$3 = /* @__PURE__ */ template(`<div class="flex items-center"></div>`),
-  _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
+  tmplYBase = /* @__PURE__ */ template(`<div class="flex items-center"></div>`),
+  tmplYBonus = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
   tmplYields = /* @__PURE__ */ template(`<div class="bz-pci-yields flex items-center text-xs -mb-0\\.5 leading-normal"></div>`),
   tmplRecs = /* @__PURE__ */ template(`<div class="bz-pci-recs flex items-center justify-center ml-2 -my-1"></div>`),
   tmplPCost = /* @__PURE__ */ template(`<div class="bz-pci-pcost flex flex-row items-center self-end mr-0\\.5"><span class="text-accent-4 text-xs"></span><span class="bz-pci-icon size-6 -my-0\\.5 bg-contain bg-center bg-no-repeat mx-1"></span></div>`),
   tmplCost = /* @__PURE__ */ template(`<div class="bz-pci-cost flex flex-row items-center self-end mr-0\\.5"><span class="text-sm"></span><span class="bz-pci-icon size-8 -my-1 bg-contain bg-center bg-no-repeat"></span></div>`),
   tmplPBar = /* @__PURE__ */ template(`<div class="flex justify-end items-center absolute h-full"><div class="bz-pci-icon build-queue__item-progress-bar flex flex-col-reverse relative h-10 w-4 p-0\\.5 right-2\\.5"><div class="build-queue__progress-bar-fill bg-contain w-3"></div></div></div>`),
-  tmplItem = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1 mr-3"><div class="flex flex-row items-center"><div class="shrink font-title text-accent-2 uppercase tracking-25 z-1"></div></div></div><div class="flex flex-row items-center justify-end"><div class="flex flex-col flex-auto items-end leading-normal relative"></div></div></div>`);
+  tmplItem = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center m-1 mr-3"><div class="flex flex-row items-center"><div class="shrink font-title text-accent-2 uppercase tracking-25 z-1"></div></div></div><div class="flex flex-row items-center justify-end"><div class="flex flex-col flex-auto items-end leading-normal relative"></div></div></div>`);
 const parseJSON = (value, fallback) => {
   if (!value) {
     return fallback;
@@ -1350,7 +1350,7 @@ const ProductionChooserItemContent = (props) => {
               return errorKey();
             },
             get children() {
-              var _el$4 = _tmpl$();
+              var _el$4 = tmplError();
               insert(_el$4, createComponent(L10n.Compose, {
                 get text() {
                   return errorKey();
@@ -1390,7 +1390,7 @@ const ProductionChooserItemContent = (props) => {
                   return showBaseYields();
                 },
                 get children() {
-                  var _el$7 = _tmpl$3();
+                  var _el$7 = tmplYBase();
                   insert(_el$7, createComponent(For, {
                     get each() {
                       return baseYields();
@@ -1413,7 +1413,7 @@ const ProductionChooserItemContent = (props) => {
                   return canShowWarehouse();
                 },
                 get children() {
-                  var _el$8 = _tmpl$4(), _el$9 = _el$8.firstChild, _el$10 = _el$9.nextSibling;
+                  var _el$8 = tmplYBonus(), _el$9 = _el$8.firstChild, _el$10 = _el$9.nextSibling;
                   insert(_el$10, warehouseCount);
                   insert(_el$8, createComponent(Icon, {
                     "class": "size-6",  // TRIX
@@ -1427,7 +1427,7 @@ const ProductionChooserItemContent = (props) => {
                   return canShowAdjacency();
                 },
                 get children() {
-                  var _el$11 = _tmpl$4(), _el$12 = _el$11.firstChild, _el$13 = _el$12.nextSibling;
+                  var _el$11 = tmplYBonus(), _el$12 = _el$11.firstChild, _el$13 = _el$12.nextSibling;
                   insert(_el$13, highestAdjacency);
                   insert(_el$11, createComponent(Icon, {
                     "class": "size-6",  // TRIX
