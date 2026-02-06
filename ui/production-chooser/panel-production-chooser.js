@@ -1296,7 +1296,7 @@ const ProductionChooserItemContent = (props) => {
           return isRepairAll() ? "true" : void 0;
         },
         get children() {
-          var _el$ = tmplItem(), _el$2 = _el$.firstChild, elTitle = _el$2.firstChild, _el$3 = elTitle.firstChild, _el$14 = _el$2.nextSibling, _el$15 = _el$14.firstChild;
+          var _el$ = tmplItem(), _el$2 = _el$.firstChild, elTitle = _el$2.firstChild, _el$3 = elTitle.firstChild, elRight = _el$2.nextSibling, elCosts = elRight.firstChild;
           insert(_el$, createComponent(Icon, {
             // TRIX: resize and realign item icon
             "class": "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
@@ -1439,13 +1439,13 @@ const ProductionChooserItemContent = (props) => {
               return _el$6;
             }
           }), null);
-          insert(_el$15, createComponent(Show, {
+          insert(elCosts, createComponent(Show, {
             get when() {
               return 0 < Number(productionCost());
             },
             get children() {
-              var _el$16 = tmplPCost(), _el$18 = _el$16.firstChild, _el$19 = _el$18.nextSibling;
-              insert(_el$18, createComponent(L10n.Stylize, {
+              var elRow = tmplPCost(), elCost = elRow.firstChild, elIcon = elCost.nextSibling;
+              insert(elCost, createComponent(L10n.Stylize, {
                 get ["class"]() {
                   return 0 < productionProgress() ? "text-positive" : "";
                 },
@@ -1456,24 +1456,24 @@ const ProductionChooserItemContent = (props) => {
               }));
               createRenderEffect((_p$) => {
                 var _v$3 = `url(Yield_Production)`, _v$4 = "LOC_YIELD_PRODUCTION";
-                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? _el$19.style.setProperty("background-image", _v$3) : _el$19.style.removeProperty("background-image"));
-                _v$4 !== _p$.t && setAttribute(_el$19, "aria-label", _p$.t = _v$4);
-                _el$19.classList.toggle("invisible", isInProgress());
+                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
+                _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
+                elIcon.classList.toggle("invisible", isInProgress());
                 return _p$;
               }, {
                 e: void 0,
                 t: void 0
               });
-              return _el$16;
+              return elRow;
             }
           }));
-          insert(_el$15, createComponent(Show, {
+          insert(elCosts, createComponent(Show, {
             get when() {
               return !hideCost();
             },
             get children() {
-              var _el$16 = tmplCost(), _el$18 = _el$16.firstChild, _el$19 = _el$18.nextSibling;
-              insert(_el$18, createComponent(L10n.Stylize, {
+              var elRow = tmplCost(), elCost = elRow.firstChild, elIcon = elCost.nextSibling;
+              insert(elCost, createComponent(L10n.Stylize, {
                 get ["class"]() {
                   return 0 < productionProgress() ? "text-positive" : "";
                 },
@@ -1484,18 +1484,18 @@ const ProductionChooserItemContent = (props) => {
               }));
               createRenderEffect((_p$) => {
                 var _v$3 = `url(${costIcon()})`, _v$4 = costIconLabel();
-                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? _el$19.style.setProperty("background-image", _v$3) : _el$19.style.removeProperty("background-image"));
-                _v$4 !== _p$.t && setAttribute(_el$19, "aria-label", _p$.t = _v$4);
-                _el$19.classList.toggle("invisible", isInProgress());
+                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
+                _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
+                elIcon.classList.toggle("invisible", isInProgress());
                 return _p$;
               }, {
                 e: void 0,
                 t: void 0
               });
-              return _el$16;
+              return elRow;
             }
           }));
-          insert(_el$15, createComponent(Show, {
+          insert(elCosts, createComponent(Show, {
             get when() {
               return isInProgress();
             },
