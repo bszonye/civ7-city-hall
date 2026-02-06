@@ -1129,7 +1129,7 @@ const ProductionTooltip = ComponentRegistry.register({
 
 var
   tmplError = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`),
-  tmplDetails = /* @__PURE__ */ template(`<div class="bz-pci-details flex items-center text-xs -ml-1"></div>`),
+  tmplDetails = /* @__PURE__ */ template(`<div class="bz-pci-details flex items-center text-xs -ml-1 -mb-0\\.5 leading-normal"></div>`),
   tmplYBase = /* @__PURE__ */ template(`<div class="flex items-center"></div>`),
   tmplYBonus = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
   tmplYields = /* @__PURE__ */ template(`<div class="bz-pci-yields flex items-center text-xs -mb-0\\.5 leading-normal"></div>`),
