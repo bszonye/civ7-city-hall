@@ -1128,16 +1128,16 @@ const ProductionTooltip = ComponentRegistry.register({
 });
 
 var
-  _tmpl$ = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`),
-  tmplDetails = /* @__PURE__ */ template(`<div class="bz-pci-details flex items-center text-xs -ml-1"></div>`),
-  _tmpl$3 = /* @__PURE__ */ template(`<div class="flex items-center"></div>`),
-  _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
+  tmplError = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`),
+  tmplDetails = /* @__PURE__ */ template(`<div class="bz-pci-details flex items-center text-xs -ml-1 -mb-0\\.5 leading-normal"></div>`),
+  tmplYBase = /* @__PURE__ */ template(`<div class="flex items-center"></div>`),
+  tmplYBonus = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
   tmplYields = /* @__PURE__ */ template(`<div class="bz-pci-yields flex items-center text-xs -mb-0\\.5 leading-normal"></div>`),
-  tmplRecs = /* @__PURE__ */ template(`<div class="bz-pci-recs flex items-center justify-center ml-2 -my-1"></div>`),
+  tmplRecs = /* @__PURE__ */ template(`<div class="bz-pci-recs flex items-center justify-center -my-1 -ml-1\\.5 mr-2\\.5"></div>`),
   tmplPCost = /* @__PURE__ */ template(`<div class="bz-pci-pcost flex flex-row items-center self-end mr-0\\.5"><span class="text-accent-4 text-xs"></span><span class="bz-pci-icon size-6 -my-0\\.5 bg-contain bg-center bg-no-repeat mx-1"></span></div>`),
   tmplCost = /* @__PURE__ */ template(`<div class="bz-pci-cost flex flex-row items-center self-end mr-0\\.5"><span class="text-sm"></span><span class="bz-pci-icon size-8 -my-1 bg-contain bg-center bg-no-repeat"></span></div>`),
   tmplPBar = /* @__PURE__ */ template(`<div class="flex justify-end items-center absolute h-full"><div class="bz-pci-icon build-queue__item-progress-bar flex flex-col-reverse relative h-10 w-4 p-0\\.5 right-2\\.5"><div class="build-queue__progress-bar-fill bg-contain w-3"></div></div></div>`),
-  tmplItem = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1 mr-3"><div class="flex flex-row items-center"><div class="shrink font-title text-accent-2 uppercase tracking-25 z-1"></div></div></div><div class="flex flex-row items-center justify-end"><div class="flex flex-col flex-auto items-end leading-normal relative"></div></div></div>`);
+  tmplItem = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1 my-1"><div class="flex flex-row flex-wrap items-center"><div class="shrink font-title text-accent-2 uppercase tracking-25 z-1 mr-3"></div><div class="flex items-center"></div></div></div><div class="flex flex-row items-center justify-end"><div class="flex flex-col flex-auto items-end leading-normal relative"></div></div></div>`);
 const parseJSON = (value, fallback) => {
   if (!value) {
     return fallback;
@@ -1296,16 +1296,16 @@ const ProductionChooserItemContent = (props) => {
           return isRepairAll() ? "true" : void 0;
         },
         get children() {
-          var _el$ = tmplItem(), _el$2 = _el$.firstChild, elTitle = _el$2.firstChild, _el$3 = elTitle.firstChild, _el$14 = _el$2.nextSibling, _el$15 = _el$14.firstChild;
-          insert(_el$, createComponent(Icon, {
+          var elItem = tmplItem(), elInfo = elItem.firstChild, elTitle = elInfo.firstChild, elName = elTitle.firstChild, elTags = elName.nextSibling, elRight = elInfo.nextSibling, elCosts = elRight.firstChild;
+          insert(elItem, createComponent(Icon, {
             // TRIX: resize and realign item icon
             "class": "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
             get name() {
               return itemType();
             }
-          }), _el$2);
+          }), elInfo);
           // TRIX: style item names
-          insert(_el$3, createComponent(L10n.Stylize, {
+          insert(elName, createComponent(L10n.Stylize, {
             get ["class"]() {
               // TRIX: repairs in yellow, ageless in gold
               return isRepairAll() || isRepair() ? "bz-city-repair" :
@@ -1315,21 +1315,21 @@ const ProductionChooserItemContent = (props) => {
               return nameKey() ?? "";
             }
           }));
-          insert(elTitle, createComponent(Show, {
+          insert(elTags, createComponent(Show, {
             get when() {
               return isAgeless() && !isRepair();
             },
             get children() {
               // TRIX: compact Ageless pill
               const pill = createComponent(PillText, {
-                "class": "bz-pci-ageless text-xs leading-none ml-2 -my-1",
+                "class": "bz-pci-ageless text-xs leading-tight py-px -my-px -ml-1 mr-3",
                 text: "LOC_UI_PRODUCTION_AGELESS"
               });
-              pill.classList.remove("h-9", "text-sm");
+              pill.classList.remove("h-9", "text-sm", "leading-normal");
               return pill;
             }
           }), null);
-          insert(elTitle, createComponent(Show, {
+          insert(elTags, createComponent(Show, {
             get when() {
               return showRecommendations();
             },
@@ -1345,12 +1345,12 @@ const ProductionChooserItemContent = (props) => {
               return _el$17;
             }
           }), null);
-          insert(_el$2, createComponent(Show, {
+          insert(elInfo, createComponent(Show, {
             get when() {
               return errorKey();
             },
             get children() {
-              var _el$4 = _tmpl$();
+              var _el$4 = tmplError();
               insert(_el$4, createComponent(L10n.Compose, {
                 get text() {
                   return errorKey();
@@ -1359,7 +1359,7 @@ const ProductionChooserItemContent = (props) => {
               return _el$4;
             }
           }), null);
-          insert(_el$2, createComponent(Show, {
+          insert(elInfo, createComponent(Show, {
             get when() {
               // TRIX: hide details for repairs
               return showSecondaryDetails() && !isRepair();
@@ -1378,7 +1378,7 @@ const ProductionChooserItemContent = (props) => {
               return _el$5;
             }
           }), null);
-          insert(_el$2, createComponent(Show, {
+          insert(elInfo, createComponent(Show, {
             get when() {
               // TRIX: hide details for repairs
               return showAlternateYields() && !isRepair();
@@ -1390,7 +1390,7 @@ const ProductionChooserItemContent = (props) => {
                   return showBaseYields();
                 },
                 get children() {
-                  var _el$7 = _tmpl$3();
+                  var _el$7 = tmplYBase();
                   insert(_el$7, createComponent(For, {
                     get each() {
                       return baseYields();
@@ -1413,7 +1413,7 @@ const ProductionChooserItemContent = (props) => {
                   return canShowWarehouse();
                 },
                 get children() {
-                  var _el$8 = _tmpl$4(), _el$9 = _el$8.firstChild, _el$10 = _el$9.nextSibling;
+                  var _el$8 = tmplYBonus(), _el$9 = _el$8.firstChild, _el$10 = _el$9.nextSibling;
                   insert(_el$10, warehouseCount);
                   insert(_el$8, createComponent(Icon, {
                     "class": "size-6",  // TRIX
@@ -1427,7 +1427,7 @@ const ProductionChooserItemContent = (props) => {
                   return canShowAdjacency();
                 },
                 get children() {
-                  var _el$11 = _tmpl$4(), _el$12 = _el$11.firstChild, _el$13 = _el$12.nextSibling;
+                  var _el$11 = tmplYBonus(), _el$12 = _el$11.firstChild, _el$13 = _el$12.nextSibling;
                   insert(_el$13, highestAdjacency);
                   insert(_el$11, createComponent(Icon, {
                     "class": "size-6",  // TRIX
@@ -1439,13 +1439,13 @@ const ProductionChooserItemContent = (props) => {
               return _el$6;
             }
           }), null);
-          insert(_el$15, createComponent(Show, {
+          insert(elCosts, createComponent(Show, {
             get when() {
               return 0 < Number(productionCost());
             },
             get children() {
-              var _el$16 = tmplPCost(), _el$18 = _el$16.firstChild, _el$19 = _el$18.nextSibling;
-              insert(_el$18, createComponent(L10n.Stylize, {
+              var elRow = tmplPCost(), elCost = elRow.firstChild, elIcon = elCost.nextSibling;
+              insert(elCost, createComponent(L10n.Stylize, {
                 get ["class"]() {
                   return 0 < productionProgress() ? "text-positive" : "";
                 },
@@ -1456,24 +1456,24 @@ const ProductionChooserItemContent = (props) => {
               }));
               createRenderEffect((_p$) => {
                 var _v$3 = `url(Yield_Production)`, _v$4 = "LOC_YIELD_PRODUCTION";
-                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? _el$19.style.setProperty("background-image", _v$3) : _el$19.style.removeProperty("background-image"));
-                _v$4 !== _p$.t && setAttribute(_el$19, "aria-label", _p$.t = _v$4);
-                _el$19.classList.toggle("invisible", isInProgress());
+                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
+                _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
+                elIcon.classList.toggle("invisible", isInProgress());
                 return _p$;
               }, {
                 e: void 0,
                 t: void 0
               });
-              return _el$16;
+              return elRow;
             }
           }));
-          insert(_el$15, createComponent(Show, {
+          insert(elCosts, createComponent(Show, {
             get when() {
               return !hideCost();
             },
             get children() {
-              var _el$16 = tmplCost(), _el$18 = _el$16.firstChild, _el$19 = _el$18.nextSibling;
-              insert(_el$18, createComponent(L10n.Stylize, {
+              var elRow = tmplCost(), elCost = elRow.firstChild, elIcon = elCost.nextSibling;
+              insert(elCost, createComponent(L10n.Stylize, {
                 get ["class"]() {
                   return 0 < productionProgress() ? "text-positive" : "";
                 },
@@ -1484,18 +1484,18 @@ const ProductionChooserItemContent = (props) => {
               }));
               createRenderEffect((_p$) => {
                 var _v$3 = `url(${costIcon()})`, _v$4 = costIconLabel();
-                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? _el$19.style.setProperty("background-image", _v$3) : _el$19.style.removeProperty("background-image"));
-                _v$4 !== _p$.t && setAttribute(_el$19, "aria-label", _p$.t = _v$4);
-                _el$19.classList.toggle("invisible", isInProgress());
+                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
+                _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
+                elIcon.classList.toggle("invisible", isInProgress());
                 return _p$;
               }, {
                 e: void 0,
                 t: void 0
               });
-              return _el$16;
+              return elRow;
             }
           }));
-          insert(_el$15, createComponent(Show, {
+          insert(elCosts, createComponent(Show, {
             get when() {
               return isInProgress();
             },
@@ -1507,7 +1507,7 @@ const ProductionChooserItemContent = (props) => {
               return elPBar;
             },
           }));
-          return _el$;
+          return elItem;
         }
       });
     }
