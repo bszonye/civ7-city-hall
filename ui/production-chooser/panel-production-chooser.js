@@ -1455,7 +1455,7 @@ const ProductionChooserItemContent = (props) => {
                 }
               }));
               createRenderEffect((_p$) => {
-                var _v$3 = `url(Yield_Production)`, _v$4 = "LOC_YIELD_PRODUCTION";
+                var _v$3 = `url(Yield_Production)`, _v$4 = Locale.compose("LOC_YIELD_PRODUCTION");
                 _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
                 _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
                 elIcon.classList.toggle("invisible", isInProgress());
