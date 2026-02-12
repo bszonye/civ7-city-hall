@@ -51,24 +51,33 @@ const GetUnitStatsFromDefinition = (definition) => {
             value: definition.BuildCharges.toString()
         });
     }
-    const statsDefinition = GameInfo.Unit_Stats.lookup(definition.UnitType);
-    if (statsDefinition) {
-        if (statsDefinition.RangedCombat > 0 && statsDefinition.Range > 1) {
-            stats.push({
-                name: "LOC_UNIT_INFO_RANGED_STRENGTH",
-                icon: "Action_Ranged",
-                value: statsDefinition.RangedCombat.toString()
-            });
-            stats.push({
-                name: "LOC_UNIT_INFO_RANGE",
-                icon: "action_rangedattack",
-                value: statsDefinition.Range.toString()
-            });
-        } else if (statsDefinition.Combat > 0) {
+    const cstats = GameInfo.Unit_Stats.lookup(definition.UnitType);
+    if (cstats) {
+        if (cstats.Combat > 0) {
             stats.push({
                 name: "LOC_UNIT_INFO_MELEE_STRENGTH",
                 icon: "Action_Attack",
-                value: statsDefinition.Combat.toString()
+                value: cstats.Combat.toString()
+            });
+        }
+        if (cstats.Bombard > cstats.RangedCombat) {
+            stats.push({
+                name: "LOC_DISCIPLINE_FLEET_BOMBARDMENT_NAME",
+                icon: "Action_Ranged",
+                value: cstats.Bombard.toString()
+            });
+        } else if (cstats.RangedCombat > 0) {
+            stats.push({
+                name: "LOC_UNIT_INFO_RANGED_STRENGTH",
+                icon: "Action_Ranged",
+                value: cstats.RangedCombat.toString()
+            });
+        }
+        if (cstats.Range > 1) {
+            stats.push({
+                name: "LOC_UNIT_INFO_RANGE",
+                icon: "action_rangedattack",
+                value: cstats.Range.toString()
             });
         }
     }
@@ -597,7 +606,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         // sorting
         const stats = GameInfo.Unit_Stats.lookup(hash);
         const cv = info.CanEarnExperience ? Number.MAX_VALUE :
-            stats?.RangedCombat || stats?.Combat || 0;
+            Math.max(stats?.Combat || 0, stats?.RangedCombat || 0);
         const sortTier =
             city.BuildQueue.getProgress(hash) ? 9 :
             info.FoundCity ? 2 :  // settlers
