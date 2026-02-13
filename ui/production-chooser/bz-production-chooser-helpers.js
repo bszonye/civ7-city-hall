@@ -273,11 +273,11 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const highestAdjacency = disabled ? void 0 : BPM.getHighestAdjacencyBonus(hash);
         const infoDisplayType = Configuration.getUser().productionPanelBuildingInfoType;
         // sort items
-        const buildingTier = improvement ? 1 : ageless ? -1 : 0;
+        const buildingTier = building && unique ? 2 : improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ?
             baseYields.reduce((acc, { value }) => acc + value, 0) +
             (warehouseCount ?? 0) + (highestAdjacency ?? 0) : 0;
-        const topTier = Boolean(result.InProgress || inQueue || building && unique);
+        const topTier = Boolean(result.InProgress || inQueue);
         const sortTier =
             topTier ? 9 :
             repairDamaged ? 8 :
