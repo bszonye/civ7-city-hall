@@ -37,14 +37,14 @@ const unlockName = (playerID, nodeType) => {
 
 const GetUnitStatsFromDefinition = (definition) => {
     const stats = [];
-    if (definition.BaseMoves > 0) {
+    if (0 < definition.BaseMoves) {
         stats.push({
             name: "LOC_UNIT_INFO_MOVES_REMAINING",
             icon: "Action_Move",
             value: definition.BaseMoves.toString()
         });
     }
-    if (definition.BuildCharges > 0) {
+    if (0 < definition.BuildCharges) {
         stats.push({
             name: "LOC_UNIT_INFO_BUILD_CHARGES",
             icon: "Action_Construct",
@@ -53,27 +53,27 @@ const GetUnitStatsFromDefinition = (definition) => {
     }
     const cstats = GameInfo.Unit_Stats.lookup(definition.UnitType);
     if (cstats) {
-        if (cstats.Combat > 0) {
+        if (0 < cstats.Combat) {
             stats.push({
                 name: "LOC_UNIT_INFO_MELEE_STRENGTH",
                 icon: "Action_Attack",
                 value: cstats.Combat.toString()
             });
         }
-        if (cstats.Bombard > cstats.RangedCombat) {
+        if (cstats.RangedCombat < cstats.Bombard) {
             stats.push({
                 name: "LOC_DISCIPLINE_FLEET_BOMBARDMENT_NAME",
                 icon: "Action_Ranged",
                 value: cstats.Bombard.toString()
             });
-        } else if (cstats.RangedCombat > 0) {
+        } else if (0 < cstats.RangedCombat) {
             stats.push({
                 name: "LOC_UNIT_INFO_RANGED_STRENGTH",
                 icon: "Action_Ranged",
                 value: cstats.RangedCombat.toString()
             });
         }
-        if (cstats.Range > 1) {
+        if (1 < cstats.Range) {
             stats.push({
                 name: "LOC_UNIT_INFO_RANGE",
                 icon: "action_rangedattack",
@@ -605,8 +605,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         const error = errors.join("[n]");
         // sorting
         const stats = GameInfo.Unit_Stats.lookup(hash);
-        const cv = info.CanEarnExperience ? Number.MAX_VALUE :
-            Math.max(stats?.Combat || 0, stats?.RangedCombat || 0);
+        const cv = info.CanEarnExperience ? Number.MAX_VALUE : stats?.Combat || 0;
         const sortTier =
             city.BuildQueue.getProgress(hash) ? 9 :
             info.FoundCity ? 2 :  // settlers
