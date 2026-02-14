@@ -4,6 +4,7 @@ import { N as NavTray } from "/core/ui/navigation-tray/model-navigation-tray.chu
 import { D as Databind } from '../../../core/ui/utilities/utilities-core-databinding.chunk.js';
 import { MustGetElement } from "/core/ui/utilities/utilities-dom.chunk.js";
 import FocusManager from '/core/ui/input/focus-manager.js';
+import { g as getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
 
 // vertical separator
 const BZ_DIVIDER_STYLE = "flex w-96 self-center";
@@ -762,7 +763,21 @@ class bzPanelCityDetails {
         mainDiv.classList.add("constructible-entry", "flex", "flex-col");
         mainDiv.setAttribute("tabindex", "-1");
         mainDiv.setAttribute("data-type", constructibleData.type);
-        mainDiv.setAttribute("data-tooltip-style", "production-constructible-tooltip");
+        const info = GameInfo.Constructibles.lookup(constructibleData.type);
+        // replace missing tooltip style
+        // mainDiv.setAttribute("data-tooltip-style", "production-constructible-tooltip");
+        if (info?.Description && Locale.keyExists(info.Description)) {
+            const name = Locale.compose(info.Name);
+            const rows = [`[b]${name}[/b]`];
+            const tags = getConstructibleTagsFromType(info.ConstructibleType);
+            if (tags.length) rows.push(`[style:text-accent-3]${tags.join(BZ_DOT_JOINER)}[/style]`);
+            const description = Locale.compose(info.Description);
+            rows.push(...description.split(/\[[Nn]\]/));
+            const tooltip = rows
+                .map(s => `[style:leading-normal]${s}[/style]`)
+                .join("[n]");
+            mainDiv.setAttribute("data-tooltip-content", tooltip);
+        }
         const topDiv = document.createElement("div");
         topDiv.classList.add("constructible-entry-highlight", "flex", "my-1", "pointer-events-none", "items-center");
         const icon = document.createElement("fxs-icon");
