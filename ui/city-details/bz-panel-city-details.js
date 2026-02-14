@@ -767,15 +767,22 @@ class bzPanelCityDetails {
         // replace missing tooltip style
         // mainDiv.setAttribute("data-tooltip-style", "production-constructible-tooltip");
         if (info?.Description && Locale.keyExists(info.Description)) {
-            const name = Locale.compose(info.Name);
-            const rows = [`[b]${name}[/b]`];
+            const stylize = (s, text) => `[style:${s}]${text}[/style]`;
+            const title = [stylize(
+                "font-title uppercase text-gradient-secondary leading-normal",
+                Locale.compose(info.Name)
+            )];
             const tags = getConstructibleTagsFromType(info.ConstructibleType);
-            if (tags.length) rows.push(`[style:text-accent-3]${tags.join(BZ_DOT_JOINER)}[/style]`);
-            const description = Locale.compose(info.Description);
-            rows.push(...description.split(/\[[Nn]\]/));
-            const tooltip = rows
-                .map(s => `[style:leading-normal]${s}[/style]`)
-                .join("[n]");
+            if (tags.length) {
+                title.push(stylize(
+                    "text-2xs text-accent-3 leading-normal",
+                    tags.join(BZ_DOT_JOINER)
+                ));
+            }
+            const description = Locale.compose(info.Description)
+                .split(/\[[Nn]\]/)
+                .map(s => stylize("leading-normal", s));
+            const tooltip = title.concat(description).join("[n]");
             mainDiv.setAttribute("data-tooltip-content", tooltip);
         }
         const topDiv = document.createElement("div");
