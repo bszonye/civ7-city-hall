@@ -37,38 +37,47 @@ const unlockName = (playerID, nodeType) => {
 
 const GetUnitStatsFromDefinition = (definition) => {
     const stats = [];
-    if (definition.BaseMoves > 0) {
+    if (0 < definition.BaseMoves) {
         stats.push({
             name: "LOC_UNIT_INFO_MOVES_REMAINING",
             icon: "Action_Move",
             value: definition.BaseMoves.toString()
         });
     }
-    if (definition.BuildCharges > 0) {
+    if (0 < definition.BuildCharges) {
         stats.push({
             name: "LOC_UNIT_INFO_BUILD_CHARGES",
             icon: "Action_Construct",
             value: definition.BuildCharges.toString()
         });
     }
-    const statsDefinition = GameInfo.Unit_Stats.lookup(definition.UnitType);
-    if (statsDefinition) {
-        if (statsDefinition.RangedCombat > 0 && statsDefinition.Range > 1) {
-            stats.push({
-                name: "LOC_UNIT_INFO_RANGED_STRENGTH",
-                icon: "Action_Ranged",
-                value: statsDefinition.RangedCombat.toString()
-            });
-            stats.push({
-                name: "LOC_UNIT_INFO_RANGE",
-                icon: "action_rangedattack",
-                value: statsDefinition.Range.toString()
-            });
-        } else if (statsDefinition.Combat > 0) {
+    const cstats = GameInfo.Unit_Stats.lookup(definition.UnitType);
+    if (cstats) {
+        if (0 < cstats.Combat) {
             stats.push({
                 name: "LOC_UNIT_INFO_MELEE_STRENGTH",
                 icon: "Action_Attack",
-                value: statsDefinition.Combat.toString()
+                value: cstats.Combat.toString()
+            });
+        }
+        if (cstats.RangedCombat < cstats.Bombard) {
+            stats.push({
+                name: "LOC_DISCIPLINE_FLEET_BOMBARDMENT_NAME",
+                icon: "Action_Ranged",
+                value: cstats.Bombard.toString()
+            });
+        } else if (0 < cstats.RangedCombat) {
+            stats.push({
+                name: "LOC_UNIT_INFO_RANGED_STRENGTH",
+                icon: "Action_Ranged",
+                value: cstats.RangedCombat.toString()
+            });
+        }
+        if (1 < cstats.Range) {
+            stats.push({
+                name: "LOC_UNIT_INFO_RANGE",
+                icon: "action_rangedattack",
+                value: cstats.Range.toString()
             });
         }
     }
@@ -264,11 +273,11 @@ const GetConstructibleItemData = (info, result, city, recs, isPurchase, viewHidd
         const highestAdjacency = disabled ? void 0 : BPM.getHighestAdjacencyBonus(hash);
         const infoDisplayType = Configuration.getUser().productionPanelBuildingInfoType;
         // sort items
-        const buildingTier = improvement ? 1 : ageless ? -1 : 0;
+        const buildingTier = building && unique ? 2 : improvement ? 1 : ageless ? -1 : 0;
         const yieldScore = building || improvement ?
             baseYields.reduce((acc, { value }) => acc + value, 0) +
             (warehouseCount ?? 0) + (highestAdjacency ?? 0) : 0;
-        const topTier = Boolean(result.InProgress || inQueue || building && unique);
+        const topTier = Boolean(result.InProgress || inQueue);
         const sortTier =
             topTier ? 9 :
             repairDamaged ? 8 :
@@ -596,8 +605,7 @@ const getUnits = (city, goldBalance, isPurchase, recs, viewHidden) => {
         const error = errors.join("[n]");
         // sorting
         const stats = GameInfo.Unit_Stats.lookup(hash);
-        const cv = info.CanEarnExperience ? Number.MAX_VALUE :
-            stats?.RangedCombat || stats?.Combat || 0;
+        const cv = info.CanEarnExperience ? Number.MAX_VALUE : stats?.Combat || 0;
         const sortTier =
             city.BuildQueue.getProgress(hash) ? 9 :
             info.FoundCity ? 2 :  // settlers

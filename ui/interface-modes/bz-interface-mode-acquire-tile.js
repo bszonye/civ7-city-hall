@@ -24,6 +24,7 @@ const YIELD_BORDER_COLOR_LINEAR = YIELD_COLOR_LINEAR.map(c => ({
 }));
 
 // get registered interface mode object
+import '/base-standard/ui/interface-modes/interface-mode-acquire-tile.js';
 const ATIM = InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_ACQUIRE_TILE");
 
 // initialize VFX model
