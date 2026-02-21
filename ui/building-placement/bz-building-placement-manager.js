@@ -32,17 +32,10 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     this.isRepairing = operationResult.RepairDamaged;
     // is the new building part of a unique quarter?
     const btype = GameInfo.Buildings.lookup(constructible.ConstructibleType);
-    const newUB = btype?.TraitType;  // for example: TRAIT_ROME
-    // get the civilization's unique quarter
-    const city = Cities.get(cityID);
-    const player = Players.get(city.owner);
-    const civ = GameInfo.Civilizations.lookup(player.civilizationType);
-    const civTraits = GameInfo.CivilizationTraits
-        .filter(trait => trait.CivilizationType === civ.CivilizationType)
-        .map(trait => trait.TraitType);
-    const civUQ = GameInfo.UniqueQuarters.find(uq => civTraits.includes(uq.TraitType));
-    // find a partial unique quarter, if any
-    const partialUQ = this.findExistingUniqueBuilding(civUQ);  // -1 if not found
+    const ubTraitType = btype?.TraitType;  // for example: TRAIT_ROME
+    // find a matching unique quarter, if any
+    const uqInfo = GameInfo.UniqueQuarters.find(uq => uq.TraitType == ubTraitType);
+    const partialUQ = this.findExistingUniqueBuilding(uqInfo);  // -1 if not found
     // check whether a district can make a unique quarter
     const hasUQBlocker = (p) => {
         const loc = GameplayMap.getLocationFromIndex(p);
@@ -70,12 +63,12 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
         // unique district selected
         if (p == partialUQ) {
             // good: a unique building here finishes the UQ
-            if (newUB) return true;
+            if (ubTraitType) return true;
             // bad: non-unique building in a unique district
             return false;
         }
         // new unique building NOT on a partial UQ
-        if (newUB) {
+        if (ubTraitType) {
             // bad: there's a partial UQ somewhere else
             if (partialUQ != -1) return false;
             // bad: this would create a non-unique quarter
