@@ -14,6 +14,7 @@ var HighlightColors = /* @__PURE__ */ ((HighlightColors2) => {
 })(HighlightColors || {});
 
 // get registered interface mode object
+import '/base-standard/ui/interface-modes/interface-mode-place-building.js';
 const PBIM = InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_PLACE_BUILDING");
 
 // patch PBIM.decorate() to support reserved tiles

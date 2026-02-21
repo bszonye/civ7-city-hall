@@ -20,12 +20,13 @@ import { V as ViewManager } from '../../../core/ui/views/view-manager.chunk.js';
 import { BuildQueue } from '../build-queue/model-build-queue.js';
 import { BuildingPlacementManager } from '../building-placement/building-placement-manager.js';
 import { CityDetailsClosedEventName } from '../city-details/panel-city-details.js';
-import { P as ProductionPanelCategory, b as GetTownFocusBlp, c as GetTownFocusItems, U as UpdateCityDetailsEventName, d as GetLastProductionData, e as GetCityBuildReccomendations, f as GetUniqueQuarterForPlayer, g as GetProductionItems, R as RepairConstruct, S as SetTownFocus, G as GetPrevCityID, a as GetNextCityID, h as Construct, i as CreateProductionChooserItem, j as GetNumUniqueQuarterBuildingsCompleted, k as GetCurrentTownFocus } from './production-chooser-helpers.chunk.js';
-import { t as template, i as insert, s as setAttribute, C as ComponentRegistry, k as defineLegacyComponent, b as spread } from '../../../core/ui-next/components/tooltip-model.chunk.js';
-import { I as Icon } from '../../../core/ui-next/components/nav-help.chunk.js';
-import { L as L10n } from '../../../core/ui-next/components/slot.chunk.js';
+import { P as ProductionPanelCategory, b as GetTownFocusBlp, c as GetTownFocusItems, U as UpdateCityDetailsEventName, d as GetLastProductionData, e as GetCityBuildReccomendations, f as GetUniqueQuartersForPlayer, g as GetProductionItems, R as RepairConstruct, S as SetTownFocus, G as GetPrevCityID, a as GetNextCityID, h as Construct, i as CreateProductionChooserItem, j as GetNumUniqueQuarterBuildingsCompleted, k as GetCurrentTownFocus } from './production-chooser-helpers.chunk.js';
+import { t as template, i as insert, s as setAttribute, C as ComponentRegistry, b as spread } from '../../../core/vendor/solid-js/store/dist/store.js';
+import { d as defineLegacyComponent } from '../../../core/ui-next/components/tooltip-model.chunk.js';
+import { I as Icon } from '../../../core/ui-next/components/icon.chunk.js';
+import { L as L10n } from '../../../core/ui-next/components/l10n.chunk.js';
 import { T as Tooltip, c as TooltipHorizontalPosition, b as TooltipVerticalPosition } from '../../../core/ui-next/components/tooltip.chunk.js';
-import { d as createComponent, f as createRenderEffect, p as splitProps, e as createMemo, m as mergeProps, F as For, S as Show, k as Switch, M as Match, a as createEffect } from '../../../core/ui-next/services/model-registry.chunk.js';
+import { c as createComponent, f as createRenderEffect, q as splitProps, e as createMemo, m as mergeProps, F as For, S as Show, k as Switch, M as Match, b as createEffect } from '../../../core/vendor/solid-js/dist/solid.js';
 import { g as getConstructibleTagsFromType, c as composeTagString } from '../utilities/utilities-tags.chunk.js';
 import { FocusCityViewEventName } from '../views/view-city.js';
 import { C as ChooserItem } from '../../../core/ui-next/components/chooser-item.chunk.js';
@@ -50,7 +51,10 @@ import '../tutorial/tutorial-item.js';
 import '../tutorial/tutorial-manager.js';
 import '../../../core/ui/input/input-filter.chunk.js';
 import '../tutorial/tutorial-events.chunk.js';
+import '../../../core/ui-next/services/model-registry.chunk.js';
 import '../../../core/ui-next/components/activatable.chunk.js';
+import '../../../core/ui-next/components/nav-help.chunk.js';
+import '../../../core/ui-next/components/slot.chunk.js';
 import '../../../core/ui-next/utilities/game-core-utilities.chunk.js';
 import '../../../core/ui-next/components/filigree.chunk.js';
 import '../../../core/ui-next/components/header.chunk.js';
@@ -2343,7 +2347,7 @@ class ProductionChooserScreen extends Panel {
     const canPurchaseDuringUnrest = city.Gold?.canPurchaseWhileInUnrest ?? true;
     this._cityID = value;
     this._recommendations = GetCityBuildReccomendations(city);
-    this.uqInfo = GetUniqueQuarterForPlayer(city.owner);
+    this.uniqueQuarterInfos = GetUniqueQuartersForPlayer(city.owner);
     this._isPurchase = city.isTown || ProductionChooserScreen.shouldReturnToPurchase;
     ProductionChooserScreen.shouldReturnToPurchase = false;
     this.productionPurchaseTabBar.setAttribute("selected-tab-index", this._isPurchase ? "1" : "0");
@@ -2412,7 +2416,7 @@ class ProductionChooserScreen extends Panel {
       this.playerGoldBalance,
       this.isPurchase,
       this.viewHidden,
-      this.uqInfo
+      this.uniqueQuarterInfos
     );
     return this._items;
   }
@@ -2431,7 +2435,7 @@ class ProductionChooserScreen extends Panel {
     this._viewHidden = value;
     this.updateItems.call("viewHidden");
   }
-  uqInfo = null;
+  uniqueQuarterInfos = [];
   // #endregion
   // #region Element References
   frame = document.createElement("fxs-subsystem-frame");
@@ -2470,7 +2474,7 @@ class ProductionChooserScreen extends Panel {
   upgradeToCityButtonCostElement;
   cityDetailsSlot;
   panelProductionSlot;
-  uniqueQuarter = null;
+  uniqueQuarters = [];
   // #endregion
   // #region Component Lifecycle
   constructor(root) {
@@ -2981,9 +2985,14 @@ class ProductionChooserScreen extends Panel {
         this.itemElementMap.set(item.type, element);
       }
       updateProductionChooserItemElement(element, item, this.isPurchase);
-      if (!this.uniqueQuarter?.containsBuilding(element)) {
-        slot.appendChild(element);
+      let bFoundInUniqueQuarter = false;
+      for (const uniqueQuarter of this.uniqueQuarters) {
+        if (uniqueQuarter.containsBuilding(element)) {
+          bFoundInUniqueQuarter = true;
+          break;
+        }
       }
+      if (!bFoundInUniqueQuarter) slot.appendChild(element);
     }
   }
   updateCategories(items) {
@@ -2999,20 +3008,25 @@ class ProductionChooserScreen extends Panel {
       this.updateItemElementMap(items[category]);
     }
     const city = this.city;
-    const uq = GetUniqueQuarterForPlayer(city.owner);
+    this.uniqueQuarterInfos = GetUniqueQuartersForPlayer(city.owner);
     const buildingSlot = this.productionCategorySlots[ProductionPanelCategory.BUILDINGS].slot;
-    if (uq) {
-      const buildingOneChooserItem = this.itemElementMap.get(uq.uniqueQuarterDef.BuildingType1);
-      const buildingTwoChooserItem = this.itemElementMap.get(uq.uniqueQuarterDef.BuildingType2);
+    for (const uniqueQuarter of this.uniqueQuarters) {
+      uniqueQuarter.root.remove();
+    }
+    this.uniqueQuarters = [];
+    for (const uniqueQuarterInfo of this.uniqueQuarterInfos) {
+      const buildingOneChooserItem = this.itemElementMap.get(uniqueQuarterInfo.uniqueQuarterDef.BuildingType1);
+      const buildingTwoChooserItem = this.itemElementMap.get(uniqueQuarterInfo.uniqueQuarterDef.BuildingType2);
       if (buildingOneChooserItem && buildingTwoChooserItem) {
-        this.uniqueQuarter ??= new UniqueQuarter();
-        this.uniqueQuarter.definition = uq.uniqueQuarterDef;
-        this.uniqueQuarter.numCompleted = GetNumUniqueQuarterBuildingsCompleted(city, uq.uniqueQuarterDef);
-        this.uniqueQuarter.setBuildings(buildingOneChooserItem, buildingTwoChooserItem);
-        buildingSlot.insertAdjacentElement("afterbegin", this.uniqueQuarter.root);
-      } else {
-        this.uniqueQuarter?.root.remove();
-        this.uniqueQuarter = null;
+        const newQuarter = new UniqueQuarter();
+        newQuarter.definition = uniqueQuarterInfo.uniqueQuarterDef;
+        newQuarter.numCompleted = GetNumUniqueQuarterBuildingsCompleted(
+          city,
+          uniqueQuarterInfo.uniqueQuarterDef
+        );
+        newQuarter.setBuildings(buildingOneChooserItem, buildingTwoChooserItem);
+        buildingSlot.insertAdjacentElement("afterbegin", newQuarter.root);
+        this.uniqueQuarters.push(newQuarter);
       }
     }
     for (const category of Object.values(ProductionPanelCategory)) {
@@ -3033,7 +3047,7 @@ class ProductionChooserScreen extends Panel {
       this.playerGoldBalance,
       this.isPurchase,
       this.viewHidden,
-      this.uqInfo
+      this.uniqueQuarterInfos
     );
     const newItems = Object.values(ProductionPanelCategory).flatMap(
       (category) => items[category].map((item) => item.type)

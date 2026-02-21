@@ -371,7 +371,7 @@ class bzProductionChooserScreen {
             c.playerGoldBalance,
             c.isPurchase,
             c.viewHidden,
-            c.uqInfo
+            c.uniqueQuarterInfos,
         );
         const newItems = Object.values(ProductionPanelCategory).flatMap(
             (category) => items[category].map((item) => item.type)
