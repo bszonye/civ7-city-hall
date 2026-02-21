@@ -1,5 +1,6 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
+import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
 export const bzUpdateCityDetailsEventName = 'bz-update-city-details';
 
 class bzUpdateCityDetailsEvent extends CustomEvent {
@@ -21,8 +22,6 @@ const IMPROVEMENT_BONUS_INDEXES = {
     LOC_IMPROVEMENT_QUARRY_NAME: 1,
     LOC_IMPROVEMENT_WOODCUTTER_NAME: 1,
 };
-const YIELD_GOLD_INFO = GameInfo.Yields.lookup(YieldTypes.YIELD_GOLD);
-const YIELD_HAPPINESS_INFO = GameInfo.Yields.lookup(YieldTypes.YIELD_HAPPINESS);
 
 const bzNameSort = (a, b) => {
     const aname = Locale.compose(a).toUpperCase();
@@ -51,6 +50,7 @@ class bzCityDetailsModel {
     }
     growth = null;
     connections = null;
+    districts = null;
     improvements = new Map();
     warehouseTable = null;
     townFocusTable = null;
@@ -101,6 +101,7 @@ class bzCityDetailsModel {
     updateOverview(city) {
         this.growth = this.modelGrowth(city);
         this.connections = this.modelConnections(city);
+        this.districts = this.modelDistricts(city);
         this.improvements = this.modelImprovements(city);
         this.warehouseTable = this.modelWarehouses(city);
         this.townFocusTable = this.modelTownFocus(city);
@@ -153,6 +154,23 @@ class bzCityDetailsModel {
         }
         return { settlements, cities, towns, focused, growing, };
     }
+    modelDistricts(city) {
+        const ids = city.Districts?.getIds() ?? [];
+        const districts = ids.map(id => Districts.get(id));
+        districts.quarters = districts.filter(d => d.isQuarter).length;
+        districts.fortified = 0;
+        for (const district of districts) {
+            const loc = district.location;
+            const cons = MapConstructibles.getHiddenFilteredConstructibles(loc.x, loc.y);
+            const fortified = cons.find(con => {
+                const item = Constructibles.getByComponentID(con);
+                const info = GameInfo.Constructibles.lookup(item.type);
+                return ConstructibleHasTagType(info.ConstructibleType, "FORTIFICATION");
+            });
+            if (fortified) districts.fortified += 1;
+        }
+        return districts;
+    }
     modelImprovements(city) {
         const improvements = new Map();
         improvements.appeal = 0;
@@ -182,11 +200,7 @@ class bzCityDetailsModel {
             imp.bonusIndex = IMPROVEMENT_BONUS_INDEXES[fcinfo.Name] ?? -1;
             imp.bonusIcon = GameInfo.Yields[imp.bonusIndex]?.YieldType;
             // Resort Town: natural Happiness yields
-            const plot = GameplayMap.getIndexFromLocation(loc);
-            const yields = GameplayMap.getYields(plot, GameContext.localPlayerID);
-            for (const [type, v] of yields) {
-                if (v && type == YieldTypes.YIELD_HAPPINESS) improvements.appeal += 1;
-            };
+            if (GameplayMap.getAppeal(loc.x, loc.y)) improvements.appeal += 1;
             // Trade Outpost and Factory Town: resources
             const resourceType = GameplayMap.getResourceType(loc.x, loc.y);
             const resource = GameInfo.Resources.lookup(resourceType);
@@ -213,9 +227,6 @@ class bzCityDetailsModel {
         if (!city.isTown) return null;
         const focusHash = city.Growth?.projectType;
         const loc = city.location;
-        // get current age and per-age multiplier
-        const age = GameInfo.Ages.lookup(Game.age);
-        const perAge = age.ChronologyIndex + 1;
         // get the enabled Town Focus projects
         const canStart = Game.CityCommands.canStart(
             city.id,
@@ -246,24 +257,25 @@ class bzCityDetailsModel {
                 disabled: !enabled.has(info.$index),
             };
             switch (info.ProjectType) {
-                case "PROJECT_TOWN_FORT":
-                    project.details = [{ icon: "ACTION_FORTIFY", bonus: 25 }];
-                    break;
-                case "PROJECT_TOWN_URBAN_CENTER": {
-                    const maintenance = buildingTypes()
-                        .map(type => city.Constructibles.getMaintenance(type));
-                    const mGold = maintenance.map(m => m[YIELD_GOLD_INFO.$index])
-                    const mHappy = maintenance.map(m => m[YIELD_HAPPINESS_INFO.$index])
-                    const dGold = mGold.reduce((a, m) => a + m, 0) / 2;
-                    const dHappy = mHappy.reduce((a, m) => a + m, 0) / 2;
+                case "PROJECT_TOWN_FORT": {
+                    const bonus = this.districts.fortified;
                     project.details = [
-                        { icon: "YIELD_GOLD", bonus: dGold },
-                        { icon: "YIELD_HAPPINESS", bonus: dHappy },
+                        { icon: "ACTION_FORTIFY", bonus: 25 },
+                        { icon: "YIELD_GOLD", bonus },
+                    ];
+                    break;
+                }
+                case "PROJECT_TOWN_URBAN_CENTER": {
+                    console.warn(`TRIX D ${JSON.stringify(this.districts)}`);
+                    const bonus = this.districts.quarters;
+                    project.details = [
+                        { icon: "YIELD_SCIENCE", bonus },
+                        { icon: "YIELD_CULTURE", bonus },
                     ];
                     break;
                 }
                 case "PROJECT_TOWN_RESORT": {
-                    const bonus = this.improvements.appeal * perAge;
+                    const bonus = this.improvements.appeal;
                     project.details = [
                         { icon: "YIELD_GOLD", bonus },
                         { icon: "YIELD_HAPPINESS", bonus },
@@ -281,7 +293,7 @@ class bzCityDetailsModel {
                         "LOC_IMPROVEMENT_PLANTATION_NAME",
                         "LOC_IMPROVEMENT_FISHING_BOAT_NAME",
                     );
-                    project.details = [{ icon: "YIELD_FOOD", bonus: count * perAge }];
+                    project.details = [{ icon: "YIELD_FOOD", bonus: count }];
                     break;
                 }
                 case "PROJECT_TOWN_PRODUCTION": {
@@ -294,12 +306,12 @@ class bzCityDetailsModel {
                     );
                     project.details = [{
                         icon: "YIELD_PRODUCTION",
-                        bonus: count * (perAge + 1),
+                        bonus: 2 * count,
                     }];
                     break;
                 }
                 case "PROJECT_TOWN_TRADE": {
-                    const bonus = 2 * this.improvements.resources;
+                    const bonus = this.improvements.resources;
                     project.details = [
                         { icon: "YIELD_TRADES", bonus: 5 },
                         { icon: "YIELD_HAPPINESS", bonus },
