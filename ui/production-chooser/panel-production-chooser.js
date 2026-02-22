@@ -1019,7 +1019,7 @@ const ProductionTooltipComponent = (props) => {
         get children() {
           return createComponent(Tooltip.Frame, {
             get children() {
-              return [createComponent(Switch, {
+              return createComponent(Switch, {
                 get fallback() {
                   return createComponent(ProductionConstructibleTooltipContent, {
                     get ["class"]() {
@@ -1115,9 +1115,7 @@ const ProductionTooltipComponent = (props) => {
                     }
                   })];
                 }
-              }), createComponent(Tooltip.InspectHint, {
-                "class": "relative mt-1"
-              })];
+              });
             }
           });
         }
