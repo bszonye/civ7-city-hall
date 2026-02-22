@@ -266,7 +266,6 @@ class bzCityDetailsModel {
                     break;
                 }
                 case "PROJECT_TOWN_URBAN_CENTER": {
-                    console.warn(`TRIX D ${JSON.stringify(this.districts)}`);
                     const bonus = this.districts.quarters;
                     project.details = [
                         { icon: "YIELD_SCIENCE", bonus },

@@ -33,9 +33,15 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     // is the new building part of a unique quarter?
     const btype = GameInfo.Buildings.lookup(constructible.ConstructibleType);
     const ubTraitType = btype?.TraitType;  // for example: TRAIT_ROME
-    // find a matching unique quarter, if any
-    const uqInfo = GameInfo.UniqueQuarters.find(uq => uq.TraitType == ubTraitType);
-    const partialUQ = this.findExistingUniqueBuilding(uqInfo);  // -1 if not found
+    // find existing unique quarters, if any
+    const uqPlots = new Map();
+    const uqTypes = Players.Constructibles.get(cityID.owner).getUnlockedUniqueQuarters();
+    for (const id of uqTypes) {
+        const info = GameInfo.UniqueQuarters.lookup(id);
+        const plot = this.findExistingUniqueBuilding(info);
+        uqPlots.set(info.TraitType, plot);
+        if (plot != -1) uqPlots.set(plot, info.TraitType);
+    }
     // check whether a district can make a unique quarter
     const hasUQBlocker = (p) => {
         const loc = GameplayMap.getLocationFromIndex(p);
@@ -61,7 +67,7 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
         if (this.isRepairing) return true;
         if (constructible.ExistingDistrictOnly) return true;
         // unique district selected
-        if (p == partialUQ) {
+        if (uqPlots.has(p)) {
             // good: a unique building here finishes the UQ
             if (ubTraitType) return true;
             // bad: non-unique building in a unique district
@@ -70,7 +76,7 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
         // new unique building NOT on a partial UQ
         if (ubTraitType) {
             // bad: there's a partial UQ somewhere else
-            if (partialUQ != -1) return false;
+            if (uqPlots.get(ubTraitType) != -1) return false;
             // bad: this would create a non-unique quarter
             if (hasUQBlocker(p)) return false;
         }
