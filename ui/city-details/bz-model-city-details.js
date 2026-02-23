@@ -1,4 +1,5 @@
 import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
+import { g as getGlobalParamNumber } from '/core/ui/utilities/utilities-data.chunk.js';
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
 import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
 export const bzUpdateCityDetailsEventName = 'bz-update-city-details';
@@ -172,6 +173,7 @@ class bzCityDetailsModel {
         return districts;
     }
     modelImprovements(city) {
+        const bonusAppeal = getGlobalParamNumber("APPEAL_FOR_HAPPINESS_TILE_YIELD");
         const improvements = new Map();
         improvements.appeal = 0;
         improvements.resources = 0;
@@ -199,8 +201,10 @@ class bzCityDetailsModel {
             // warehouse yield icons
             imp.bonusIndex = IMPROVEMENT_BONUS_INDEXES[fcinfo.Name] ?? -1;
             imp.bonusIcon = GameInfo.Yields[imp.bonusIndex]?.YieldType;
-            // Resort Town: natural Happiness yields
-            if (GameplayMap.getAppeal(loc.x, loc.y)) improvements.appeal += 1;
+            // Resort Town: appealing tiles
+            if (bonusAppeal <= GameplayMap.getAppeal(loc.x, loc.y)) {
+                improvements.appeal += 1;
+            }
             // Trade Outpost and Factory Town: resources
             const resourceType = GameplayMap.getResourceType(loc.x, loc.y);
             const resource = GameInfo.Resources.lookup(resourceType);
