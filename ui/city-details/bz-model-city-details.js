@@ -324,7 +324,7 @@ class bzCityDetailsModel {
                 case "PROJECT_TOWN_TEMPLE":
                     project.details = [{
                         icon: "YIELD_HAPPINESS",
-                        bonus: buildingTypes().length,
+                        bonus: 2 * buildingTypes().length,
                     }];
                     break;
                 case "PROJECT_TOWN_INN":
