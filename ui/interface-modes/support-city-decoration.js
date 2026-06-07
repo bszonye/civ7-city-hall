@@ -1,5 +1,5 @@
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
-import { O as OVERLAY_PRIORITY } from '/base-standard/ui/utilities/utilities-overlay.chunk.js';
+import { ComponentID } from '../../../core/ui/utilities/utilities-component-id.js';
+import { OVERLAY_PRIORITY } from '../utilities/utilities-overlay.js';
 import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
 import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
 import { realizeBuildSlots } from '/bz-city-hall/ui/lenses/layer/bz-building-slots.js';
@@ -120,5 +120,5 @@ var CityDecorationSupport;
     CityDecorationSupport2.manager = new Instance();
 })(CityDecorationSupport || (CityDecorationSupport = {}));
 
-export { CityDecorationSupport as C };
-//# sourceMappingURL=support-city-decoration.chunk.js.map
+export { CityDecorationSupport };
+//# sourceMappingURL=support-city-decoration.js.map

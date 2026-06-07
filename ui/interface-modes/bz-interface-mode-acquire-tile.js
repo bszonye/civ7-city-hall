@@ -1,6 +1,6 @@
 import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
-import { C as CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.chunk.js';
+import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
+import { CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.js';
 import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-manager.js';
 
 const VFX_RING = "VFX_3dUI_Tut_SelectThis_01";
