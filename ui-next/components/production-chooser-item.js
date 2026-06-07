@@ -227,7 +227,7 @@ const ProductionChooserItemContent = (props) => {
                     "class": "bz-pci-ageless text-xs leading-tight py-px -my-px -ml-1 mr-3",
                     text: "LOC_UI_PRODUCTION_AGELESS"
                   });
-                  pill.classList.remove("h-9", "text-sm", "leading-normal");
+                  pill.classList.remove("min-h-9", "text-sm", "leading-normal");
                   return pill;
                 }
               }), null);
