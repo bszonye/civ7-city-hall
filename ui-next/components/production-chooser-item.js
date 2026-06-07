@@ -11,7 +11,17 @@ import { AdvisorRecommendationsList } from './advisor-recommendation.js';
 import { PillText } from './pills.js';
 import { ProductionTooltip } from '../tooltips/production-tooltip.js';
 
-var _tmpl$ = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`), _tmpl$2 = /* @__PURE__ */ template(`<div class="flex text-sm"></div>`), _tmpl$3 = /* @__PURE__ */ template(`<div class="flex items-center"></div>`), _tmpl$4 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`), _tmpl$5 = /* @__PURE__ */ template(`<div class="flex items-center text-sm production-chooser__font-icon-positioning"></div>`), _tmpl$6 = /* @__PURE__ */ template(`<div class="flex flex-row items-center self-end"><span></span><span class="size-8 bg-contain bg-center bg-no-repeat mr-1"></span></div>`), _tmpl$7 = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-stretch"><div class="relative flex flex-col flex-auto justify-between pt-2 pb-1.5"><span class="font-title text-accent-2 uppercase"></span></div><div class="flex flex-col justify-end"><div class=self-end></div><div class="flex flex-auto self-end"></div></div></div>`);
+var
+  tmplError = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`),
+  tmplDetails = /* @__PURE__ */ template(`<div class="bz-pci-details flex items-center text-xs -ml-1 -mb-0\\.5 leading-normal"></div>`),
+  tmplYBase = /* @__PURE__ */ template(`<div class="flex items-center"></div>`),
+  tmplYBonus = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mx-2>|</div><div class=mx-1></div></div>`),
+  tmplYields = /* @__PURE__ */ template(`<div class="bz-pci-yields flex items-center text-xs -mb-0\\.5 leading-normal"></div>`),
+  tmplRecs = /* @__PURE__ */ template(`<div class="bz-pci-recs flex items-center justify-center -my-1 -ml-1\\.5 mr-2\\.5"></div>`),
+  tmplPCost = /* @__PURE__ */ template(`<div class="bz-pci-pcost flex flex-row items-center self-end mr-0\\.5"><span class="text-accent-4 text-xs"></span><span class="bz-pci-icon size-6 -my-0\\.5 bg-contain bg-center bg-no-repeat mx-1"></span></div>`),
+  tmplCost = /* @__PURE__ */ template(`<div class="bz-pci-cost flex flex-row items-center self-end mr-0\\.5"><span class="text-sm"></span><span class="bz-pci-icon size-8 -my-1 bg-contain bg-center bg-no-repeat"></span></div>`),
+  tmplPBar = /* @__PURE__ */ template(`<div class="flex justify-end items-center absolute h-full"><div class="bz-pci-icon build-queue__item-progress-bar flex flex-col-reverse relative h-10 w-4 p-0\\.5 right-2\\.5"><div class="build-queue__progress-bar-fill bg-contain w-3"></div></div></div>`),
+  tmplItem = /* @__PURE__ */ template(`<div class="flex flex-row flex-auto items-center"><div class="relative flex flex-col flex-auto justify-center ml-1 my-1"><div class="flex flex-row flex-wrap items-center"><div class="shrink font-title text-accent-2 uppercase tracking-25 z-1 mr-3"></div><div class="flex items-center"></div></div></div><div class="flex flex-row items-center justify-end"><div class="flex flex-col flex-auto items-end leading-normal relative"></div></div></div>`);
 const parseJSON = (value, fallback) => {
   if (!value) {
     return fallback;
