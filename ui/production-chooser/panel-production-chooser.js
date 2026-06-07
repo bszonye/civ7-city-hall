@@ -1278,7 +1278,7 @@ class ProductionChooserScreen extends Panel {
     this.frame.appendChild(cityNameWrapper);
     this.frame.classList.add("shrink", "pointer-events-auto", "panel-production__frame");
     Databind.classToggle(this.frame, "mb-16", "{{g_NavTray.isTrayRequired}}");
-    this.frame.dataset.headerClass = "flex flex-col flex-initial px-3 mx-0\\.5";
+    this.frame.dataset.headerClass = "flex flex-col px-3 mx-0\\.5";
     this.frame.dataset.footerClass = "px-5 pb-2 mx-0\\.5";
     const yieldBarRow = document.createElement("div");
     yieldBarRow.classList.value = "flex self-center justify-center items-center";
