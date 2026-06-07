@@ -82,97 +82,6 @@ const ConvertToCity = (townID) => {
   return false;
 };
 
-var _tmpl$$3 = /* @__PURE__ */ template(`<div class="production-chooser-item text-xs leading-tight flex items-center mb-2 mx-2 hover\\:text-secondary-1 focus\\:text-secondary-1"><div class="flex-auto flex flex-col ml-1"><div class="font-title text-sm tracking-25 uppercase text-gradient-secondary transition-color"></div><div class="font-body transition-color" data-l10n-id=LOC_UI_PRODUCTION_UNIQUE_QUARTER></div></div><div class="font-body self-end transition-color"></div></div>`);
-// var _tmpl$$3 = /* @__PURE__ */ template(`<div class="production-chooser-item flex items-center mb-2 ml-2 hover\\\\:text-accent-1 focus\\\\:text-accent-1"><div class="flex-auto flex flex-col"><div class="font-title text-base tracking-100 uppercase transition-color"></div><div class="font-body text-sm transition-color"data-l10n-id=LOC_UI_PRODUCTION_UNIQUE_QUARTER></div></div><div class="font-body text-sm self-end transition-color"></div></div>`);
-const ProductionChooserUniqueQuarterItemComponent = (props) => {
-  return createComponent(Tooltip.Text, {
-    get initialVPosition() {
-      return TooltipVerticalPosition.CENTER;
-    },
-    get initialHPosition() {
-      return TooltipHorizontalPosition.RIGHT;
-    },
-    offset: 30,
-    get text() {
-      return props.description;
-    },
-    get children() {
-      var _el$ = _tmpl$$3(), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$2.nextSibling;
-      insert(_el$, createComponent(Icon, {
-        "class": "size-10 ml-2\\.5 mr-2",
-        name: "CITY_UNIQUE_QUARTER"
-      }), _el$2);
-      insert(_el$4, createComponent(L10n.Compose, {
-        text: "LOC_UI_PRODUCTION_QUARTER_BUILDINGS_COMPLETED",
-        get args() {
-          return [props.currentCompleted];
-        }
-      }));
-      createRenderEffect(() => setAttribute(_el$3, "data-l10n-id", props.name));
-      return _el$;
-    }
-  });
-};
-const ProductionChooserUniqueQuarterItem = ComponentRegistry.register({
-  name: "ProductionChooserUniqueQuarterItem",
-  createInstance: ProductionChooserUniqueQuarterItemComponent
-});
-defineLegacyComponent("production-chooser-unique-quarter-item", {
-  attrs: {
-    "data-name": "",
-    "data-description": "",
-    "data-current-completed": "0",
-    "data-total-completed": "2"
-  }
-}, (attrs) => {
-  const name = attrs["data-name"] ?? "";
-  const description = attrs["data-description"] ?? "";
-  const currentCompleted = parseInt(attrs["data-current-completed"] ?? "0", 10);
-  const totalCompleted = parseInt(attrs["data-total-completed"] ?? "2", 10);
-  return createComponent(ProductionChooserUniqueQuarterItem, {
-    name,
-    description,
-    currentCompleted,
-    totalCompleted
-  });
-});
-
-class UniqueQuarter {
-  root = document.createElement("div");
-  item = document.createElement("production-chooser-unique-quarter-item");
-  buildingContainer = document.createElement("div");
-  buildingElementOne = void 0;
-  buildingElementTwo = void 0;
-  set definition(value) {
-    this.item.setAttribute("data-name", value.Name);
-    this.item.setAttribute("data-description", value.Description);
-  }
-  set numCompleted(value) {
-    this.item.setAttribute("data-current-completed", value.toString());
-  }
-  constructor() {
-    this.root.className = "production-chooser__unique-quarter relative flex flex-col pointer-events-auto";
-    this.buildingContainer.className = "flex flex-col pl-2\\.5";
-    const uqBarDecor = document.createElement("div");
-    uqBarDecor.className = "absolute -left-px h-full w-1\\.5 img-city-tab-line-vert";
-    const uqDivider = document.createElement("div");
-    uqDivider.className = "production-chooser__unique-quarter-divider";
-    this.root.append(this.item, this.buildingContainer, uqBarDecor, uqDivider);
-  }
-  setBuildings(chooserItemOne, chooserItemTwo) {
-    if (this.buildingElementOne == chooserItemOne && this.buildingElementTwo == chooserItemTwo) {
-      return;
-    }
-    this.buildingContainer.innerHTML = "";
-    this.buildingElementOne = chooserItemOne;
-    this.buildingElementTwo = chooserItemTwo;
-    this.buildingContainer.append(this.buildingElementOne, this.buildingElementTwo);
-  }
-  containsBuilding(item) {
-    return this.buildingElementOne == item || this.buildingElementTwo == item;
-  }
-}
-
 const styles = "fs://game/base-standard/ui/production-chooser/panel-production-chooser.css";
 
 var _tmpl$$2 = /* @__PURE__ */ template(`<div class="flex items-center w-full"><div class=constructible-details__divider-line-left></div><p class="mx-2 font-title text-secondary text-sm uppercase"></p><div class=constructible-details__divider-line-right></div></div>`), _tmpl$2$2 = /* @__PURE__ */ template(`<div class="mb-2 flex flex-wrap"></div>`), _tmpl$3$2 = /* @__PURE__ */ template(`<div class=mb-2></div>`), _tmpl$4$2 = /* @__PURE__ */ template(`<div class="img-shell-line-divider h-1 w-1/2 self-center mb-2"></div>`), _tmpl$5$2 = /* @__PURE__ */ template(`<div class="flex items-center"><div class=mr-2></div></div>`), _tmpl$6$2 = /* @__PURE__ */ template(`<div class="flex mb-2 items-center"><div class=mr-2></div></div>`), _tmpl$7$1 = /* @__PURE__ */ template(`<div><div class="w-full flex flex-wrap self-center justify-center"></div></div>`), _tmpl$8$1 = /* @__PURE__ */ template(`<div></div>`);
@@ -1248,245 +1157,254 @@ const ProductionChooserItemContent = (props) => {
       return canShowAdjacency();
     },
     get children() {
-      return createComponent(ChooserItem, {
-        // TRIX
-        // "class": "text-base production-chooser-item",
-        // contentClass: "p-2 tracking-100 flex flex-row",
-        "class": "production-chooser-item text-xs leading-tight",
-        contentClass: "flex flex-row justify-start items-center",  // TRIX
-        name: "ProductionChooserItem",
-        selectOnActivate: true,
-        get disabled() {
-          return isDisabled();
-        },
-        get audio() {
-          return audio();
-        },
-        get disableFocus() {
-          return disableFocus();
-        },
-        get ["data-category"]() {
-          return category();
-        },
-        get ["data-type"]() {
-          return itemType();
-        },
-        get ["data-repair-all"]() {
-          return isRepairAll() ? "true" : void 0;
+      return createComponent(AudioContextProvider, {
+        get vars() {
+          return {
+            isPurchase: isPurchase().toString()
+          };
         },
         get children() {
-          var elItem = tmplItem(), elInfo = elItem.firstChild, elTitle = elInfo.firstChild, elName = elTitle.firstChild, elTags = elName.nextSibling, elRight = elInfo.nextSibling, elCosts = elRight.firstChild;
-          insert(elItem, createComponent(Icon, {
-            // TRIX: resize and realign item icon
-            "class": "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
-            get name() {
+          return createComponent(ChooserItem, {
+            // TRIX
+            // "class": "text-base production-chooser-item",
+            // contentClass: "p-2 tracking-100 flex flex-row",
+            "class": "production-chooser-item text-xs leading-tight",
+            contentClass: "flex flex-row justify-start items-center",  // TRIX
+            name: "ProductionChooserItem",
+            selectOnActivate: true,
+            get disabled() {
+              return isDisabled();
+            },
+            get audio() {
+              return audio();
+            },
+            get disableFocus() {
+              return disableFocus();
+            },
+            get ["data-category"]() {
+              return category();
+            },
+            get ["data-type"]() {
               return itemType();
-            }
-          }), elInfo);
-          // TRIX: style item names
-          insert(elName, createComponent(L10n.Stylize, {
-            get ["class"]() {
-              // TRIX: repairs in yellow, ageless in gold
-              return isRepairAll() || isRepair() ? "bz-city-repair" :
-                isAgeless() ? "text-gradient-secondary" : "";
             },
-            get text() {
-              return nameKey() ?? "";
-            }
-          }));
-          insert(elTags, createComponent(Show, {
-            get when() {
-              return isAgeless() && !isRepair();
+            get ["data-repair-all"]() {
+              return isRepairAll() ? "true" : void 0;
             },
             get children() {
-              // TRIX: compact Ageless pill
-              const pill = createComponent(PillText, {
-                "class": "bz-pci-ageless text-xs leading-tight py-px -my-px -ml-1 mr-3",
-                text: "LOC_UI_PRODUCTION_AGELESS"
-              });
-              pill.classList.remove("h-9", "text-sm", "leading-normal");
-              return pill;
-            }
-          }), null);
-          insert(elTags, createComponent(Show, {
-            get when() {
-              return showRecommendations();
-            },
-            get children() {
-              var _el$17 = tmplRecs();
-              insert(_el$17, createComponent(AdvisorRecommendationsList, {
-                get recommendations() {
-                  return recommendations();
+              var elItem = tmplItem(), elInfo = elItem.firstChild, elTitle = elInfo.firstChild, elName = elTitle.firstChild, elTags = elName.nextSibling, elRight = elInfo.nextSibling, elCosts = elRight.firstChild;
+              insert(elItem, createComponent(Icon, {
+                // TRIX: resize and realign item icon
+                "class": "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
+                get name() {
+                  return itemType();
+                }
+              }), elInfo);
+              // TRIX: style item names
+              insert(elName, createComponent(L10n.Stylize, {
+                get ["class"]() {
+                  // TRIX: repairs in yellow, ageless in gold
+                  return isRepairAll() || isRepair() ? "bz-city-repair" :
+                    isAgeless() ? "text-gradient-secondary" : "";
                 },
-                direction: "horizontal",
-                iconOnly: true
-              }));
-              return _el$17;
-            }
-          }), null);
-          insert(elInfo, createComponent(Show, {
-            get when() {
-              return errorKey();
-            },
-            get children() {
-              var _el$4 = tmplError();
-              insert(_el$4, createComponent(L10n.Compose, {
                 get text() {
-                  return errorKey();
+                  return nameKey() ?? "";
                 }
               }));
-              return _el$4;
-            }
-          }), null);
-          insert(elInfo, createComponent(Show, {
-            get when() {
-              // TRIX: hide details for repairs
-              return showSecondaryDetails() && !isRepair();
-            },
-            get children() {
-              var _el$5 = tmplDetails();
-              createRenderEffect((_p$) => {
-                var _v$ = !!isUnitType(), _v$2 = secondaryDetails();
-                _v$ !== _p$.e && _el$5.classList.toggle("-ml-1.5", _p$.e = _v$);
-                _v$2 !== _p$.t && (_el$5.innerHTML = _p$.t = _v$2);
-                return _p$;
-              }, {
-                e: void 0,
-                t: void 0
-              });
-              return _el$5;
-            }
-          }), null);
-          insert(elInfo, createComponent(Show, {
-            get when() {
-              // TRIX: hide details for repairs
-              return showAlternateYields() && !isRepair();
-            },
-            get children() {
-              var _el$6 = tmplYields();
-              insert(_el$6, createComponent(Show, {
+              insert(elTags, createComponent(Show, {
                 get when() {
-                  return showBaseYields();
+                  return isAgeless() && !isRepair();
                 },
                 get children() {
-                  var _el$7 = tmplYBase();
-                  insert(_el$7, createComponent(For, {
-                    get each() {
-                      return baseYields();
+                  // TRIX: compact Ageless pill
+                  const pill = createComponent(PillText, {
+                    "class": "bz-pci-ageless text-xs leading-tight py-px -my-px -ml-1 mr-3",
+                    text: "LOC_UI_PRODUCTION_AGELESS"
+                  });
+                  pill.classList.remove("h-9", "text-sm", "leading-normal");
+                  return pill;
+                }
+              }), null);
+              insert(elTags, createComponent(Show, {
+                get when() {
+                  return showRecommendations();
+                },
+                get children() {
+                  var _el$17 = tmplRecs();
+                  insert(_el$17, createComponent(AdvisorRecommendationsList, {
+                    get recommendations() {
+                      return recommendations();
                     },
-                    children: (yieldValue, index) => createComponent(L10n.Stylize, {
-                      get ["class"]() {
-                        return `flex items-center ${index() > 0 ? "ml-1" : ""}`;
-                      },
-                      text: "LOC_BUILDING_PLACEMENT_YIELD_ICON_ONLY",
-                      get args() {
-                        return [yieldValue.value, yieldValue.yieldType];
-                      }
-                    })
+                    direction: "horizontal",
+                    iconOnly: true
                   }));
-                  return _el$7;
+                  return _el$17;
                 }
               }), null);
-              insert(_el$6, createComponent(Show, {
+              insert(elInfo, createComponent(Show, {
                 get when() {
-                  return canShowWarehouse();
+                  return errorKey();
                 },
                 get children() {
-                  var _el$8 = tmplYBonus(), _el$9 = _el$8.firstChild, _el$10 = _el$9.nextSibling;
-                  insert(_el$10, warehouseCount);
-                  insert(_el$8, createComponent(Icon, {
-                    "class": "size-6",  // TRIX
-                    name: "YIELD_WAREHOUSE"
-                  }), null);
-                  return _el$8;
+                  var _el$4 = tmplError();
+                  insert(_el$4, createComponent(L10n.Compose, {
+                    get text() {
+                      return errorKey();
+                    }
+                  }));
+                  return _el$4;
                 }
               }), null);
-              insert(_el$6, createComponent(Show, {
+              insert(elInfo, createComponent(Show, {
                 get when() {
-                  return canShowAdjacency();
+                  // TRIX: hide details for repairs
+                  return showSecondaryDetails() && !isRepair();
                 },
                 get children() {
-                  var _el$11 = tmplYBonus(), _el$12 = _el$11.firstChild, _el$13 = _el$12.nextSibling;
-                  insert(_el$13, highestAdjacency);
-                  insert(_el$11, createComponent(Icon, {
-                    "class": "size-6",  // TRIX
-                    name: "YIELD_ADJACENCY"
-                  }), null);
-                  return _el$11;
+                  var _el$5 = tmplDetails();
+                  createRenderEffect((_p$) => {
+                    var _v$ = !!isUnitType(), _v$2 = secondaryDetails();
+                    _v$ !== _p$.e && _el$5.classList.toggle("-ml-1.5", _p$.e = _v$);
+                    _v$2 !== _p$.t && (_el$5.innerHTML = _p$.t = _v$2);
+                    return _p$;
+                  }, {
+                    e: void 0,
+                    t: void 0
+                  });
+                  return _el$5;
                 }
               }), null);
-              return _el$6;
-            }
-          }), null);
-          insert(elCosts, createComponent(Show, {
-            get when() {
-              return 0 < Number(productionCost());
-            },
-            get children() {
-              var elRow = tmplPCost(), elCost = elRow.firstChild, elIcon = elCost.nextSibling;
-              insert(elCost, createComponent(L10n.Stylize, {
-                get ["class"]() {
-                  return 0 < productionProgress() ? "text-positive" : "";
+              insert(elInfo, createComponent(Show, {
+                get when() {
+                  // TRIX: hide details for repairs
+                  return showAlternateYields() && !isRepair();
                 },
-                text: "LOC_BZ_GROUPED_DIGITS",
-                get args() {
-                  return [Number(productionCost())];
+                get children() {
+                  var _el$6 = tmplYields();
+                  insert(_el$6, createComponent(Show, {
+                    get when() {
+                      return showBaseYields();
+                    },
+                    get children() {
+                      var _el$7 = tmplYBase();
+                      insert(_el$7, createComponent(For, {
+                        get each() {
+                          return baseYields();
+                        },
+                        children: (yieldValue, index) => createComponent(L10n.Stylize, {
+                          get ["class"]() {
+                            return `flex items-center ${index() > 0 ? "ml-1" : ""}`;
+                          },
+                          text: "LOC_BUILDING_PLACEMENT_YIELD_ICON_ONLY",
+                          get args() {
+                            return [yieldValue.value, yieldValue.yieldType];
+                          }
+                        })
+                      }));
+                      return _el$7;
+                    }
+                  }), null);
+                  insert(_el$6, createComponent(Show, {
+                    get when() {
+                      return canShowWarehouse();
+                    },
+                    get children() {
+                      var _el$8 = tmplYBonus(), _el$9 = _el$8.firstChild, _el$10 = _el$9.nextSibling;
+                      insert(_el$10, warehouseCount);
+                      insert(_el$8, createComponent(Icon, {
+                        "class": "size-6",  // TRIX
+                        name: "YIELD_WAREHOUSE"
+                      }), null);
+                      return _el$8;
+                    }
+                  }), null);
+                  insert(_el$6, createComponent(Show, {
+                    get when() {
+                      return canShowAdjacency();
+                    },
+                    get children() {
+                      var _el$11 = tmplYBonus(), _el$12 = _el$11.firstChild, _el$13 = _el$12.nextSibling;
+                      insert(_el$13, highestAdjacency);
+                      insert(_el$11, createComponent(Icon, {
+                        "class": "size-6",  // TRIX
+                        name: "YIELD_ADJACENCY"
+                      }), null);
+                      return _el$11;
+                    }
+                  }), null);
+                  return _el$6;
+                }
+              }), null);
+              insert(elCosts, createComponent(Show, {
+                get when() {
+                  return 0 < Number(productionCost());
+                },
+                get children() {
+                  var elRow = tmplPCost(), elCost = elRow.firstChild, elIcon = elCost.nextSibling;
+                  insert(elCost, createComponent(L10n.Stylize, {
+                    get ["class"]() {
+                      return 0 < productionProgress() ? "text-positive" : "";
+                    },
+                    text: "LOC_BZ_GROUPED_DIGITS",
+                    get args() {
+                      return [Number(productionCost())];
+                    }
+                  }));
+                  createRenderEffect((_p$) => {
+                    var _v$3 = `url(Yield_Production)`, _v$4 = Locale.compose("LOC_YIELD_PRODUCTION");
+                    _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
+                    _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
+                    elIcon.classList.toggle("invisible", isInProgress());
+                    return _p$;
+                  }, {
+                    e: void 0,
+                    t: void 0
+                  });
+                  return elRow;
                 }
               }));
-              createRenderEffect((_p$) => {
-                var _v$3 = `url(Yield_Production)`, _v$4 = Locale.compose("LOC_YIELD_PRODUCTION");
-                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
-                _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
-                elIcon.classList.toggle("invisible", isInProgress());
-                return _p$;
-              }, {
-                e: void 0,
-                t: void 0
-              });
-              return elRow;
-            }
-          }));
-          insert(elCosts, createComponent(Show, {
-            get when() {
-              return !hideCost();
-            },
-            get children() {
-              var elRow = tmplCost(), elCost = elRow.firstChild, elIcon = elCost.nextSibling;
-              insert(elCost, createComponent(L10n.Stylize, {
-                get ["class"]() {
-                  return 0 < productionProgress() ? "text-positive" : "";
+              insert(elCosts, createComponent(Show, {
+                get when() {
+                  return !hideCost();
                 },
-                text: "LOC_BZ_GROUPED_DIGITS",
-                get args() {
-                  return [Number(costValue())];
+                get children() {
+                  var elRow = tmplCost(), elCost = elRow.firstChild, elIcon = elCost.nextSibling;
+                  insert(elCost, createComponent(L10n.Stylize, {
+                    get ["class"]() {
+                      return 0 < productionProgress() ? "text-positive" : "";
+                    },
+                    text: "LOC_BZ_GROUPED_DIGITS",
+                    get args() {
+                      return [Number(costValue())];
+                    }
+                  }));
+                  createRenderEffect((_p$) => {
+                    var _v$3 = `url(${costIcon()})`, _v$4 = costIconLabel();
+                    _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
+                    _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
+                    elIcon.classList.toggle("invisible", isInProgress());
+                    return _p$;
+                  }, {
+                    e: void 0,
+                    t: void 0
+                  });
+                  return elRow;
                 }
               }));
-              createRenderEffect((_p$) => {
-                var _v$3 = `url(${costIcon()})`, _v$4 = costIconLabel();
-                _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
-                _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
-                elIcon.classList.toggle("invisible", isInProgress());
-                return _p$;
-              }, {
-                e: void 0,
-                t: void 0
-              });
-              return elRow;
+              insert(elCosts, createComponent(Show, {
+                get when() {
+                  return isInProgress();
+                },
+                get children() {
+                  var elPBar = tmplPBar();
+                  const discount = isPurchase() && 0 < Number(productionProgress());
+                  elPBar.classList.toggle("bz-purchase-progress", discount);
+                  elPBar.firstChild.firstChild.style.heightPERCENT = productionPercent();
+                  return elPBar;
+                },
+              }));
+              return elItem;
             }
-          }));
-          insert(elCosts, createComponent(Show, {
-            get when() {
-              return isInProgress();
-            },
-            get children() {
-              var elPBar = tmplPBar();
-              const discount = isPurchase() && 0 < Number(productionProgress());
-              elPBar.classList.toggle("bz-purchase-progress", discount);
-              elPBar.firstChild.firstChild.style.heightPERCENT = productionPercent();
-              return elPBar;
-            },
-          }));
-          return elItem;
+          });
         }
       });
     }

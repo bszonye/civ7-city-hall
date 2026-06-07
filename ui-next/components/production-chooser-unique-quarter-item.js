@@ -22,7 +22,7 @@ const ProductionChooserUniqueQuarterItemComponent = (props) => {
     get children() {
       var _el$ = _tmpl$(), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$2.nextSibling;
       insert(_el$, createComponent(Icon, {
-        "class": "size-10 mr-2",
+        "class": "size-10 ml-2\\.5 mr-2",
         name: "CITY_UNIQUE_QUARTER"
       }), _el$2);
       insert(_el$4, createComponent(L10n.Compose, {

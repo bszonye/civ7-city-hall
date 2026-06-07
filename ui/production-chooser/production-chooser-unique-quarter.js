@@ -15,7 +15,7 @@ class UniqueQuarter {
   }
   constructor() {
     this.root.className = "production-chooser__unique-quarter relative flex flex-col pointer-events-auto";
-    this.buildingContainer.className = "flex flex-col";
+    this.buildingContainer.className = "flex flex-col pl-2\\.5";
     const uqBarDecor = document.createElement("div");
     uqBarDecor.className = "absolute -left-px h-full w-1\\.5 img-city-tab-line-vert";
     const uqDivider = document.createElement("div");

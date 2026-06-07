@@ -55,6 +55,7 @@ const ProductionChooserItemContent = (props) => {
   const category = createMemo(() => normalizeCategory(attrs()["data-category"]));
   const itemType = createMemo(() => attrs()["data-type"] ?? void 0);
   const isRepairAll = createMemo(() => attrs()["data-repair-all"] === "true");
+  const isRepair = createMemo(() => attrs()["data-is-repair"] === "true");  // TRIX
   const nameKey = createMemo(() => attrs()["data-name"] ?? void 0);
   const descriptionKey = createMemo(() => attrs()["data-description"] ?? void 0);
   const isPurchase = createMemo(() => attrs()["data-is-purchase"] === "true");
@@ -89,6 +90,11 @@ const ProductionChooserItemContent = (props) => {
   });
   const costIcon = createMemo(() => isPurchase() ? "Yield_Gold" : "hud_turn-timer");
   const costIconLabel = createMemo(() => Locale.compose(isPurchase() ? "LOC_YIELD_GOLD" : "LOC_UI_CITY_INSPECTOR_TURNS"));
+  // TRIX: production cost and progress
+  const productionCost = createMemo(() => attrs()["data-production-cost"] ?? "");
+  const productionPercent = createMemo(() => attrs()["data-production-percent"] ?? "");
+  const productionProgress = createMemo(() => attrs()["data-production-progress"] ?? "");
+  const isInProgress = createMemo(() => attrs()["data-is-in-progress"] === "true");
   const audio = createMemo(() => {
     const group = attrs()["data-audio-group-ref"] ?? void 0;
     const onActivate = attrs()["data-audio-activate-ref"] ?? void 0;
@@ -156,8 +162,11 @@ const ProductionChooserItemContent = (props) => {
         },
         get children() {
           return createComponent(ChooserItem, {
-            "class": "text-base production-chooser-item",
-            contentClass: "p-2 tracking-100 flex flex-row",
+            // TRIX
+            // "class": "text-base production-chooser-item",
+            // contentClass: "p-2 tracking-100 flex flex-row",
+            "class": "production-chooser-item text-xs leading-tight",
+            contentClass: "flex flex-row justify-start items-center",  // TRIX
             name: "ProductionChooserItem",
             selectOnActivate: true,
             get disabled() {
@@ -179,24 +188,61 @@ const ProductionChooserItemContent = (props) => {
               return isRepairAll() ? "true" : void 0;
             },
             get children() {
-              var _el$ = _tmpl$7(), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$14 = _el$2.nextSibling, _el$15 = _el$14.firstChild, _el$16 = _el$15.nextSibling;
-              insert(_el$, createComponent(Icon, {
-                "class": "size-16 bg-contain bg-center bg-no-repeat mr-2 flex-shrink-0 pointer-events-none",
+              var elItem = tmplItem(), elInfo = elItem.firstChild, elTitle = elInfo.firstChild, elName = elTitle.firstChild, elTags = elName.nextSibling, elRight = elInfo.nextSibling, elCosts = elRight.firstChild;
+              insert(elItem, createComponent(Icon, {
+                // TRIX: resize and realign item icon
+                "class": "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
                 get name() {
                   return itemType();
                 }
-              }), _el$2);
-              insert(_el$3, createComponent(L10n.Compose, {
+              }), elInfo);
+              // TRIX: style item names
+              insert(elName, createComponent(L10n.Stylize, {
+                get ["class"]() {
+                  // TRIX: repairs in yellow, ageless in gold
+                  return isRepairAll() || isRepair() ? "bz-city-repair" :
+                    isAgeless() ? "text-gradient-secondary" : "";
+                },
                 get text() {
                   return nameKey() ?? "";
                 }
               }));
-              insert(_el$2, createComponent(Show, {
+              insert(elTags, createComponent(Show, {
+                get when() {
+                  return isAgeless() && !isRepair();
+                },
+                get children() {
+                  // TRIX: compact Ageless pill
+                  const pill = createComponent(PillText, {
+                    "class": "bz-pci-ageless text-xs leading-tight py-px -my-px -ml-1 mr-3",
+                    text: "LOC_UI_PRODUCTION_AGELESS"
+                  });
+                  pill.classList.remove("h-9", "text-sm", "leading-normal");
+                  return pill;
+                }
+              }), null);
+              insert(elTags, createComponent(Show, {
+                get when() {
+                  return showRecommendations();
+                },
+                get children() {
+                  var _el$17 = tmplRecs();
+                  insert(_el$17, createComponent(AdvisorRecommendationsList, {
+                    get recommendations() {
+                      return recommendations();
+                    },
+                    direction: "horizontal",
+                    iconOnly: true
+                  }));
+                  return _el$17;
+                }
+              }), null);
+              insert(elInfo, createComponent(Show, {
                 get when() {
                   return errorKey();
                 },
                 get children() {
-                  var _el$4 = _tmpl$();
+                  var _el$4 = tmplError();
                   insert(_el$4, createComponent(L10n.Compose, {
                     get text() {
                       return errorKey();
@@ -205,12 +251,13 @@ const ProductionChooserItemContent = (props) => {
                   return _el$4;
                 }
               }), null);
-              insert(_el$2, createComponent(Show, {
+              insert(elInfo, createComponent(Show, {
                 get when() {
-                  return showSecondaryDetails();
+                  // TRIX: hide details for repairs
+                  return showSecondaryDetails() && !isRepair();
                 },
                 get children() {
-                  var _el$5 = _tmpl$2();
+                  var _el$5 = tmplDetails();
                   createRenderEffect((_p$) => {
                     var _v$ = !!isUnitType(), _v$2 = secondaryDetails();
                     _v$ !== _p$.e && _el$5.classList.toggle("-ml-1.5", _p$.e = _v$);
@@ -223,18 +270,19 @@ const ProductionChooserItemContent = (props) => {
                   return _el$5;
                 }
               }), null);
-              insert(_el$2, createComponent(Show, {
+              insert(elInfo, createComponent(Show, {
                 get when() {
-                  return showAlternateYields();
+                  // TRIX: hide details for repairs
+                  return showAlternateYields() && !isRepair();
                 },
                 get children() {
-                  var _el$6 = _tmpl$5();
+                  var _el$6 = tmplYields();
                   insert(_el$6, createComponent(Show, {
                     get when() {
                       return showBaseYields();
                     },
                     get children() {
-                      var _el$7 = _tmpl$3();
+                      var _el$7 = tmplYBase();
                       insert(_el$7, createComponent(For, {
                         get each() {
                           return baseYields();
@@ -257,10 +305,10 @@ const ProductionChooserItemContent = (props) => {
                       return canShowWarehouse();
                     },
                     get children() {
-                      var _el$8 = _tmpl$4(), _el$9 = _el$8.firstChild, _el$10 = _el$9.nextSibling;
+                      var _el$8 = tmplYBonus(), _el$9 = _el$8.firstChild, _el$10 = _el$9.nextSibling;
                       insert(_el$10, warehouseCount);
                       insert(_el$8, createComponent(Icon, {
-                        "class": "size-8",
+                        "class": "size-6",  // TRIX
                         name: "YIELD_WAREHOUSE"
                       }), null);
                       return _el$8;
@@ -271,10 +319,10 @@ const ProductionChooserItemContent = (props) => {
                       return canShowAdjacency();
                     },
                     get children() {
-                      var _el$11 = _tmpl$4(), _el$12 = _el$11.firstChild, _el$13 = _el$12.nextSibling;
+                      var _el$11 = tmplYBonus(), _el$12 = _el$11.firstChild, _el$13 = _el$12.nextSibling;
                       insert(_el$13, highestAdjacency);
                       insert(_el$11, createComponent(Icon, {
-                        "class": "size-8",
+                        "class": "size-6",  // TRIX
                         name: "YIELD_ADJACENCY"
                       }), null);
                       return _el$11;
@@ -283,52 +331,75 @@ const ProductionChooserItemContent = (props) => {
                   return _el$6;
                 }
               }), null);
-              insert(_el$15, createComponent(Show, {
+              insert(elCosts, createComponent(Show, {
                 get when() {
-                  return isAgeless();
+                  return 0 < Number(productionCost());
                 },
                 get children() {
-                  return createComponent(PillText, {
-                    text: "LOC_UI_PRODUCTION_AGELESS"
-                  });
-                }
-              }));
-              insert(_el$16, createComponent(Show, {
-                get when() {
-                  return !hideCost();
-                },
-                get children() {
-                  var _el$17 = _tmpl$6(), _el$18 = _el$17.firstChild, _el$19 = _el$18.nextSibling;
-                  insert(_el$17, createComponent(Show, {
-                    get when() {
-                      return showRecommendations();
+                  var elRow = tmplPCost(), elCost = elRow.firstChild, elIcon = elCost.nextSibling;
+                  insert(elCost, createComponent(L10n.Stylize, {
+                    get ["class"]() {
+                      return 0 < productionProgress() ? "text-positive" : "";
                     },
-                    get children() {
-                      return createComponent(AdvisorRecommendationsList, {
-                        "class": "mr-2",
-                        get recommendations() {
-                          return recommendations();
-                        },
-                        direction: "horizontal",
-                        iconOnly: true,
-                        noWrap: true
-                      });
+                    text: "LOC_BZ_GROUPED_DIGITS",
+                    get args() {
+                      return [Number(productionCost())];
                     }
-                  }), _el$18);
-                  insert(_el$18, costValue);
+                  }));
                   createRenderEffect((_p$) => {
-                    var _v$3 = `url(${costIcon()})`, _v$4 = costIconLabel();
-                    _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? _el$19.style.setProperty("background-image", _v$3) : _el$19.style.removeProperty("background-image"));
-                    _v$4 !== _p$.t && setAttribute(_el$19, "aria-label", _p$.t = _v$4);
+                    var _v$3 = `url(Yield_Production)`, _v$4 = Locale.compose("LOC_YIELD_PRODUCTION");
+                    _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
+                    _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
+                    elIcon.classList.toggle("invisible", isInProgress());
                     return _p$;
                   }, {
                     e: void 0,
                     t: void 0
                   });
-                  return _el$17;
+                  return elRow;
                 }
               }));
-              return _el$;
+              insert(elCosts, createComponent(Show, {
+                get when() {
+                  return !hideCost();
+                },
+                get children() {
+                  var elRow = tmplCost(), elCost = elRow.firstChild, elIcon = elCost.nextSibling;
+                  insert(elCost, createComponent(L10n.Stylize, {
+                    get ["class"]() {
+                      return 0 < productionProgress() ? "text-positive" : "";
+                    },
+                    text: "LOC_BZ_GROUPED_DIGITS",
+                    get args() {
+                      return [Number(costValue())];
+                    }
+                  }));
+                  createRenderEffect((_p$) => {
+                    var _v$3 = `url(${costIcon()})`, _v$4 = costIconLabel();
+                    _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? elIcon.style.setProperty("background-image", _v$3) : elIcon.style.removeProperty("background-image"));
+                    _v$4 !== _p$.t && setAttribute(elIcon, "aria-label", _p$.t = _v$4);
+                    elIcon.classList.toggle("invisible", isInProgress());
+                    return _p$;
+                  }, {
+                    e: void 0,
+                    t: void 0
+                  });
+                  return elRow;
+                }
+              }));
+              insert(elCosts, createComponent(Show, {
+                get when() {
+                  return isInProgress();
+                },
+                get children() {
+                  var elPBar = tmplPBar();
+                  const discount = isPurchase() && 0 < Number(productionProgress());
+                  elPBar.classList.toggle("bz-purchase-progress", discount);
+                  elPBar.firstChild.firstChild.style.heightPERCENT = productionPercent();
+                  return elPBar;
+                },
+              }));
+              return elItem;
             }
           });
         }
@@ -344,10 +415,15 @@ defineLegacyComponent("production-chooser-item", {
     "data-name": null,
     "data-type": null,
     "data-cost": null,
+    "data-production-cost": null,
+    "data-production-percent": null,
+    "data-production-progress": null,
+    "data-is-in-progress": null,
     "data-prereq": null,
     "data-description": null,
     "data-error": null,
     "data-is-purchase": null,
+    "data-is-repair": null,
     "data-is-ageless": null,
     "data-secondary-details": null,
     "data-recommendations": null,
