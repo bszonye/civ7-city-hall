@@ -55,7 +55,9 @@
                 <ImportFiles>
                     <Item>ui/interface-modes/support-city-decoration.js</Item>
                     <Item>ui/production-chooser/panel-production-chooser.js</Item>
+                    <Item>ui/production-chooser/production-chooser-unique-quarter.js</Item>
                     <Item>ui-next/components/production-chooser-item.js</Item>
+                    <Item>ui-next/components/production-chooser-unique-quarter-item.js</Item>
                 </ImportFiles>
                 <UIScripts>
                     <Item>ui/building-placement/bz-building-placement-manager.js</Item>
