@@ -1,63 +1,40 @@
 // vim: sw=2 et
-import { A as Audio } from '../../../core/ui/audio-base/audio-support.chunk.js';
-import { b as FxsFrame, E as EditableHeaderTextChangedEventName, e as EditableHeaderExitEditEventName } from '../../../core/ui/components/fxs-editable-header.chunk.js';
+import { Audio } from '../../../core/ui/audio-base/audio-support.js';
+import { EditableHeaderTextChangedEventName, EditableHeaderExitEditEventName } from '../../../core/ui/components/fxs-editable-header.js';
 import ContextManager from '../../../core/ui/context-manager/context-manager.js';
-import { a as DialogBoxManager, D as DialogBoxAction } from '../../../core/ui/dialog-box/manager-dialog-box.chunk.js';
+import { DialogBoxManager } from '../../../core/ui/dialog-box/manager-dialog-box.js';
 import ActionHandler from '../../../core/ui/input/action-handler.js';
-import FocusManager from '../../../core/ui/input/focus-manager.js';
-import { b as FxsVSlot, F as Focus } from '../../../core/ui/input/focus-support.chunk.js';
-import { b as InputEngineEventName } from '../../../core/ui/input/input-support.chunk.js';
+import { Focus } from '../../../core/ui/input/focus-support.js';
+import { InputEngineEventName } from '../../../core/ui/input/input-support.js';
 import { PlotCursor } from '../../../core/ui/input/plot-cursor.js';
 import { InterfaceModeChangedEventName, InterfaceMode } from '../../../core/ui/interface-modes/interface-modes.js';
-import { N as NavTray } from '../../../core/ui/navigation-tray/model-navigation-tray.chunk.js';
-import { P as Panel, A as AnchorType } from '../../../core/ui/panel-support.chunk.js';
-import { C as ComponentID } from '../../../core/ui/utilities/utilities-component-id.chunk.js';
-import { D as Databind } from '../../../core/ui/utilities/utilities-core-databinding.chunk.js';
-import { MustGetElement, IsElement } from '../../../core/ui/utilities/utilities-dom.chunk.js';
-import { L as Layout } from '../../../core/ui/utilities/utilities-layout.chunk.js';
-import { U as UpdateGate } from '../../../core/ui/utilities/utilities-update-gate.chunk.js';
-import { V as ViewManager } from '../../../core/ui/views/view-manager.chunk.js';
+import NavTray from '../../../core/ui/navigation-tray/model-navigation-tray.js';
+import Panel, { AnchorType } from '../../../core/ui/panel-support.js';
+import { ComponentID } from '../../../core/ui/utilities/utilities-component-id.js';
+import Databind from '../../../core/ui/utilities/utilities-core-databinding.js';
+import { MustGetElement, IsElement } from '../../../core/ui/utilities/utilities-dom.js';
+import { Layout } from '../../../core/ui/utilities/utilities-layout.js';
+import UpdateGate from '../../../core/ui/utilities/utilities-update-gate.js';
+import ViewManager from '../../../core/ui/views/view-manager.js';
+import { FocusManager } from '../../../core/ui-next/services/focus-manager.js';
 import { BuildQueue } from '../build-queue/model-build-queue.js';
 import { BuildingPlacementManager } from '../building-placement/building-placement-manager.js';
 import { CityDetailsClosedEventName } from '../city-details/panel-city-details.js';
-import { P as ProductionPanelCategory, b as GetTownFocusBlp, c as GetTownFocusItems, U as UpdateCityDetailsEventName, d as GetLastProductionData, e as GetCityBuildReccomendations, f as GetUniqueQuartersForPlayer, g as GetProductionItems, R as RepairConstruct, S as SetTownFocus, G as GetPrevCityID, a as GetNextCityID, h as Construct, i as CreateProductionChooserItem, j as GetNumUniqueQuarterBuildingsCompleted, k as GetCurrentTownFocus } from './production-chooser-helpers.chunk.js';
-import { t as template, i as insert, s as setAttribute, C as ComponentRegistry, b as spread } from '../../../core/vendor/solid-js/store/dist/store.js';
-import { d as defineLegacyComponent } from '../../../core/ui-next/components/tooltip-model.chunk.js';
-import { I as Icon } from '../../../core/ui-next/components/icon.chunk.js';
-import { L as L10n } from '../../../core/ui-next/components/l10n.chunk.js';
-import { T as Tooltip, c as TooltipHorizontalPosition, b as TooltipVerticalPosition } from '../../../core/ui-next/components/tooltip.chunk.js';
-import { c as createComponent, f as createRenderEffect, q as splitProps, e as createMemo, m as mergeProps, F as For, S as Show, k as Switch, M as Match, b as createEffect } from '../../../core/vendor/solid-js/dist/solid.js';
-import { g as getConstructibleTagsFromType, c as composeTagString } from '../utilities/utilities-tags.chunk.js';
+import { ProductionPanelCategory, GetCityBuildReccomendations, GetUniqueQuartersForPlayer, GetProductionItems, RepairConstruct, SetTownFocus, GetPrevCityID, GetNextCityID, Construct, CreateProductionChooserItem, GetNumUniqueQuarterBuildingsCompleted, GetCurrentTownFocus } from './production-chooser-helpers.js';
+import { ConvertToCity, CanConvertToCity } from './production-chooser-operations.js';
+import { UniqueQuarter } from './production-chooser-unique-quarter.js';
+import { composeTagString } from '../utilities/utilities-tags.js';
 import { FocusCityViewEventName } from '../views/view-city.js';
-import { C as ChooserItem } from '../../../core/ui-next/components/chooser-item.chunk.js';
-import { P as PillText, A as AdvisorRecommendationPill, a as AdvisorRecommendationsList } from '../../ui-next/components/pills.chunk.js';
-import { F as FiligreeTitle } from '../../../core/ui-next/components/filigree-title.chunk.js';
-import { g as getModifierTextByContext, b as parseConstructibleAdjacencyNameOnly } from '../../../core/ui/utilities/utilities-core-textprovider.chunk.js';
-import { F as Framework } from '../../../core/ui/framework.chunk.js';
+import styles from './panel-production-chooser.scss.js';
+import '../../ui-next/components/production-chooser-item.js';
+import '../../ui-next/components/production-chooser-unique-quarter-item.js';
+import { TownFocusRefreshEvent } from './panel-town-focus.js';
+import { ProductionChooserAccordionSection, ProductionChooserAccordionSectionToggleEventName } from './production-chooser-accordion.js';
 import '../yield-bar-base/yield-bar-base.js';
-import { F as FxsChooserItem } from '../../../core/ui/components/fxs-chooser-item.chunk.js';
-import '../../../core/ui/components/fxs-activatable.chunk.js';
-import '../../../core/ui/context-manager/display-queue-manager.js';
-import '../../../core/ui/input/cursor.js';
-import '../../../core/ui/spatial/spatial-manager.js';
-import '../../../core/ui/utilities/utilities-image.chunk.js';
-import '../utilities/utilities-overlay.chunk.js';
-import '../tutorial/tutorial-support.chunk.js';
-import '../../../core/ui/components/fxs-nav-help.chunk.js';
-import '../quest-tracker/quest-item.js';
-import '../quest-tracker/quest-tracker.js';
-import '../../../core/ui/utilities/utility-serialize.chunk.js';
-import '../tutorial/tutorial-item.js';
-import '../tutorial/tutorial-manager.js';
-import '../../../core/ui/input/input-filter.chunk.js';
-import '../tutorial/tutorial-events.chunk.js';
-import '../../../core/ui-next/services/model-registry.chunk.js';
-import '../../../core/ui-next/components/activatable.chunk.js';
-import '../../../core/ui-next/components/nav-help.chunk.js';
-import '../../../core/ui-next/components/slot.chunk.js';
-import '../../../core/ui-next/utilities/game-core-utilities.chunk.js';
-import '../../../core/ui-next/components/filigree.chunk.js';
-import '../../../core/ui-next/components/header.chunk.js';
+import './town-focus-section.js';
+import './town-unrest-display.js';
+import './last-production-section.js';
+import { DialogBoxAction } from '../../../core/ui/dialog-box/model-dialog-box.js';
 
 // eslint-disable-next-line no-unused-vars -- FXS
 const CanUpgradeToCity = (townID) => {
@@ -2884,7 +2861,7 @@ class ProductionChooserScreen extends Panel {
       cityDetailsPanel.maybeComponent?.update();
       cityDetailsPanel.classList.toggle("hidden");
       if (!cityDetailsPanel.classList.contains("hidden")) {
-        Focus.setContextAwareFocus(cityDetailsPanel, this.Root);
+        FocusManager.get().setFocus(cityDetailsPanel);
         Audio.playSound("data-audio-city-details-enter", "city-actions");
       } else {
         Audio.playSound("data-audio-city-details-exit", "city-actions");
@@ -2892,7 +2869,7 @@ class ProductionChooserScreen extends Panel {
     } else {
       const newCityDetailsPanel = document.createElement("panel-city-details");
       this.cityDetailsSlot.appendChild(newCityDetailsPanel);
-      Focus.setContextAwareFocus(newCityDetailsPanel, this.Root);
+      FocusManager.get().setFocus(newCityDetailsPanel);
       Audio.playSound("data-audio-city-details-enter", "city-actions");
     }
     this.cityNameElement.classList.remove("trigger-nav-help");
@@ -2994,7 +2971,7 @@ class ProductionChooserScreen extends Panel {
     }
   }
   updateCategories(items) {
-    const initialFocus = FocusManager.getFocus();
+    const initialFocus = FocusManager.get().currentFocus();
     let initialFocusParent = null;
     for (const parent of this.itemElementMap.values()) {
       if (parent.contains(initialFocus)) {
@@ -3012,19 +2989,49 @@ class ProductionChooserScreen extends Panel {
       uniqueQuarter.root.remove();
     }
     this.uniqueQuarters = [];
+    const hiddenItems = !this.viewHidden && this.uniqueQuarterInfos.length > 0 ? GetProductionItems(
+      city,
+      this.recommendations,
+      this.playerGoldBalance,
+      this.isPurchase,
+      true,
+      this.uniqueQuarterInfos
+    ) : void 0;
     for (const uniqueQuarterInfo of this.uniqueQuarterInfos) {
-      const buildingOneChooserItem = this.itemElementMap.get(uniqueQuarterInfo.uniqueQuarterDef.BuildingType1);
-      const buildingTwoChooserItem = this.itemElementMap.get(uniqueQuarterInfo.uniqueQuarterDef.BuildingType2);
-      if (buildingOneChooserItem && buildingTwoChooserItem) {
+      let buildingOneChooserItem = this.itemElementMap.get(uniqueQuarterInfo.uniqueQuarterDef.BuildingType1);
+      let buildingTwoChooserItem = this.itemElementMap.get(uniqueQuarterInfo.uniqueQuarterDef.BuildingType2);
+      if (buildingOneChooserItem || buildingTwoChooserItem) {
         const newQuarter = new UniqueQuarter();
         newQuarter.definition = uniqueQuarterInfo.uniqueQuarterDef;
         newQuarter.numCompleted = GetNumUniqueQuarterBuildingsCompleted(
           city,
           uniqueQuarterInfo.uniqueQuarterDef
         );
-        newQuarter.setBuildings(buildingOneChooserItem, buildingTwoChooserItem);
-        buildingSlot.insertAdjacentElement("afterbegin", newQuarter.root);
-        this.uniqueQuarters.push(newQuarter);
+        if (hiddenItems && !(buildingOneChooserItem && buildingTwoChooserItem)) {
+          if (!buildingOneChooserItem) {
+            const item = hiddenItems.buildings.filter(
+              (r) => r.type == uniqueQuarterInfo.uniqueQuarterDef.BuildingType1
+            )[0];
+            if (item) {
+              buildingOneChooserItem = CreateProductionChooserItem();
+              updateProductionChooserItemElement(buildingOneChooserItem, item, this.isPurchase);
+            }
+          }
+          if (!buildingTwoChooserItem) {
+            const item = hiddenItems.buildings.filter(
+              (r) => r.type == uniqueQuarterInfo.uniqueQuarterDef.BuildingType2
+            )[0];
+            if (item) {
+              buildingTwoChooserItem = CreateProductionChooserItem();
+              updateProductionChooserItemElement(buildingTwoChooserItem, item, this.isPurchase);
+            }
+          }
+        }
+        if (buildingOneChooserItem && buildingTwoChooserItem) {
+          newQuarter.setBuildings(buildingOneChooserItem, buildingTwoChooserItem);
+          buildingSlot.insertAdjacentElement("afterbegin", newQuarter.root);
+          this.uniqueQuarters.push(newQuarter);
+        }
       }
     }
     for (const category of Object.values(ProductionPanelCategory)) {
@@ -3052,7 +3059,7 @@ class ProductionChooserScreen extends Panel {
     );
     const newItemsSet = new Set(newItems);
     let resetFocus = false;
-    const currentFocus = FocusManager.getFocus();
+    const currentFocus = FocusManager.get().currentFocus();
     for (const [type, item] of this.itemElementMap) {
       if (!newItemsSet.has(type)) {
         resetFocus ||= currentFocus === item;
@@ -3072,7 +3079,7 @@ class ProductionChooserScreen extends Panel {
     const result = CanConvertToCity(cityID);
     this.upgradeToCityButton.setAttribute("disabled", result.Success ? "false" : "true");
     this.upgradeToCityButton.classList.toggle("hidden", !isTown);
-    this.upgradeToCityButtonCostElement.textContent = upgradeCost.toString();
+    this.upgradeToCityButtonCostElement.innerHTML = upgradeCost.toString();
     if (result.FailureReasons) {
       const failureTooltip = result.FailureReasons.join("\n");
       this.upgradeToCityButton.setAttribute("data-tooltip-content", failureTooltip);
@@ -3147,16 +3154,18 @@ class ProductionChooserScreen extends Panel {
     if (status != InputActionStatuses.FINISH) {
       return !(name === "camera-zoom-in" || name === "camera-zoom-out" || name == "accept");
     }
+    if (inputEvent.isCancelInput()) {
+      if (this.Root.dataset.showTownFocus === "true") {
+        this.Root.dataset.showTownFocus = "false";
+        Focus.setContextAwareFocus(this.townFocusSection, this.Root);
+        this.updateNavTray();
+      } else {
+        this.requestClose();
+      }
+      return false;
+    }
     let live = false;
     switch (name) {
-      case "cancel":
-        if (this.Root.dataset.showTownFocus === "true") {
-          this.Root.dataset.showTownFocus = "false";
-          Focus.setContextAwareFocus(this.townFocusSection, this.Root);
-        } else {
-          live = true;
-        }
-        break;
       case "accept":
         live = false;
         break;
@@ -3172,7 +3181,7 @@ class ProductionChooserScreen extends Panel {
   updateNavTray() {
     NavTray.clear();
     NavTray.addOrUpdateGenericBack();
-    const currentFocus = FocusManager.getFocus();
+    const currentFocus = FocusManager.get().currentFocus();
     if (currentFocus?.closest("panel-build-queue") || currentFocus?.closest("panel-town-focus")) {
       return;
     }
@@ -3289,6 +3298,7 @@ class ProductionChooserScreen extends Panel {
       case "data-show-town-focus":
         this.townFocusPanel.classList.toggle("hidden", newValue !== "true");
         if (oldValue === "false" && newValue === "true") {
+          Focus.setContextAwareFocus(this.townFocusPanel, this.Root);
           Audio.playSound("data-audio-showing", "town-specialization-panel");
         } else if (oldValue === "true" && newValue === "false") {
           Audio.playSound("data-audio-hiding", "town-specialization-panel");
