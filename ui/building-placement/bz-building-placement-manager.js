@@ -1,6 +1,6 @@
 import { BuildingPlacementManager, BuildingPlacementConstructibleChangedEvent } from '/base-standard/ui/building-placement/building-placement-manager.js';
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
-import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
+import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
+import { ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.js';
 
 const proto = Object.getPrototypeOf(BuildingPlacementManager);
 

@@ -1,7 +1,7 @@
 import { ComponentID } from '../../../core/ui/utilities/utilities-component-id.js';
 import { OVERLAY_PRIORITY } from '../utilities/utilities-overlay.js';
-import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
-import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
+import LensManager from '/core/ui/lenses/lens-manager.js';
+import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
 import { realizeBuildSlots } from '/bz-city-hall/ui/lenses/layer/bz-building-slots.js';
 // make sure the urban layer loads first
 import '/bz-city-hall/ui/lenses/layer/bz-urban-layer.js';

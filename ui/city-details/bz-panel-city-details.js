@@ -1,10 +1,10 @@
 import bzCityDetails, { bzUpdateCityDetailsEventName } from "/bz-city-hall/ui/city-details/bz-model-city-details.js";
-import { C as CityDetails, U as UpdateCityDetailsEventName } from "/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js";
-import { N as NavTray } from "/core/ui/navigation-tray/model-navigation-tray.chunk.js";
-import { D as Databind } from '../../../core/ui/utilities/utilities-core-databinding.chunk.js';
-import { MustGetElement } from "/core/ui/utilities/utilities-dom.chunk.js";
-import FocusManager from '/core/ui/input/focus-manager.js';
-import { g as getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
+import CityDetails, { UpdateCityDetailsEventName } from "/base-standard/ui/city-details/model-city-details.js";
+import NavTray from "/core/ui/navigation-tray/model-navigation-tray.js";
+import Databind from '../../../core/ui/utilities/utilities-core-databinding.js';
+import { MustGetElement } from "/core/ui/utilities/utilities-dom.js";
+import { FocusManager } from '/core/ui-next/services/focus-manager.js';
+import { getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.js';
 
 // vertical separator
 const BZ_DIVIDER_STYLE = "flex w-96 self-center";
@@ -395,7 +395,7 @@ class bzPanelCityDetails {
         this.component.slotGroup.setAttribute("selected-slot", tab.id);
         this.component.Root.classList.toggle("trigger-nav-help", focus);
         if (!focus) return;
-        FocusManager.setFocus(slot);
+        FocusManager.get().setFocus(slot);
     }
     // empty decorators
     beforeAttach() {
@@ -422,7 +422,7 @@ class bzPanelCityDetails {
         this.improvementsContainer = MustGetElement(".improvements-container", oslot);
         this.townFocusContainer = MustGetElement(".town-focus-container", oslot);
         // enable navigation back to the left panel
-        this.slots.forEach(slot => slot.removeAttribute("data-navrule-left"));
+        this.slots.forEach(slot => slot.setAttribute("data-navrule-left", "escape"));
         // select tab
         this.component.tabBar.addEventListener("tab-selected", this.onTabSelected);
         this.selectTab(bzPanelCityDetails.lastTab);
@@ -515,7 +515,7 @@ class bzPanelCityDetails {
         bzCityDetails.sortConstructibles(buildings, improvements, wonders);
         // fix controller focus
         const c = this.component;
-        const hasFocus = this.component.Root.contains(FocusManager.getFocus());
+        const hasFocus = this.component.Root.contains(FocusManager.get().currentFocus());
         c.Root.classList.toggle("trigger-nav-help", hasFocus);
         Databind.classToggle(c.Root, "bz-no-help", "!{{g_NavTray.isTrayRequired}}");
         Databind.classToggle(c.Root, "bz-nav-help", "{{g_NavTray.isTrayRequired}}");
@@ -523,7 +523,7 @@ class bzPanelCityDetails {
     // update data model for new tab slot
     updateOverview() {
         // Flag so we can give the overview back focus after updating
-        const overviewHasFocus = this.overviewSlot.contains(FocusManager.getFocus());
+        const overviewHasFocus = this.overviewSlot.contains(FocusManager.get().currentFocus());
         this.renderGrowth(this.growthContainer);
         this.renderConnections(this.connectionsContainer);
         this.renderTable(
@@ -537,7 +537,7 @@ class bzPanelCityDetails {
             "LOC_UI_TOWN_FOCUS",
             bzCityDetails.townFocusTable,
         );
-        if (overviewHasFocus) FocusManager.setFocus(this.overviewSlot);
+        if (overviewHasFocus) FocusManager.get().setFocus(this.overviewSlot);
     }
     renderGrowth(container) {
         container.innerHTML = "";
@@ -895,7 +895,7 @@ class bzPanelCityDetails {
             const tab = this.tabs.at(index);  // string index coerced to integer
             if (tab && tab.id != event.target.id) {
                 // switch focus to the selected tab
-                setTimeout(() => FocusManager.setFocus(this.slots.at(index)));
+                setTimeout(() => FocusManager.get().setFocus(this.slots.at(index)));
             }
         }
     }

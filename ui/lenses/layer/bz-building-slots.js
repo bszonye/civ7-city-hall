@@ -1,5 +1,5 @@
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
-import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
+import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
+import { ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.js';
 
 const BUILDING_TEXT_PARAMS = {
     fonts: ["TitleFont"],

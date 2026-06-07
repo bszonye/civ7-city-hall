@@ -1,12 +1,13 @@
 import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
-import { Icon } from '/core/ui/utilities/utilities-image.chunk.js';
+import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
+import { Icon } from '/core/ui/utilities/utilities-image.js';
 import { BuildingPlacementManager as BPM } from '/base-standard/ui/building-placement/building-placement-manager.js';
-import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
-import { C as ConstructibleHasTagType, g as getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
+import { AdvisorUtilities } from '/base-standard/ui/tutorial/advisor-utilities.js';
+import { ConstructibleHasTagType, getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.js';
 
-// import { c as getNodeName } from '/base-standard/ui/utilities/utilities-textprovider.chunk.js';
-function getNodeName(nodeData) {
+import { getNodeName } from '/base-standard/ui/utilities/utilities-textprovider.js';
+// TODO: test and remove
+function _getNodeName(nodeData) {
     if (!nodeData) {
         return "";
     }
@@ -758,5 +759,5 @@ function bzSortProductionItems(list) {
     });
 }
 
-export { GetProductionItems as g, Construct as h };
+export { GetProductionItems, Construct };
 //# sourceMappingURL=production-chooser-helpers.chunk.js.map

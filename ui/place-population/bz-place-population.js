@@ -1,4 +1,4 @@
-import { D as Databind } from '../../../core/ui/utilities/utilities-core-databinding.chunk.js';
+import Databind from '../../../core/ui/utilities/utilities-core-databinding.js';
 import { PlacePopulation } from '/base-standard/ui/place-population/model-place-population.js';
 
 const YIELD_NEUTRAL = "blp:yield_container_neutral";

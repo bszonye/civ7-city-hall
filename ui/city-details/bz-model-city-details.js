@@ -1,7 +1,7 @@
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
-import { g as getGlobalParamNumber } from '/core/ui/utilities/utilities-data.chunk.js';
-import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
-import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
+import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
+import { getGlobalParamNumber } from '/core/ui/utilities/utilities-data.js';
+import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
+import { ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.js';
 export const bzUpdateCityDetailsEventName = 'bz-update-city-details';
 
 class bzUpdateCityDetailsEvent extends CustomEvent {
