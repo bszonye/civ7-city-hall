@@ -307,10 +307,7 @@ class bzCityDetailsModel {
                         "LOC_IMPROVEMENT_MINE_NAME",
                         "LOC_IMPROVEMENT_QUARRY_NAME",
                     );
-                    project.details = [{
-                        icon: "YIELD_PRODUCTION",
-                        bonus: 2 * count,
-                    }];
+                    project.details = [{ icon: "YIELD_PRODUCTION", bonus: 2 * count }];
                     break;
                 }
                 case "PROJECT_TOWN_TRADE": {
@@ -321,12 +318,16 @@ class bzCityDetailsModel {
                     ];
                     break;
                 }
-                case "PROJECT_TOWN_TEMPLE":
-                    project.details = [{
-                        icon: "YIELD_HAPPINESS",
-                        bonus: 2 * buildingTypes().length,
-                    }];
+                case "PROJECT_TOWN_TEMPLE": {
+                    const slots = city.Constructibles
+                        .hasConstructible("BUILDING_TEMPLE", false) ? 2 : 0;
+                    const bonus = 2 * buildingTypes().length;
+                    project.details = [
+                        { icon: "GREATWORK", bonus: slots },
+                        { icon: "YIELD_HAPPINESS", bonus },
+                    ];
                     break;
+                }
                 case "PROJECT_TOWN_INN":
                     project.details = [{
                         icon: "YIELD_DIPLOMACY",
@@ -334,7 +335,10 @@ class bzCityDetailsModel {
                     }];
                     break;
                 case "PROJECT_TOWN_FACTORY":
-                    project.details = [{ icon: "YIELD_TRADES", bonus: 5 }];
+                    project.details = [
+                        { icon: "YIELD_TRADES", bonus: 5 },
+                        { icon: "RADIAL_RESOURCES", bonus: 1, small: true },
+                    ];
                     break;
             }
             projects.push(project);
