@@ -169,21 +169,20 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-city-name-wrapper .fxs-nav-help {
     margin: 0;
 }
-.bz-city-hall .bz-city-name-wrapper .bz-cycle-city {
-    position: relative;
-    z-index: 1;
-}
 .bz-city-hall .bz-city-name-wrapper .bz-cycle-city.hidden {
     display: flex;
     opacity: 0;
 }
-.bz-city-hall .bz-city-name-wrapper.bz-nav-help .bz-cycle-city {
-    top: 1.3333333333rem;
-    left: 2.3888888889rem;
-}
-.bz-city-hall .bz-city-name-wrapper.bz-no-help .bz-cycle-city {
+.bz-city-hall .bz-city-name-wrapper .bz-cycle-city {
+    position: relative;
+    z-index: 1;
     top: 1.2777777778rem;
-    left: 2.6666666667rem;
+}
+.bz-city-hall .bz-city-name-wrapper .bz-prev-city {
+    left: 1.7777777778rem;
+}
+.bz-city-hall .bz-city-name-wrapper .bz-next-city {
+    left: -1.7777777778rem;
 }
 .bz-city-hall .img-city-details {
     width: 2.3333333333rem;
