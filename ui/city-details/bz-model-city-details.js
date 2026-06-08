@@ -229,7 +229,6 @@ class bzCityDetailsModel {
     }
     modelTownFocus(city) {
         if (!city.isTown) return null;
-        const focusHash = city.Growth?.projectType;
         const loc = city.location;
         // get the enabled Town Focus projects
         const canStart = Game.CityCommands.canStart(
@@ -239,6 +238,7 @@ class bzCityDetailsModel {
             false
         );
         const enabled = new Set(canStart.Projects ?? []);
+        const focus = enabled.size == 1 ? canStart.Projects[0] : null;
         // utility functions
         const buildingTypes = () => city.Constructibles.getIds()
             .map(id => Constructibles.getByComponentID(id))
@@ -257,7 +257,7 @@ class bzCityDetailsModel {
                 icon: info.ProjectType,
                 name: info.Name,
                 description: info.Description,
-                highlight: info.$hash == focusHash,
+                highlight: info.$index == focus,
                 disabled: !enabled.has(info.$index),
             };
             switch (info.ProjectType) {
