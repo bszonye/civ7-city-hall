@@ -155,11 +155,11 @@ const BZ_HEAD_STYLE = [
 }
 .bz-city-hall .panel-city-details.bz-nav-help .bz-cycle-city {
     top: 0.6666666667rem;
-    left: 1rem;
+    left: 0.2777777778rem;
 }
 .bz-city-hall .panel-city-details.bz-no-help .bz-cycle-city {
     top: 0.6111111111rem;
-    left: 1rem;
+    left: 0;
 }
 .bz-overview-entry.bz-odd-row {
     background-color: ${BZ_COLOR.bronze6}99;
