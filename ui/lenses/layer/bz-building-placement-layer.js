@@ -1,4 +1,4 @@
-import { L as LensManager } from '/core/ui/lenses/lens-manager.chunk.js';
+import LensManager from '/core/ui/lenses/lens-manager.js';
 import { realizeBuildSlots } from '/bz-city-hall/ui/lenses/layer/bz-building-slots.js';
 // make sure the vanilla layer loads first
 import '/base-standard/ui/lenses/layer/building-placement-layer.js';

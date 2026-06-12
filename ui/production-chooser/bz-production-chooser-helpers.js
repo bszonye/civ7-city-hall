@@ -1,12 +1,13 @@
 import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
-import { Icon } from '/core/ui/utilities/utilities-image.chunk.js';
+import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
+import { Icon } from '/core/ui/utilities/utilities-image.js';
 import { BuildingPlacementManager as BPM } from '/base-standard/ui/building-placement/building-placement-manager.js';
-import { A as AdvisorUtilities } from '/base-standard/ui/tutorial/tutorial-support.chunk.js';
-import { C as ConstructibleHasTagType, g as getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
+import { AdvisorUtilities } from '/base-standard/ui/tutorial/advisor-utilities.js';
+import { ConstructibleHasTagType, getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.js';
 
-// import { c as getNodeName } from '/base-standard/ui/utilities/utilities-textprovider.chunk.js';
-function getNodeName(nodeData) {
+import { getNodeName } from '/base-standard/ui/utilities/utilities-textprovider.js';
+// TODO: test and remove
+function _getNodeName(nodeData) {
     if (!nodeData) {
         return "";
     }
@@ -419,7 +420,7 @@ const ShouldShowUniqueQuarter = (...results) => {
         result.AlreadyExists
     );
 };
-const GetProductionItems = (city, recs, goldBalance, isPurchase, viewHidden, uqInfo) => {
+const GetProductionItems = (city, recs, goldBalance, isPurchase, viewHidden, uqInfoList) => {
     const items = {
         ["buildings" /* BUILDINGS */]: [],
         ["wonders" /* WONDERS */]: [],
@@ -446,13 +447,10 @@ const GetProductionItems = (city, recs, goldBalance, isPurchase, viewHidden, uqI
             CityQueryType.Constructible
         );
     }
-    let shouldShowUniqueQuarter = false;
-    let repairableItemCount = 0;
-    let repairableTotalCost = 0;
-    let repairableTotalTurns = 0;
-    if (uqInfo) {
-        const uq1index = uqInfo.buildingOneDef.$index;
-        const uq2index = uqInfo.buildingTwoDef.$index;
+    const uniqueBuildingMap = /* @__PURE__ */ new Map();
+    for (const uniqueQuarterInfo of uqInfoList) {
+        const uq1index = uniqueQuarterInfo.buildingOneDef.$index;
+        const uq2index = uniqueQuarterInfo.buildingTwoDef.$index;
         let uq1result = results.find(({ index }) => index === uq1index)?.result;
         let uq2result = results.find(({ index }) => index === uq2index)?.result;
         const uq1status = uq1result ?? isPurchase ? Game.CityCommands.canStart(
@@ -479,23 +477,37 @@ const GetProductionItems = (city, recs, goldBalance, isPurchase, viewHidden, uqI
         );
         if (!uq1result) results.push({ index: uq1index, result: uq1status });
         if (!uq2result) results.push({ index: uq2index, result: uq2status });
-        shouldShowUniqueQuarter = viewHidden || ShouldShowUniqueQuarter(uq1status, uq2status);
+        const shouldShow = viewHidden || ShouldShowUniqueQuarter(uq1status, uq2status);
+        uniqueBuildingMap.set(uniqueQuarterInfo.buildingOneDef.ConstructibleType, {
+          type: uniqueQuarterInfo.buildingOneDef.ConstructibleType,
+          showBuilding: shouldShow
+        });
+        uniqueBuildingMap.set(uniqueQuarterInfo.buildingTwoDef.ConstructibleType, {
+          type: uniqueQuarterInfo.buildingTwoDef.ConstructibleType,
+          showBuilding: shouldShow
+        });
     }
+    results.sort((a, b) => {
+        return a.index - b.index;
+    });
+    let repairableItemCount = 0;
+    let repairableTotalCost = 0;
+    let repairableTotalTurns = 0;
     const repairItems = [];
     for (const { index, result } of results) {
-        const definition = index === uqInfo?.buildingOneDef.$index ? uqInfo?.buildingOneDef : index === uqInfo?.buildingTwoDef.$index ? uqInfo?.buildingTwoDef : GameInfo.Constructibles.lookup(index);
+        const definition = GameInfo.Constructibles.lookup(index);
         if (!definition) {
             console.error(`GetProductionItems: Failed to find ConstructibleDefinition for ConstructibleType: ${index}`);
             continue;
         }
-        const isUniqueQuarterBuilding = uqInfo?.buildingOneDef.ConstructibleType === definition.ConstructibleType || uqInfo?.buildingTwoDef.ConstructibleType === definition.ConstructibleType;
+        const uniqueBuilding = uniqueBuildingMap.get(definition.ConstructibleType);
         const data = GetConstructibleItemData(
             definition,
             result,
             city,
             recs,
             isPurchase,
-            isUniqueQuarterBuilding ? shouldShowUniqueQuarter : viewHidden,
+            uniqueBuilding?.showBuilding ?? viewHidden,
         );
         if (!data) {
             continue;
@@ -747,5 +759,5 @@ function bzSortProductionItems(list) {
     });
 }
 
-export { GetProductionItems as g, Construct as h };
+export { GetProductionItems, Construct };
 //# sourceMappingURL=production-chooser-helpers.chunk.js.map

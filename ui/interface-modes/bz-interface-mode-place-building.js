@@ -1,7 +1,7 @@
 import { InterfaceMode } from '/core/ui/interface-modes/interface-modes.js';
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
+import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
 import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
-import { C as CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.chunk.js';
+import { CityZoomer } from '/base-standard/ui/city-zoomer/city-zoomer.js';
 // make sure the vanilla interface loads first
 import '/base-standard/ui/interface-modes/interface-mode-place-building.js';
 
@@ -14,6 +14,7 @@ var HighlightColors = /* @__PURE__ */ ((HighlightColors2) => {
 })(HighlightColors || {});
 
 // get registered interface mode object
+import '/base-standard/ui/interface-modes/interface-mode-place-building.js';
 const PBIM = InterfaceMode.getInterfaceModeHandler("INTERFACEMODE_PLACE_BUILDING");
 
 // patch PBIM.decorate() to support reserved tiles

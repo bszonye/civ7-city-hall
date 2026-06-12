@@ -1,12 +1,12 @@
 import bzCityHallOptions from '/bz-city-hall/ui/options/bz-city-hall-options.js';
-import { A as Audio } from '/core/ui/audio-base/audio-support.chunk.js';
-import FocusManager from '/core/ui/input/focus-manager.js';
+import { Audio } from '/core/ui/audio-base/audio-support.js';
+import { FocusManager } from '/core/ui-next/services/focus-manager.js';
 import { InterfaceMode } from '../../../core/ui/interface-modes/interface-modes.js';
-import { D as Databind } from '/core/ui/utilities/utilities-core-databinding.chunk.js';
-import { U as UpdateGate } from '/core/ui/utilities/utilities-update-gate.chunk.js';
+import Databind from '/core/ui/utilities/utilities-core-databinding.js';
+import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
 import { BuildQueue } from '/base-standard/ui/build-queue/model-build-queue.js';
-import { P as ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.chunk.js';
-import { g as GetProductionItems, h as Construct } from './bz-production-chooser-helpers.js';
+import { ProductionPanelCategory } from '/base-standard/ui/production-chooser/production-chooser-helpers.js';
+import { GetProductionItems, Construct } from './bz-production-chooser-helpers.js';
 
 // color palette
 const BZ_COLOR = {
@@ -169,21 +169,20 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-city-name-wrapper .fxs-nav-help {
     margin: 0;
 }
-.bz-city-hall .bz-city-name-wrapper .bz-cycle-city {
-    position: relative;
-    z-index: 1;
-}
 .bz-city-hall .bz-city-name-wrapper .bz-cycle-city.hidden {
     display: flex;
     opacity: 0;
 }
-.bz-city-hall .bz-city-name-wrapper.bz-nav-help .bz-cycle-city {
-    top: 1.3333333333rem;
-    left: 2.3888888889rem;
-}
-.bz-city-hall .bz-city-name-wrapper.bz-no-help .bz-cycle-city {
+.bz-city-hall .bz-city-name-wrapper .bz-cycle-city {
+    position: relative;
+    z-index: 1;
     top: 1.2777777778rem;
-    left: 2.6666666667rem;
+}
+.bz-city-hall .bz-city-name-wrapper .bz-prev-city {
+    left: 1.7777777778rem;
+}
+.bz-city-hall .bz-city-name-wrapper .bz-next-city {
+    left: -1.7777777778rem;
 }
 .bz-city-hall .img-city-details {
     width: 2.3333333333rem;
@@ -371,14 +370,14 @@ class bzProductionChooserScreen {
             c.playerGoldBalance,
             c.isPurchase,
             c.viewHidden,
-            c.uqInfo
+            c.uniqueQuarterInfos,
         );
         const newItems = Object.values(ProductionPanelCategory).flatMap(
             (category) => items[category].map((item) => item.type)
         );
         const newItemsSet = new Set(newItems);
         let resetFocus = false;
-        const currentFocus = FocusManager.getFocus();
+        const currentFocus = FocusManager.get().currentFocus();
         for (const [type, item] of c.itemElementMap) {
             if (!newItemsSet.has(type)) {
                 resetFocus ||= currentFocus === item;
@@ -389,7 +388,7 @@ class bzProductionChooserScreen {
         c.items = items;
         if (resetFocus ||
             c.Root.contains(currentFocus) && !c.buildQueue.contains(currentFocus)) {
-            FocusManager.setFocus(c.productionAccordion);
+            FocusManager.get().setFocus(c.productionAccordion);
         }
     }
     doOrConfirmConstruction(category, type, animationConfirmCallback) {
@@ -424,7 +423,7 @@ class bzProductionChooserScreen {
     onActiveDeviceTypeChanged(deviceType) {
         this.isGamepadActive = deviceType == InputDeviceType.Controller;
         if (this.isGamepadActive) {
-            const focus = FocusManager.getFocus();
+            const focus = FocusManager.get().currentFocus();
             const focusedPanel = this.component.getElementParentPanel(focus);
             focusedPanel?.classList.add("trigger-nav-help");
             this.component.lastFocusedPanel = focusedPanel;
@@ -436,7 +435,7 @@ class bzProductionChooserScreen {
     onCityDetailsClosed() {
         this.component.panelProductionSlot.classList.remove("hidden");
         if (this.isGamepadActive) {
-            FocusManager.setFocus(this.component.productionAccordion);
+            FocusManager.get().setFocus(this.component.productionAccordion);
             this.component.frame.classList.add("trigger-nav-help");
             this.component.cityNameElement.classList.add("trigger-nav-help");
         }

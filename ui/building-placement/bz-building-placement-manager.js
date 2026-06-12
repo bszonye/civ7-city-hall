@@ -1,6 +1,6 @@
 import { BuildingPlacementManager, BuildingPlacementConstructibleChangedEvent } from '/base-standard/ui/building-placement/building-placement-manager.js';
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
-import { C as ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.chunk.js';
+import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
+import { ConstructibleHasTagType } from '/base-standard/ui/utilities/utilities-tags.js';
 
 const proto = Object.getPrototypeOf(BuildingPlacementManager);
 
@@ -30,19 +30,27 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     }
     this._currentConstructible = constructible;
     this.isRepairing = operationResult.RepairDamaged;
-    // is the new building part of a unique quarter?
-    const btype = GameInfo.Buildings.lookup(constructible.ConstructibleType);
-    const newUB = btype?.TraitType;  // for example: TRAIT_ROME
-    // get the civilization's unique quarter
+    // find existing unique quarters, if any
+    const uqPlots = new Map();
+    const uqList = Players.Constructibles.get(cityID.owner)
+        .getUnlockedUniqueQuarters()
+        .map(id => GameInfo.UniqueQuarters.lookup(id));
     const city = Cities.get(cityID);
-    const player = Players.get(city.owner);
-    const civ = GameInfo.Civilizations.lookup(player.civilizationType);
-    const civTraits = GameInfo.CivilizationTraits
-        .filter(trait => trait.CivilizationType === civ.CivilizationType)
-        .map(trait => trait.TraitType);
-    const civUQ = GameInfo.UniqueQuarters.find(uq => civTraits.includes(uq.TraitType));
-    // find a partial unique quarter, if any
-    const partialUQ = this.findExistingUniqueBuilding(civUQ);  // -1 if not found
+    for (const uq of uqList) {
+        // attach UQ type to unique building locations
+        const plot1 = this.bzFindConstructible(city, uq.BuildingType1);
+        const plot2 = this.bzFindConstructible(city, uq.BuildingType2);
+        if (plot1 != null) uqPlots.set(plot1, uq.UniqueQuarterType);
+        if (plot2 != null) uqPlots.set(plot2, uq.UniqueQuarterType);
+        // attach location to UQ type
+        const plot = plot1 ?? plot2;
+        if (plot != null) uqPlots.set(uq.UniqueQuarterType, plot);
+    }
+    // is the new building part of a unique quarter?
+    const btype = constructible.ConstructibleType;
+    const uqtype = uqList
+        .find(uq => btype == uq.BuildingType1 || btype == uq.BuildingType2)
+        ?.UniqueQuarterType;
     // check whether a district can make a unique quarter
     const hasUQBlocker = (p) => {
         const loc = GameplayMap.getLocationFromIndex(p);
@@ -67,17 +75,12 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
         // repairs and walls are always compatible with UQs
         if (this.isRepairing) return true;
         if (constructible.ExistingDistrictOnly) return true;
-        // unique district selected
-        if (p == partialUQ) {
-            // good: a unique building here finishes the UQ
-            if (newUB) return true;
-            // bad: non-unique building in a unique district
-            return false;
-        }
+        // unique district selected: ok if new building matches
+        if (uqPlots.has(p)) return uqtype == uqPlots.get(p);
         // new unique building NOT on a partial UQ
-        if (newUB) {
+        if (uqtype) {
             // bad: there's a partial UQ somewhere else
-            if (partialUQ != -1) return false;
+            if (uqPlots.has(uqtype)) return false;
             // bad: this would create a non-unique quarter
             if (hasUQBlocker(p)) return false;
         }
@@ -116,9 +119,36 @@ proto.reset = function(...args) {
     this._bzReservedPlots = [];
     return BPM_reset.apply(this, args);
 }
+proto.bzFindConstructible = function(city, type) {
+    // a constructible can appear in three places:
+    // - city.BuildQueue (queued)
+    // - Game.CityOperations.canStart (in progress)
+    // - city.Constructibles (finished)
+    const hash = Game.getHash(type);
+    // queued
+    const qindex = city.BuildQueue.getQueuedPositionOfType(hash);
+    if (qindex != -1) {
+        const queue = city.BuildQueue.getQueue();
+        return GameplayMap.getIndexFromLocation(queue[qindex].location);
+    }
+    // in progress
+    const result = Game.CityOperations.canStart(
+        city.id, CityOperationTypes.BUILD, { ConstructibleType: hash }, false);
+    if (result.InProgress && result.Plots) return result.Plots[0];
+    // finished
+    if (city.Constructibles.hasConstructible(hash, false)) {
+        for (const id of city.Constructibles.getIds()) {
+            const con = Constructibles.getByComponentID(id);
+            if (con?.type != hash) continue;
+            return GameplayMap.getIndexFromLocation(con.location);
+        }
+    }
+    // not found
+    return void 0;
+}
 // replace BPM.findExistingUniqueBuilding method:
 // find in-progress and queued buildings in addition to finished ones
-proto.findExistingUniqueBuilding = function(uniqueQuarterDef) {
+proto.findExistingUniqueBuilding = function(uq) {
     // get city info
     if (!this.cityID || ComponentID.isInvalid(this.cityID)) {
         console.error(`bz-bpm: invalid cityID ${ComponentID.toLogString(this.cityID)}`);
@@ -129,33 +159,10 @@ proto.findExistingUniqueBuilding = function(uniqueQuarterDef) {
         console.error(`bz-bpm: broken cityID ${ComponentID.toLogString(this.cityID)}`);
         return -1;
     }
-    // a building can appear in three places:
-    // - Game.CityCommands.canStart (in-progress buildings)
-    // - city.BuildQueue (production queue)
-    // - city.Constructibles (finished buildings)
-    const ublist = [
-        uniqueQuarterDef?.BuildingType1,
-        uniqueQuarterDef?.BuildingType2,
-    ].filter(ub => ub);  // eliminate empty/null/undefined buildings
-    // match UQ buildings by their hashed constructible IDs
-    const ubset = new Set(ublist.map(ub => Game.getHash(ub)));
-    if (!ubset.size) return -1;  // no unique quarter
-    // check for a unique building in progress
-    for (const ConstructibleType of ubset) {
-        const result = Game.CityCommands.canStart(
-            city.id, CityCommandTypes.PURCHASE, { ConstructibleType }, false);
-        if (result.InProgress && result.Plots) return result.Plots[0];
-    }
-    // check the production queue
-    const queued = city.BuildQueue?.getQueue().find(q => ubset.has(q.constructibleType));
-    if (queued) return GameplayMap.getIndexFromLocation(queued.location);
-    // check the finished buildings
-    for (const id of city.Constructibles.getIds()) {
-        const con = Constructibles.getByComponentID(id);
-        if (con && ubset.has(con.type)) {
-            return GameplayMap.getIndexFromLocation(con.location);
-        }
-    }
-    // not found
-    return -1;
+    if (!uq) return -1;
+    const plot =
+        this.bzFindConstructible(city, uq.BuildingType1) ??
+        this.bzFindConstructible(city, uq.BuildingType2) ??
+        -1;
+    return plot;
 }

@@ -1,4 +1,4 @@
-import { C as ComponentID } from '/core/ui/utilities/utilities-component-id.chunk.js';
+import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
 import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-manager.js';
 
 const proto = Object.getPrototypeOf(PlotWorkersManager);

@@ -1,5 +1,5 @@
 import '/core/ui/options/screen-options.js';  // make sure this loads first
-import { C as CategoryType, O as Options, a as OptionType } from '/core/ui/options/editors/index.chunk.js';
+import { CategoryType, Options, OptionType } from '/core/ui/options/model-options.js';
 // set up mod options tab
 import ModOptions from '/bz-city-hall/ui/options/mod-options.js';
 
