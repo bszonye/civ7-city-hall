@@ -242,6 +242,7 @@ const GetConstructibleItemData = ({
             if (result.Plots) plots.push(...result.Plots);
             if (result.ExpandUrbanPlots) plots.push(...result.ExpandUrbanPlots);
         }
+        if (!plots.length && !viewHidden) return null;
         const locations = Locale.compose("LOC_UI_PRODUCTION_LOCATIONS", plots.length);
         // cost
         const cost = result.Cost ??
