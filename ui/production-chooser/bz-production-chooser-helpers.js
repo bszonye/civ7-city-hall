@@ -215,11 +215,14 @@ const GetConstructibleItemData = ({
     const qindex = city.BuildQueue.getQueuedPositionOfType(hash);
     const inQueue = qindex != -1;
     // repairs
-    const repairDamaged = result.RepairDamaged ?? (inQueue && !result.InQueue) ?? false;
+    const repairDamaged =
+        (result.RepairDamaged ?? (inQueue && !result.InQueue) ?? false) &&
+        info.Repairable;
     const altName =
-        repairDamaged && info.Repairable ? "LOC_UI_PRODUCTION_REPAIR_NAME" :
+        repairDamaged ? "LOC_UI_PRODUCTION_REPAIR_NAME" :
         result.MoveToNewLocation? "LOC_UI_PRODUCTION_MOVE_NAME" : null;
     const name = altName ? Locale.compose(altName, info.Name) : info.Name;
+    const description = repairDamaged ? "LOC_UI_PRODUCTION_REPAIR_DESCRIPTION" : "";
     const ageless = ConstructibleHasTagType(type, "AGELESS");
     const insufficientFunds = result.InsufficientFunds ?? false;
     // note: some items are not researchable (like locked legacy items)
@@ -262,8 +265,6 @@ const GetConstructibleItemData = ({
         // tags
         const tags = wonder ? [] : getConstructibleTagsFromType(type);
         // yield preview details
-        const bestYields = GetCurrentBestTotalYieldForConstructible(city, type);
-        const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
         // base yield details
         const baseYields = [];
         if (!disabled) {
@@ -275,6 +276,8 @@ const GetConstructibleItemData = ({
                 });
             }
         }
+        const bestYields = GetCurrentBestTotalYieldForConstructible(city, type);
+        const secondaryDetails = GetSecondaryDetailsHTML(bestYields);
         const canGetWarehouseBonuses = disabled ? void 0 :
             ConstructibleHasTagType(type, "WAREHOUSE");
         const warehouseCount = disabled ? void 0 : BPM.getNumberOfWarehouseBonuses(hash);
@@ -299,33 +302,33 @@ const GetConstructibleItemData = ({
         const item = {
             sortTier,
             sortValue,
-            interfaceMode: "INTERFACEMODE_PLACE_BUILDING",
-            // disabled
-            disabled,
-            category,
             name,
+            description,
             type,
-            repairDamaged,
             cost,
-            turns,
-            showTurns: turns > -1,
-            showCost: cost > 0,
             productionCost,
             productionPercent,
             productionProgress,
             isInProgress,
-            insufficientFunds,
-            error,
+            category,
             ageless,
+            turns,
+            showTurns: turns > -1,
+            showCost: cost > 0,
+            insufficientFunds,
+            disabled,
+            error,
             locations,
+            interfaceMode: "INTERFACEMODE_PLACE_BUILDING",
             secondaryDetails,
+            repairDamaged,
             tags,
             baseYields,
-            canGetWarehouseBonuses,
             infoDisplayType,
+            canGetWarehouseBonuses,
             warehouseCount,
             canGetAdjacencyBonuses,
-            highestAdjacency,
+            highestAdjacency
         };
         return item;
     }
@@ -615,18 +618,18 @@ const getUnits = (city, playerGoldBalance, isPurchase, recommendations, viewHidd
             sortValue,
             name: info.Name,
             type: info.UnitType,
+            ageless: false,
             cost,
             turns,
             showTurns: false,
             showCost: cost > 0,
-            insufficientFunds: cost > playerGoldBalance,
             productionCost,
             productionPercent,
+            insufficientFunds: cost > playerGoldBalance,
             disabled: !result.Success,
             category: "units" /* UNITS */,
             isInProgress,
             error,
-            ageless: false,
             secondaryDetails
         };
         if (result.Requirements?.MeetsRequirements) {
