@@ -202,7 +202,6 @@ const GetConstructibleItemData = ({
 }) => {
     const info = constructible;
     const result = operationResult;
-    const viewHidden = !hideIfUnavailable;
     const type = info.ConstructibleType;
     const hash = info.$hash;
     const building = GameInfo.Buildings.lookup(info.ConstructibleType);
@@ -230,10 +229,11 @@ const GetConstructibleItemData = ({
     const lockType = result.NeededUnlock ?? -1;  // research type
     const unlockable = isUnlockable(city.owner, lockType);
     if (locked && !unlockable && !unique) return null;
-    const buyout = isPurchase &&
-        (result.InProgress || result.InQueue || repairDamaged || insufficientFunds);
-    const viewWonder = wonder && (result.InProgress || result.InQueue);
-    if (result.Success || result.InProgress || buyout || viewWonder || viewHidden) {
+    const hasProgress = result.InProgress || result.inQueue || repairDamaged;
+    const buyout = isPurchase && hasProgress || insufficientFunds;
+    const viewWonder = wonder && hasProgress;
+    const viewHidden = viewWonder || !hideIfUnavailable;
+    if (result.Success || result.InProgress || buyout || viewHidden) {
         const plots = [];
         if (result.InQueue) {
             // get placement from the build queue
@@ -256,7 +256,7 @@ const GetConstructibleItemData = ({
         // error handling
         const disableQueued = result.InQueue && !buyout;
         const disabled = !result.Success || !plots.length || disableQueued;
-        if (disabled && !buyout && !viewWonder && !viewHidden) return null;
+        if (disabled && !buyout && !viewHidden) return null;
         const error =
             result.AlreadyExists ? "LOC_UI_PRODUCTION_ALREADY_EXISTS" :
             locked && lockType != -1 ? unlockName(city.owner, lockType) :
