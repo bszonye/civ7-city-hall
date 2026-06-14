@@ -229,7 +229,7 @@ const GetConstructibleItemData = ({
     const lockType = result.NeededUnlock ?? -1;  // research type
     const unlockable = isUnlockable(city.owner, lockType);
     if (locked && !unlockable && !unique) return null;
-    const hasProgress = result.InProgress || result.inQueue || repairDamaged;
+    const hasProgress = result.InProgress || result.InQueue || repairDamaged;
     const buyout = isPurchase && hasProgress || insufficientFunds;
     const viewWonder = wonder && hasProgress;
     const viewHidden = viewWonder || !hideIfUnavailable;
