@@ -231,8 +231,7 @@ const GetConstructibleItemData = ({
     if (locked && !unlockable && !unique) return null;
     const hasProgress = result.InProgress || result.InQueue || repairDamaged;
     const buyout = isPurchase && hasProgress || insufficientFunds;
-    const viewWonder = wonder && hasProgress;
-    const viewHidden = viewWonder || !hideIfUnavailable;
+    const viewHidden = hasProgress || !hideIfUnavailable;
     if (result.Success || result.InProgress || buyout || viewHidden) {
         const plots = [];
         if (result.InQueue) {
