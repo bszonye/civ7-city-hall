@@ -198,7 +198,7 @@ const GetConstructibleItemData = ({
     operationResult,
     isPurchase,
     hideIfUnavailable = false,
-    infoDisplayType
+    _infoDisplayType  // TODO
 }) => {
     const info = constructible;
     const result = operationResult;
@@ -536,7 +536,7 @@ const createRepairAllProductionChooserItemData = (cost, turns) => {
         );
         return null;
     }
-    const isInsufficientFunds = cost > (localPlayer.Treasury?.playerGoldBalance || 0);
+    const isInsufficientFunds = cost > (localPlayer.Treasury?.goldBalance || 0);
     return {
         sortTier: 8,
         sortValue: 8,
@@ -577,7 +577,6 @@ const getUnits = (city, playerGoldBalance, isPurchase, recommendations, viewHidd
             console.error(`getUnits: no UnitDefinition for UnitType: ${index}`);
             continue;
         }
-        const type = info.UnitType;
         const hash = info.$hash;
         const lockType = result.Requirements?.NeededProgressionTreeNode;
         const locked = lockType != null;
