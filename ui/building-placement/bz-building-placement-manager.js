@@ -88,7 +88,11 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     };
     // evaluate existing districts
     operationResult.Plots?.forEach(p => {
-        if (!isUQCompatible(p)) this._bzReservedPlots.push(p);
+        if (!isUQCompatible(p)) {
+            this._bzReservedPlots.push(p);
+        } else if (uqPlots.has(p)) {
+            this._uniqueQuarterPlots.push(p);
+        }
         this._urbanPlots.push(p);
     });
     // evaluate rural and undeveloped tiles
