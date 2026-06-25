@@ -57,6 +57,7 @@ const updateProductionChooserItemElement = (element, data, isPurchase) => {
   element.setAttribute("data-is-repair", data.repairDamaged ? "true" : "false");
   element.setAttribute("data-is-ageless", data.ageless ? "true" : "false");
   element.setAttribute("data-disabled", (!!data.disabled).toString());
+  element.setAttribute("data-disable-focus", data.insufficientFunds ? "true" : "false");
   if (infoDisplayType) {
     element.setAttribute("data-info-display-type", infoDisplayType);
   } else {
@@ -321,6 +322,7 @@ class ProductionChooserScreen extends Panel {
     {}
   );
   upgradeToCityButton;
+  upgradeToCityAlert;
   upgradeToCityButtonCostElement;
   cityDetailsSlot;
   panelProductionSlot;
@@ -331,7 +333,16 @@ class ProductionChooserScreen extends Panel {
     super(root);
     this.animateInType = this.animateOutType = AnchorType.RelativeToLeft;
     const [upgradeToCityButton, costElement] = this.renderUpgradeToCityButton();
+    const [upgradeToCityAlert] = this.renderUpgradeToCityAlert();
     this.upgradeToCityButton = upgradeToCityButton;
+    this.upgradeToCityAlert = upgradeToCityAlert;
+    if (this.isCityCapReached()) {
+      this.upgradeToCityButton.classList.add("hidden");
+      this.upgradeToCityAlert.classList.remove("hidden");
+    } else {
+      this.upgradeToCityAlert.classList.add("hidden");
+      this.upgradeToCityButton.classList.toggle("hidden");
+    }
     this.upgradeToCityButtonCostElement = costElement;
     this.enableOpenSound = true;
     this.enableCloseSound = true;
@@ -950,16 +961,34 @@ class ProductionChooserScreen extends Panel {
   updateCityName(city) {
     this.cityNameElement.setAttribute("title", city.name);
   }
+  isCityCapReached() {
+    const player = Players.get(GameContext.localPlayerID);
+    const cityCount = player?.Stats?.numCities;
+    const cityLimit = player?.Cities?.getCityLimit();
+    if (cityCount && cityLimit) {
+      if (cityLimit == 0) {
+        return false;
+      }
+      return cityCount >= cityLimit;
+    }
+    return false;
+  }
   updateUpgradeToCityButton(upgradeCost, isTown, cityID) {
-    const result = CanConvertToCity(cityID);
-    this.upgradeToCityButton.setAttribute("disabled", result.Success ? "false" : "true");
-    this.upgradeToCityButton.classList.toggle("hidden", !isTown);
-    this.upgradeToCityButtonCostElement.innerHTML = upgradeCost.toString();
-    if (result.FailureReasons) {
-      const failureTooltip = result.FailureReasons.join("\n");
-      this.upgradeToCityButton.setAttribute("data-tooltip-content", failureTooltip);
+    if (this.isCityCapReached() && isTown) {
+      this.upgradeToCityButton.classList.add("hidden");
+      this.upgradeToCityAlert.classList.remove("hidden");
     } else {
-      this.upgradeToCityButton.removeAttribute("data-tooltip-content");
+      this.upgradeToCityAlert.classList.add("hidden");
+      const result = CanConvertToCity(cityID);
+      this.upgradeToCityButton.setAttribute("disabled", result.Success ? "false" : "true");
+      this.upgradeToCityButton.classList.toggle("hidden", !isTown);
+      this.upgradeToCityButtonCostElement.innerHTML = upgradeCost.toString();
+      if (result.FailureReasons) {
+        const failureTooltip = result.FailureReasons.join("\n");
+        this.upgradeToCityButton.setAttribute("data-tooltip-content", failureTooltip);
+      } else {
+        this.upgradeToCityButton.removeAttribute("data-tooltip-content");
+      }
     }
   }
   onFrameEngineInput(inputEvent) {
@@ -1145,6 +1174,20 @@ class ProductionChooserScreen extends Panel {
       } else {
         this.townFocusSection.classList.remove("hidden");
       }
+      const city = Cities.get(cityID);
+      if (city && city.Growth) {
+        this.townFocusSection.dataset.settlementName = city.name;
+        const connections = city.getConnectedCities().map((connectedCityID) => {
+          return Cities.get(connectedCityID);
+        });
+        this.townFocusSection.dataset.connectedTowns = connections.filter((a) => {
+          return a && a.isTown;
+        }).length.toString();
+        this.townFocusSection.dataset.connectedCities = connections.filter((a) => {
+          return a && !a.isTown;
+        }).length.toString();
+        this.townFocusSection.dataset.foodExport = city.getSentFoodPerCity().toString();
+      }
     } else {
       this.townFocusSection.classList.add("hidden");
       this.Root.dataset.showTownFocus = "false";
@@ -1181,6 +1224,23 @@ class ProductionChooserScreen extends Panel {
         this.updateNavTray();
         break;
     }
+  }
+  renderUpgradeToCityAlert() {
+    const backgroundColor = "rgb(72, 36, 36)";
+    const capReachedBar = document.createElement("div");
+    capReachedBar.classList.add("flex-row-reverse", "flex", "h-10");
+    capReachedBar.dataset.slot = "footer";
+    capReachedBar.style.backgroundColor = backgroundColor;
+    const capReachedContent = document.createElement("div");
+    capReachedContent.classList.add("flex-auto", "relative", "flex", "items-center", "justify-center");
+    const capReachedLabel = document.createElement("div");
+    capReachedLabel.classList.add("ml-1", "accent-2", "uppercase", "text-center", "w-full");
+    capReachedLabel.setAttribute("data-l10n-id", "LOC_UI_CITY_CAP_REACHED");
+    const costElement = document.createElement("div");
+    costElement.className = "text-sm font-body tracking-25";
+    capReachedContent.appendChild(capReachedLabel);
+    capReachedBar.appendChild(capReachedContent);
+    return [capReachedBar, costElement];
   }
   renderUpgradeToCityButton() {
     const upgradeToCityButton = document.createElement("chooser-item");
@@ -1353,6 +1413,9 @@ class ProductionChooserScreen extends Panel {
     this.upgradeToCityButton.setAttribute("data-audio-activate-ref", "data-audio-city-production-upgrade");
     this.upgradeToCityButton.setAttribute("tabindex", "-1");
     this.frame.appendChild(this.upgradeToCityButton);
+    this.upgradeToCityAlert.dataset.slot = "footer";
+    this.upgradeToCityAlert.setAttribute("tabindex", "-1");
+    this.frame.appendChild(this.upgradeToCityAlert);
     this.frame.appendChild(this.townUnrestDisplay);
     this.productionAccordion.classList.add("relative");
     this.productionAccordion.setAttribute("disable-focus-allowed", "true");
