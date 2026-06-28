@@ -181,9 +181,13 @@ class bzCityDetailsModel {
         const ids = city.Constructibles?.getIds() ?? [];
         for (const id of ids) {
             const item = Constructibles.getByComponentID(id);
+            const loc = item.location;
+            // Resort Town: appealing tiles (all constructible types)
+            if (bonusAppeal <= GameplayMap.getAppeal(loc.x, loc.y)) {
+                improvements.appeal += 1;
+            }
             const cinfo = item && GameInfo.Constructibles.lookup(item.type);
             if (cinfo?.ConstructibleClass != "IMPROVEMENT") continue;
-            const loc = item.location;
             const fcid = Districts.getFreeConstructible(loc, GameContext.localPlayerID);
             const fcinfo = GameInfo.Constructibles.lookup(fcid);
             if (!fcinfo) {
@@ -201,10 +205,6 @@ class bzCityDetailsModel {
             // warehouse yield icons
             imp.bonusIndex = IMPROVEMENT_BONUS_INDEXES[fcinfo.Name] ?? -1;
             imp.bonusIcon = GameInfo.Yields[imp.bonusIndex]?.YieldType;
-            // Resort Town: appealing tiles
-            if (bonusAppeal <= GameplayMap.getAppeal(loc.x, loc.y)) {
-                improvements.appeal += 1;
-            }
             // Trade Outpost and Factory Town: resources
             const resourceType = GameplayMap.getResourceType(loc.x, loc.y);
             const resource = GameInfo.Resources.lookup(resourceType);

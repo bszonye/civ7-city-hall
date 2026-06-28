@@ -55,4 +55,15 @@ PBIM.decorate = function(overlay) {
     this.plotOverlay.addPlots([...urban], { fillColor: HighlightColors.best });
     this.plotOverlay.addPlots([...developed], { fillColor: HighlightColors.okay });
     this.plotOverlay.addPlots([...expandable], { fillColor: HighlightColors.good });
+    // highlight unique quarters
+    if (!BuildingPlacementManager.isRepairing) {
+        for (const plotIndex of BuildingPlacementManager.uniqueQuarterPlots) {
+            this.uniqueQuarterModelGroup.addVFXAtPlot(
+                "VFX_3dUI_Hex_Highlight_01",
+                plotIndex,
+                { x: 0, y: 0, z: 0 },
+                { angle: 0, constants: { Color3: [1, 0.992, 0.62], Alpha1: 1 } }
+            );
+        }
+    }
 }

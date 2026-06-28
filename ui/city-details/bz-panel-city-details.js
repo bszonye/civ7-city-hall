@@ -429,8 +429,8 @@ class bzPanelCityDetails {
     }
     // render new & replaced tabs
     afterRender() {
-        this.patchTabSlots();
         this.renderOverviewSlot();
+        this.patchTabSlots();
         // adjust arrow buttons
         const c = this.component;
         c.prevCityButton.classList.add("bz-prev-city", "bz-cycle-city");
