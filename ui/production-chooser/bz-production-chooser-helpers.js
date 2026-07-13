@@ -68,7 +68,7 @@ const GetUnitStatsFromDefinition = (definition) => {
                 value: cstats.RangedCombat.toString()
             });
         }
-        if (0 < cstats.Bombard) {
+        if (cstats.Bombard != cstats.RangedCombat) {
             stats.push({
                 name: "LOC_DISCIPLINE_FLEET_BOMBARDMENT_NAME",
                 icon: "action_bombard",
