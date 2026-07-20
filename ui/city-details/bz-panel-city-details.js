@@ -104,6 +104,11 @@ const BZ_COLOR = {
     scientific: "#4d7c96",
     economic: "#ffd553",
     cultural: "#892bb3",
+    // highlight & shadow colors
+    light: "#fff6e5cc",     //  40° 100 95 pale bronze
+    shadow: "#00000080",
+    progress: "#e0b96c",    //  40°  65 65 deep bronze
+    growing: "#60c000",
 };
 // box metrics (for initialization, component can update)
 // TODO: remove unneeded items
@@ -177,6 +182,11 @@ const BZ_HEAD_STYLE = [
 }
 .bz-overview-entry.bz-focus-highlight {
     color: ${BZ_COLOR.accent1};
+}
+.bz-city-hall #${cityDetailTabID.overview} .shadow.bz-locked-focus {
+    filter: saturate(0) contrast(0.5) brightness(1.33)
+        fxs-color-tint(${BZ_COLOR.growing})
+        drop-shadow(0 0.0555555556rem 0.0555555556rem black);
 }
 `,
 ];
@@ -263,15 +273,27 @@ function getFontMetrics() {
     };
 }
 function getTownFocus(city) {
+    const isGrowing = city.Growth?.growthType == GrowthTypes.EXPAND;
     const ptype = city.Growth?.projectType ?? null;
     const info = ptype && GameInfo.Projects.lookup(ptype);
-    const isGrowing = !info || city.Growth?.growthType == GrowthTypes.EXPAND;
+    const projects = Game.CityCommands.canStart(
+        city.id,
+        CityCommandTypes.CHANGE_GROWTH_MODE,
+        { Type: GrowthTypes.PROJECT },
+        false
+    )?.Projects;
+    const locked = projects?.length == 1 ? GameInfo.Projects[projects[0]] : null;
+    const icon =
+        info ? info.ProjectType :
+        locked ? locked.ProjectType :
+        isGrowing ? "PROJECT_GROWTH" :
+        BZ_ICON_TOWN;
     const town = "LOC_CAPITAL_SELECT_PROMOTION_NONE";
     const growth = "LOC_UI_FOOD_CHOOSER_FOCUS_GROWTH";
     const name = info?.Name ?? town;
     const note = isGrowing && name != growth ? growth : null;
-    const icon = isGrowing ? "PROJECT_GROWTH" : info.ProjectType;
-    return { isGrowing, name, note, icon, info, };
+    const style = isGrowing && locked ? "bz-locked-focus" : null;
+    return { isGrowing, icon, name, note, info, style, };
 }
 const BZ_PRELOADED_ICONS = {};
 function preloadIcon(icon, context) {
@@ -632,7 +654,7 @@ class bzPanelCityDetails {
             row.addEventListener("action-activate", this.onCityLinkListener);
             if (conn.isTown) {
                 const focus = getTownFocus(conn);
-                row.appendChild(docIcon(focus.icon, size, size));
+                row.appendChild(docIcon(focus.icon, size, size, focus.style));
             } else {
                 row.appendChild(docIcon(BZ_ICON_CITY, size, small));
             }

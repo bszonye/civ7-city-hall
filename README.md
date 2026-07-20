@@ -1,4 +1,4 @@
-# City Hall 2.7.1
+# City Hall 2.7.2
 better city & town tools for Civilization VII
 
 ## improved production list and city details

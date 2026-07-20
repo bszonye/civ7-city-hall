@@ -156,12 +156,15 @@ class bzCityDetailsModel {
         return { settlements, cities, towns, focused, growing, };
     }
     modelDistricts(city) {
+        const appealing = getGlobalParamNumber("APPEAL_FOR_HAPPINESS_TILE_YIELD");
         const ids = city.Districts?.getIds() ?? [];
         const districts = ids.map(id => Districts.get(id));
-        districts.quarters = districts.filter(d => d.isQuarter).length;
+        districts.appeal = 0;
         districts.fortified = 0;
+        districts.quarters = districts.filter(d => d.isQuarter).length;
         for (const district of districts) {
             const loc = district.location;
+            // count fortified tiles for Fort Town
             const cons = MapConstructibles.getHiddenFilteredConstructibles(loc.x, loc.y);
             const fortified = cons.find(con => {
                 const item = Constructibles.getByComponentID(con);
@@ -169,23 +172,21 @@ class bzCityDetailsModel {
                 return ConstructibleHasTagType(info.ConstructibleType, "FORTIFICATION");
             });
             if (fortified) districts.fortified += 1;
+            // count appealing tiles for Resort Town
+            if (appealing <= GameplayMap.getAppeal(loc.x, loc.y)) {
+                districts.appeal += 1;
+            }
         }
         return districts;
     }
     modelImprovements(city) {
-        const bonusAppeal = getGlobalParamNumber("APPEAL_FOR_HAPPINESS_TILE_YIELD");
         const improvements = new Map();
-        improvements.appeal = 0;
         improvements.resources = 0;
         improvements.factoryResources = 0;
         const ids = city.Constructibles?.getIds() ?? [];
         for (const id of ids) {
             const item = Constructibles.getByComponentID(id);
             const loc = item.location;
-            // Resort Town: appealing tiles (all constructible types)
-            if (bonusAppeal <= GameplayMap.getAppeal(loc.x, loc.y)) {
-                improvements.appeal += 1;
-            }
             const cinfo = item && GameInfo.Constructibles.lookup(item.type);
             if (cinfo?.ConstructibleClass != "IMPROVEMENT") continue;
             const fcid = Districts.getFreeConstructible(loc, GameContext.localPlayerID);
@@ -278,7 +279,7 @@ class bzCityDetailsModel {
                     break;
                 }
                 case "PROJECT_TOWN_RESORT": {
-                    const bonus = this.improvements.appeal;
+                    const bonus = this.districts.appeal;
                     project.details = [
                         { icon: "YIELD_GOLD", bonus },
                         { icon: "YIELD_HAPPINESS", bonus },

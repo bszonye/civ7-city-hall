@@ -61,17 +61,18 @@ const GetUnitStatsFromDefinition = (definition) => {
                 value: cstats.Combat.toString()
             });
         }
-        if (cstats.RangedCombat < cstats.Bombard) {
-            stats.push({
-                name: "LOC_DISCIPLINE_FLEET_BOMBARDMENT_NAME",
-                icon: "Action_Ranged",
-                value: cstats.Bombard.toString()
-            });
-        } else if (0 < cstats.RangedCombat) {
+        if (0 < cstats.RangedCombat) {
             stats.push({
                 name: "LOC_UNIT_INFO_RANGED_STRENGTH",
                 icon: "Action_Ranged",
                 value: cstats.RangedCombat.toString()
+            });
+        }
+        if (cstats.Bombard != cstats.RangedCombat) {
+            stats.push({
+                name: "LOC_DISCIPLINE_FLEET_BOMBARDMENT_NAME",
+                icon: "action_bombard",
+                value: cstats.Bombard.toString()
             });
         }
         if (1 < cstats.Range) {
@@ -186,8 +187,8 @@ const GetCurrentBestTotalYieldForConstructible = (city, constructibleType) => {
     return results;
 };
 const GetSecondaryDetailsHTML = (items) => {
-    const outer = items.length < 5 ? "mr-2" : "mr-0\\.5";
-    const inner = items.length < 5 ? "mr-0" : "-mr-0\\.5";
+    const outer = items.length < 6 ? "mr-2" : "mr-0\\.5";
+    const inner = items.length < 6 ? "mr-0" : "-mr-0\\.5";
     return items.reduce((acc, { icon, value, name }) => {
         return acc + `<div class="flex items-center ${outer}"><img aria-label="${Locale.compose(name)}" src="${icon}" class="size-6 ${inner}" />${value}</div>`;
     }, "");

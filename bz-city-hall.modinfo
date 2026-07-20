@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Mod id="bz-city-hall" version="2.7.1"
+<Mod id="bz-city-hall" version="2.7.2"
     xmlns="ModInfo">
     <Properties>
         <Name>LOC_MOD_BZ_CITY_HALL_NAME</Name>
-        <Version>2.7.1</Version>
+        <Version>2.7.2</Version>
         <Description>LOC_MOD_BZ_CITY_HALL_DESCRIPTION</Description>
         <Authors>beezany</Authors>
         <URL>https://forums.civfanatics.com/resources/city-hall.31946/</URL>
@@ -22,6 +22,14 @@
         </Criteria>
         <Criteria id="never">
             <NeverMet/>
+        </Criteria>
+        <Criteria id="production-ok">
+            <!-- compatible mods -->
+            <!-- <ModInUse inverse="1">f1rstdan-cool-ui</ModInUse> -->
+            <!-- incompatible mods -->
+            <ModInUse inverse="1">compact-production</ModInUse>
+            <ModInUse inverse="1">drongos-compact-production</ModInUse>
+            <ModInUse inverse="1">mm-compact-production-chooser</ModInUse>
         </Criteria>
     </ActionCriteria>
     <ActionGroups>
@@ -54,16 +62,11 @@
             <Actions>
                 <ImportFiles>
                     <Item>ui/interface-modes/support-city-decoration.js</Item>
-                    <Item>ui/production-chooser/panel-production-chooser.js</Item>
-                    <Item>ui/production-chooser/production-chooser-unique-quarter.js</Item>
-                    <Item>ui-next/components/production-chooser-item.js</Item>
-                    <Item>ui-next/components/production-chooser-unique-quarter-item.js</Item>
                 </ImportFiles>
                 <UIScripts>
                     <Item>ui/building-placement/bz-building-placement-manager.js</Item>
                     <Item>ui/city-details/bz-model-city-details.js</Item>
                     <Item>ui/city-details/bz-panel-city-details.js</Item>
-                    <Item>ui/constructible-details/bz-constructible-details.js</Item>
                     <Item>ui/interface-modes/bz-interface-mode-acquire-tile.js</Item>
                     <Item>ui/interface-modes/bz-interface-mode-place-building.js</Item>
                     <Item>ui/lenses/layer/bz-building-placement-layer.js</Item>
@@ -73,8 +76,6 @@
                     <Item>ui/options/mod-options.js</Item>
                     <Item>ui/place-population/bz-place-population.js</Item>
                     <Item>ui/plot-workers/bz-plot-workers-manager.js</Item>
-                    <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
-                    <Item>ui/production-chooser/bz-production-chooser-helpers.js</Item>
                 </UIScripts>
                 <UpdateText>
                     <Item>text/en_us/InGameText.xml</Item>
@@ -87,6 +88,24 @@
                     <Item locale="zh_Hans_CN">text/zh_Hans_CN/InGameText.xml</Item>
                     <Item locale="zh_Hant_HK">text/zh_Hant_HK/InGameText.xml</Item>
                 </UpdateText>
+            </Actions>
+        </ActionGroup>
+        <ActionGroup id="bz-city-production-ui" scope="game" criteria="production-ok">
+            <Properties>
+                <LoadOrder>1000</LoadOrder>
+            </Properties>
+            <Actions>
+                <ImportFiles>
+                    <Item>ui/production-chooser/panel-production-chooser.js</Item>
+                    <Item>ui/production-chooser/production-chooser-unique-quarter.js</Item>
+                    <Item>ui-next/components/production-chooser-item.js</Item>
+                    <Item>ui-next/components/production-chooser-unique-quarter-item.js</Item>
+                </ImportFiles>
+                <UIScripts>
+                    <Item>ui/constructible-details/bz-constructible-details.js</Item>
+                    <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
+                    <Item>ui/production-chooser/bz-production-chooser-helpers.js</Item>
+                </UIScripts>
             </Actions>
         </ActionGroup>
     </ActionGroups>
