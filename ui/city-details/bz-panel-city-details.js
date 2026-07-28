@@ -307,11 +307,7 @@ function preloadIcon(icon, context) {
 
 // PanelCityDetails decorator
 class bzPanelCityDetails {
-    static c_prototype;
-    static c_renderBuildingSlot;
-    static c_addConstructibleData;
-    static c_addDistrictData;
-    static c_renderYieldsSlot;
+    static c = null;
     static lastTab = 0;
     static tableWidth = 0;
     tabs;
@@ -325,8 +321,10 @@ class bzPanelCityDetails {
     onCityLinkListener = this.onCityLink.bind(this);
     constructor(component) {
         this.component = component;
-        component.bzComponent = this;
-        this.patchPrototypes(this.component);
+        component.bzCityHall = this;
+        this.patchPrototype(Object.getPrototypeOf(component));
+        // rebind listener
+        component.updateCityDetailersListener = component.update.bind(component);
         // replace onFocus to override default slot
         this.component.onFocus = () => {
             this.syncFocus(true);
@@ -346,45 +344,41 @@ class bzPanelCityDetails {
             for (const f of GameInfo.Projects) preloadIcon(f.ProjectType);
         });
     }
-    patchPrototypes(component) {
-        const c_prototype = Object.getPrototypeOf(component);
-        if (bzPanelCityDetails.c_prototype == c_prototype) return;
-        // patch PanelCityDetails methods
-        const proto = bzPanelCityDetails.c_prototype = c_prototype;
+    patchPrototype(proto) {
+        if (bzPanelCityDetails.c) return;  // one-time initialization
+        // patch PanelCityDetails methods & properties
+        const c = bzPanelCityDetails.c = { proto };
         // wrap render method to extend it
-        const c_render = proto.render;
-        const after_render = this.afterRender;
-        proto.render = function(...args) {
-            const c_rv = c_render.apply(this, args);
-            const after_rv = after_render.apply(this.bzComponent, args);
-            return after_rv ?? c_rv;
+        c.render = c.proto.render;
+        c.proto.render = function(...args) {
+            const crv = c.render.apply(this, args);
+            const arv = this.bzCityHall.afterRender(...args);
+            return arv ?? crv;
         }
         // wrap update method to extend it
-        const c_update = proto.update;
-        const before_update = this.beforeUpdate;
-        proto.update = function(...args) {
-            const before_rv = before_update.apply(this.bzComponent, args);
-            const c_rv = c_update.apply(this, args);
-            return c_rv ?? before_rv;
+        c.update = c.proto.update;
+        c.proto.update = function(...args) {
+            const brv = this.bzCityHall.beforeUpdate(...args);
+            const crv = c.update.apply(this, args);
+            return crv ?? brv;
         }
-        component.updateCityDetailersListener = component.update.bind(component);
         // replace vanilla methods for city-details-tab-buildings
-        bzPanelCityDetails.c_renderBuildingSlot = proto.renderBuildingSlot;
-        proto.renderBuildingSlot = function(...args) {
-            return this.bzComponent.renderBuildingSlot(...args);
+        c.renderBuildingSlot = c.proto.renderBuildingSlot;
+        c.proto.renderBuildingSlot = function(...args) {
+            return this.bzCityHall.renderBuildingSlot(...args);
         }
-        bzPanelCityDetails.c_addConstructibleData = proto.addConstructibleData;
-        proto.addConstructibleData = function(...args) {
-            return this.bzComponent.addConstructibleData(...args);
+        c.addConstructibleData = c.proto.addConstructibleData;
+        c.proto.addConstructibleData = function(...args) {
+            return this.bzCityHall.addConstructibleData(...args);
         }
-        bzPanelCityDetails.c_addDistrictData = proto.addDistrictData;
-        proto.addDistrictData = function(...args) {
-            return this.bzComponent.addDistrictData(...args);
+        c.addDistrictData = c.proto.addDistrictData;
+        c.proto.addDistrictData = function(...args) {
+            return this.bzCityHall.addDistrictData(...args);
         }
         // replace component.renderYieldsSlot to fix a bug
-        bzPanelCityDetails.c_renderYieldsSlot = proto.renderYieldsSlot;
-        proto.renderYieldsSlot = function() {
-            return this.bzComponent.renderYieldsSlot();
+        c.renderYieldsSlot = c.proto.renderYieldsSlot;
+        c.proto.renderYieldsSlot = function() {
+            return this.bzCityHall.renderYieldsSlot();
         }
     }
     patchTabSlots() {
