@@ -103,7 +103,6 @@
                     <Item>ui-next/components/production-chooser-unique-quarter-item.js</Item>
                 </ImportFiles>
                 <UIScripts>
-                    <Item>ui/constructible-details/bz-constructible-details.js</Item>
                     <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
                     <Item>ui/production-chooser/bz-production-chooser-helpers.js</Item>
                 </UIScripts>
