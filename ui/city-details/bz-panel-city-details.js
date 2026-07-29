@@ -4,7 +4,6 @@ import NavTray from "/core/ui/navigation-tray/model-navigation-tray.js";
 import Databind from '../../../core/ui/utilities/utilities-core-databinding.js';
 import { MustGetElement } from "/core/ui/utilities/utilities-dom.js";
 import { FocusManager } from '/core/ui-next/services/focus-manager.js';
-import { getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.js';
 import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
 
 // vertical separator
@@ -787,6 +786,7 @@ class bzPanelCityDetails {
         container.appendChild(layout);
     }
     addDistrictData(districtData) {
+        const c = this.component;
         const mainDiv = document.createElement("div");
         mainDiv.classList.add("flex", "flex-col");
         if (districtData.name && districtData.description) {
@@ -802,7 +802,7 @@ class bzPanelCityDetails {
             uniqueQuarterTextContainer.classList.add("flex", "flex-col", "flex-auto", "mx-2");
             uniqueQuarterContainer.appendChild(uniqueQuarterTextContainer);
             const districtName = document.createElement("div");
-            districtName.classList.add("my-1", "font-title", "uppercase", "text-xs");
+            districtName.classList.add("my-1", "font-title", "uppercase", "text-sm");
             districtName.innerHTML = districtData.name;
             uniqueQuarterTextContainer.appendChild(districtName);
             const districtDescription = document.createElement("div");
@@ -811,11 +811,13 @@ class bzPanelCityDetails {
             uniqueQuarterTextContainer.appendChild(districtDescription);
         }
         for (const constructibleData of districtData.constructibleData) {
-            mainDiv.appendChild(this.addConstructibleData(constructibleData));
+            const constructibleEntry = this.addConstructibleData(constructibleData);
+            c.addProductionTooltip(mainDiv, constructibleEntry, constructibleData);
         }
         return mainDiv;
     }
     addImprovementEntry(constructibleData) {
+        const c = this.component;
         const wrapDiv = document.createElement("div");
         wrapDiv.classList.add("relative");
         const collapseButton = document.createElement("fxs-minus-plus");
@@ -829,31 +831,31 @@ class bzPanelCityDetails {
         mainDiv.setAttribute("tabindex", "-1");
         mainDiv.setAttribute("data-type", constructibleData.type);
         collapseButton.addEventListener("on-collapse-all", () => {
-            this.component.onCollapseImprovementSection(
+            c.onCollapseImprovementSection(
                 collapseButton,
                 childList,
-                this.component.improvementsCollapseAll,
-                this.component.improvementsCollapseAllText,
-                this.component.improvementsList,
+                c.improvementsCollapseAll,
+                c.improvementsCollapseAllText,
+                c.improvementsList,
                 false
             );
         });
         collapseButton.addEventListener("action-activate", () => {
-            this.component.onCollapseImprovementSection(
+            c.onCollapseImprovementSection(
                 collapseButton,
                 childList,
-                this.component.improvementsCollapseAll,
-                this.component.improvementsCollapseAllText,
-                this.component.improvementsList
+                c.improvementsCollapseAll,
+                c.improvementsCollapseAllText,
+                c.improvementsList
             );
         });
         mainDiv.addEventListener("action-activate", () => {
-            this.component.onCollapseImprovementSection(
+            c.onCollapseImprovementSection(
                 collapseButton,
                 childList,
-                this.component.improvementsCollapseAll,
-                this.component.improvementsCollapseAllText,
-                this.component.improvementsList
+                c.improvementsCollapseAll,
+                c.improvementsCollapseAllText,
+                c.improvementsList
             );
         });
         const topDiv = document.createElement("div");
@@ -869,7 +871,7 @@ class bzPanelCityDetails {
         nameContainer.classList.add("flex", "ml-2", "center", "flex-col");
         rightContainer.appendChild(nameContainer);
         const name = document.createElement("div");
-        name.classList.add("mr-2", "font-title", "uppercase", "text-xs");
+        name.classList.add("mr-2", "font-title", "uppercase", "text-sm");
         name.textContent = Locale.compose(constructibleData.name);
         nameContainer.appendChild(name);
         const countText = document.createElement("div");
@@ -883,7 +885,7 @@ class bzPanelCityDetails {
         mainDiv.appendChild(topDiv);
         const improvementDef = GameInfo.Constructibles.lookup(constructibleData.type);
         if (improvementDef && improvementDef.Tooltip) {
-            this.component.addProductionTooltip(wrapDiv, mainDiv, constructibleData);
+            c.addProductionTooltip(wrapDiv, mainDiv, constructibleData);
         } else {
             wrapDiv.appendChild(mainDiv);
         }
@@ -891,32 +893,12 @@ class bzPanelCityDetails {
         return [wrapDiv, childList];
     }
     addConstructibleData(constructibleData) {
+        const c = this.component;
         const mainDiv = document.createElement("fxs-activatable");
         mainDiv.classList.add("constructible-entry", "flex", "flex-col");
         mainDiv.setAttribute("tabindex", "-1");
         mainDiv.setAttribute("data-type", constructibleData.type);
-        const info = GameInfo.Constructibles.lookup(constructibleData.type);
-        // replace missing tooltip style
-        // mainDiv.setAttribute("data-tooltip-style", "production-constructible-tooltip");
-        if (info?.Description && Locale.keyExists(info.Description)) {
-            const stylize = (s, text) => `[style:${s}]${text}[/style]`;
-            const title = [stylize(
-                "font-title uppercase text-gradient-secondary leading-normal",
-                Locale.compose(info.Name)
-            )];
-            const tags = getConstructibleTagsFromType(info.ConstructibleType);
-            if (tags.length) {
-                title.push(stylize(
-                    "text-2xs text-accent-3 leading-normal",
-                    tags.join(BZ_DOT_JOINER)
-                ));
-            }
-            const description = Locale.compose(info.Description)
-                .split(/\[[Nn]\]/)
-                .map(s => stylize("leading-normal", s));
-            const tooltip = title.concat(description).join("[n]");
-            mainDiv.setAttribute("data-tooltip-content", tooltip);
-        }
+        mainDiv.setAttribute("data-tooltip-style", "production-constructible-tooltip");
         const topDiv = document.createElement("div");
         topDiv.classList.add("constructible-entry-highlight", "flex", "my-1", "pointer-events-none", "items-center");
         const icon = document.createElement("fxs-icon");
@@ -930,7 +912,7 @@ class bzPanelCityDetails {
         nameContainer.classList.add("flex", "center");
         rightContainer.appendChild(nameContainer);
         const name = document.createElement("div");
-        name.classList.add("font-title", "uppercase", "text-xs");
+        name.classList.add("font-title", "uppercase", "text-sm");
         name.textContent = Locale.compose(constructibleData.name);
         nameContainer.appendChild(name);
         const yieldAdjustContainer = document.createElement("div");
@@ -986,7 +968,10 @@ class bzPanelCityDetails {
                     maintenanceEntry.appendChild(maintenanceIcon);
                     const maintenanceValue = document.createElement("div");
                     maintenanceValue.classList.add("text-xs", "self-center", "text-negative-light");
-                    maintenanceValue.textContent = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", maintenanceData.value);
+                    maintenanceValue.textContent = Locale.compose(
+                        "LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL",
+                        maintenanceData.value
+                    );
                     maintenanceEntry.appendChild(maintenanceValue);
                 }
             }
@@ -994,11 +979,11 @@ class bzPanelCityDetails {
         yieldAdjustContainer.appendChild(maintenanceContainer);
         rightContainer.appendChild(yieldAdjustContainer);
         mainDiv.setAttribute("data-constructible-data", JSON.stringify(constructibleData));
-        mainDiv.addEventListener("mouseover", this.component.mouseOverBuildingListener);
-        mainDiv.addEventListener("mouseout", this.component.mouseOutBuildingListener);
-        mainDiv.addEventListener("focus", this.component.focusBuildingListener);
-        mainDiv.addEventListener("focusout", this.component.focusOutBuildingListener);
-        mainDiv.addEventListener("action-activate", this.component.activateBuildingListener);
+        mainDiv.addEventListener("mouseover", c.mouseOverBuildingListener);
+        mainDiv.addEventListener("mouseout", c.mouseOutBuildingListener);
+        mainDiv.addEventListener("focus", c.focusBuildingListener);
+        mainDiv.addEventListener("focusout", c.focusOutBuildingListener);
+        mainDiv.addEventListener("action-activate", c.activateBuildingListener);
         topDiv.appendChild(rightContainer);
         mainDiv.appendChild(topDiv);
         return mainDiv;
