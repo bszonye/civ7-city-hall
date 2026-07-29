@@ -5,6 +5,7 @@ import Databind from '../../../core/ui/utilities/utilities-core-databinding.js';
 import { MustGetElement } from "/core/ui/utilities/utilities-dom.js";
 import { FocusManager } from '/core/ui-next/services/focus-manager.js';
 import { getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.js';
+import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
 
 // vertical separator
 const BZ_DIVIDER_STYLE = "flex w-96 self-center";
@@ -380,7 +381,25 @@ class bzPanelCityDetails {
         c.proto.renderYieldsSlot = function() {
             return this.bzCityHall.renderYieldsSlot();
         }
+        // replace onCollapseAllSection for debouncing (see below)
+        c.onCollapseAllSection = c.proto.onCollapseAllSection;
+        c.proto.onCollapseAllSection = function(...args) {
+            this.bzCityHall.debounceCollapseAll.call("debounce", ...args);
+        }
     }
+    debounceCollapseAll = new UpdateGate(() => {
+        // the Collapse All button has a bug (event listener leak) that
+        // runs the handler multiple times per click.  this replaces the
+        // vanilla handler with an UpdateGate that will only run once
+        // per frame.
+        const onCollapseAllSection = bzPanelCityDetails.c.onCollapseAllSection;
+        onCollapseAllSection.call(
+            this.component,
+            this.component.improvementsCollapseAll,
+            this.component.improvementsCollapseAllText,
+            this.component.improvementsList
+        );
+    });
     patchTabSlots() {
         const tabItems = this.component.tabBar.getAttribute("tab-items");
         const tabs = JSON.parse(tabItems);
