@@ -148,6 +148,12 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .wonders-list .city-details-half-divider {
     display: none;
 }
+.bz-city-hall #${cityDetailTabID.buildings} .text-negative {
+    margin-left: 0.2222222222rem;
+}
+.bz-city-hall .improvements-list .flex.flex-col.py-1 {
+    padding: 0.1111111111rem 0;
+}
 .bz-city-hall .improvements-list .constructible-entry-highlight.mt-1.mb-1 {
     align-items: center;
     margin-bottom: 0;
@@ -930,13 +936,8 @@ class bzPanelCityDetails {
         maintenanceContainer.classList.add("flex", "justify-end", "items-center");
         if (constructibleData.damaged) {
             const damagedText = document.createElement("div");
-            // display warning in a yellow capsule
-            damagedText.classList.value = "uppercase text-xs px-2 mr-1 rounded-full";
-            damagedText.style.lineHeight = 1.25;
-            damagedText.style.backgroundColor = BZ_COLOR.caution;
-            damagedText.style.color = BZ_COLOR.black;
-            damagedText.setAttribute("data-l10n-id",
-                "LOC_UI_CITY_DETAILS_BUILDING_DAMAGED");
+            damagedText.classList.add("uppercase", "text-xs", "text-negative");
+            damagedText.textContent = "LOC_UI_CITY_DETAILS_BUILDING_DAMAGED";
             yieldContainer.appendChild(damagedText);
         }
         if (constructibleData.yieldMap) {
