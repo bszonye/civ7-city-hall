@@ -484,7 +484,23 @@ class bzPanelCityDetails {
                     ${BZ_DIVIDER}
                     <div class="flex">
                         <fxs-icon class="size-12 ml-3 my-1" data-icon-id="CITY_IMPROVEMENTS_LIST"></fxs-icon>
-                        <div class="self-center font-title text-lg uppercase text-gradient-secondary ml-2" data-l10n-id="LOC_UI_CITY_DETAILS_IMPROVEMENTS"></div>
+                        <div class="flex-col flex grow">
+                            <div class="improvements-header flex-row flex ml-2 justify-between self-stretch items-center">
+                                <div class="self-center font-title text-lg uppercase text-gradient-secondary" data-l10n-id="LOC_UI_CITY_DETAILS_IMPROVEMENTS"></div>
+                                <div class="constructible-entry improvements-breakdown-icon flex flex-row items-center justify-center mr-5 relative" tabindex="-1">
+                                    <div class="constructible-entry-highlight flex-row flex items-center justify-between relative -top-1 -right-1">
+                                        <div class="size-6 m-1 bg-center bg-contain bg-no-repeat" style="background-image: url('blp:icon_info.png')">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <fxs-activatable class="improvements-collapse-all pointer-events-auto constructible-entry flex-row flex ml-2 self-stretch items-center" tabindex="-1">
+                                <div class="constructible-entry-highlight flex-row flex items-center justify-between">
+                                    <div class="improvements-collapse-all-text" data-l10n-id="LOC_GLOBAL_YIELDS_COLLAPSE_ALL"></div>
+                                    <fxs-minus-plus type="minus" class="improvements-collapse-all-minus-plus ml-2"></fxs-minus-plus>
+                                </div>
+                            </fxs-activatable>
+                        </div>
                     </div>
                 </div>
                 <div class="improvements-list flex-col"></div>
