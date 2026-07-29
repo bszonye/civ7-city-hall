@@ -518,7 +518,7 @@ class bzPanelCityDetails {
                             <div class="improvements-header flex-row flex ml-2 justify-between self-stretch items-center">
                                 <div class="self-center font-title text-lg uppercase text-gradient-secondary" data-l10n-id="LOC_UI_CITY_DETAILS_IMPROVEMENTS"></div>
                                 <div class="constructible-entry improvements-breakdown-icon flex flex-row items-center justify-center mr-5 relative" tabindex="-1">
-                                    <div class="constructible-entry-highlight flex-row flex items-center justify-between relative -top-1 -right-1">
+                                    <div class="constructible-entry-highlight flex-row flex items-center justify-between relative bottom-0 -right-1">
                                         <div class="size-6 m-1 bg-center bg-contain bg-no-repeat" style="background-image: url('blp:icon_info.png')">
                                         </div>
                                     </div>
@@ -592,6 +592,7 @@ class bzPanelCityDetails {
             "LOC_UI_TOWN_FOCUS",
             bzCityDetails.townFocusTable,
         );
+        this.component.addWarehouseBreakdownTooltip(this.improvementsContainer, this.improvementsContainer.lastChild);
         if (overviewHasFocus) FocusManager.get().setFocus(this.overviewSlot);
     }
     renderGrowth(container) {
