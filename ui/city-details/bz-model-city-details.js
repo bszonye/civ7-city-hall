@@ -11,17 +11,19 @@ class bzUpdateCityDetailsEvent extends CustomEvent {
 }
 
 const IMPROVEMENT_BONUS_INDEXES = {
-    LOC_IMPROVEMENT_EXPEDITION_BASE_NAME: -1,
-    LOC_IMPROVEMENT_FARM_NAME: 0,
-    LOC_IMPROVEMENT_FISHING_BOAT_NAME: 0,
-    LOC_IMPROVEMENT_PASTURE_NAME: 0,
-    LOC_IMPROVEMENT_PLANTATION_NAME: 0,
-    LOC_IMPROVEMENT_CAMP_NAME: 1,
-    LOC_IMPROVEMENT_CLAY_PIT_NAME: 1,
-    LOC_IMPROVEMENT_MINE_NAME: 1,
-    LOC_IMPROVEMENT_OIL_RIG_NAME: 1,
-    LOC_IMPROVEMENT_QUARRY_NAME: 1,
-    LOC_IMPROVEMENT_WOODCUTTER_NAME: 1,
+    LOC_IMPROVEMENT_FARM_NAME: 0.0,
+    LOC_IMPROVEMENT_PASTURE_NAME: 0.1,
+    LOC_IMPROVEMENT_PLANTATION_NAME: 0.1,
+    LOC_IMPROVEMENT_FISHING_BOAT_NAME: 0.2,
+    LOC_IMPROVEMENT_MINE_NAME: 1.0,
+    LOC_IMPROVEMENT_CLAY_PIT_NAME: 1.1,
+    LOC_IMPROVEMENT_QUARRY_NAME: 1.2,
+    LOC_IMPROVEMENT_WOODCUTTER_NAME: 1.3,
+    LOC_IMPROVEMENT_CAMP_NAME: 1.4,
+    LOC_IMPROVEMENT_OIL_RIG_NAME: 1.5,
+    LOC_IMPROVEMENT_EXPEDITION_BASE_NAME: 99,
+    LOC_IMPROVEMENT_INCA_MOUNTAIN_NAME: 99,
+    LOC_IMPROVEMENT_MOUNTAIN_NAME: 99,
 };
 
 const bzNameSort = (a, b) => {
@@ -205,7 +207,7 @@ class bzCityDetailsModel {
             imp.count += 1;
             // warehouse yield icons
             imp.bonusIndex = IMPROVEMENT_BONUS_INDEXES[fcinfo.Name] ?? -1;
-            imp.bonusIcon = GameInfo.Yields[imp.bonusIndex]?.YieldType;
+            imp.bonusIcon = GameInfo.Yields[Math.floor(imp.bonusIndex)]?.YieldType;
             // Trade Outpost and Factory Town: resources
             const resourceType = GameplayMap.getResourceType(loc.x, loc.y);
             const resource = GameInfo.Resources.lookup(resourceType);
@@ -223,7 +225,7 @@ class bzCityDetailsModel {
             icon: info.ConstructibleType,
             name: info.Name,
             bonusIndex: info.bonusIndex,
-            details: [{ icon: info.bonusIcon, bonus: info.count }],
+            details: [{ icon: info.bonusIcon, count: info.count }],
         }));
         return warehouses.sort((a, b) =>
             a.bonusIndex - b.bonusIndex || bzNameSort(a.name, b.name));

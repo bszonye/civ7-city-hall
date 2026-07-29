@@ -758,8 +758,14 @@ class bzPanelCityDetails {
                 if (detail.icon) {
                     row.appendChild(docIcon(detail.icon, size, isize, "ml-1"));
                 }
-                const bonus = `+${detail.bonus.toFixed()}`;
-                row.appendChild(docText(bonus, "mr-1 text-right"));
+                if (detail.bonus) {
+                    const bonus = `+${detail.bonus.toFixed()}`;
+                    row.appendChild(docText(bonus, "mr-1 text-right"));
+                }
+                if (detail.count) {
+                    const count = `×${detail.count.toFixed()}`;
+                    row.appendChild(docText(count, "mr-1 text-right"));
+                }
             }
             // optional tooltips
             if (item.description) {
