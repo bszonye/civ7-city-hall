@@ -488,8 +488,8 @@ class bzPanelCityDetails {
         // slot.setAttribute("data-navrule-right", "stop");
         slot.id = cityDetailTabID.overview;
         slot.innerHTML = `
-        <fxs-scrollable class="w-full">
-            <div class="growth-container flex flex-col ml-6 mt-3"></div>
+        <fxs-scrollable class="w-full my-1\\.5">
+            <div class="growth-container flex flex-col ml-6 mt-1\\.5"></div>
             <div class="connections-container flex flex-col ml-6"></div>
             <div class="improvements-container flex flex-col ml-6"></div>
             <div class="town-focus-container flex flex-col ml-6"></div>
