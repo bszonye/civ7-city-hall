@@ -139,21 +139,19 @@ const BZ_HEAD_STYLE = [
     margin: -0.2222222222rem 0;
 }
 .bz-city-hall .improvements-category .city-details-half-divider {
-    margin-top: -0.4444444444rem;
+    margin-top: -0.2222222222rem;
 }
 .bz-city-hall .wonders-category .city-details-half-divider {
-    margin: -0.2222222222rem;
+    margin-bottom: -0.2222222222rem;
 }
 .bz-city-hall .buildings-list .flex:last-child .city-details-half-divider,
 .bz-city-hall .improvements-list .city-details-half-divider,
 .bz-city-hall .wonders-list .city-details-half-divider {
     display: none;
 }
-.bz-city-hall .improvements-list > div.relative {
-    margin-bottom: 0.2222222222rem;
-}
 .bz-city-hall .improvements-list .constructible-entry-highlight.mt-1.mb-1 {
     align-items: center;
+    margin-bottom: 0;
 }
 .bz-city-hall .improvements-list fxs-minus-plus {
     top: 1rem;
@@ -386,6 +384,10 @@ class bzPanelCityDetails {
         c.proto.addDistrictData = function(...args) {
             return this.bzCityHall.addDistrictData(...args);
         }
+        c.addImprovementEntry = c.proto.addImprovementEntry;
+        c.proto.addImprovementEntry = function(...args) {
+            return this.bzCityHall.addImprovementEntry(...args);
+        }
         // replace component.renderYieldsSlot to fix a bug
         c.renderYieldsSlot = c.proto.renderYieldsSlot;
         c.proto.renderYieldsSlot = function() {
@@ -525,7 +527,7 @@ class bzPanelCityDetails {
                             </div>
                             <fxs-activatable class="improvements-collapse-all pointer-events-auto constructible-entry flex-row flex ml-2 self-stretch items-center" tabindex="-1">
                                 <div class="constructible-entry-highlight flex-row flex items-center justify-between">
-                                    <div class="improvements-collapse-all-text" data-l10n-id="LOC_GLOBAL_YIELDS_COLLAPSE_ALL"></div>
+                                    <div class="improvements-collapse-all-text text-xs" data-l10n-id="LOC_GLOBAL_YIELDS_COLLAPSE_ALL"></div>
                                     <fxs-minus-plus type="minus" class="improvements-collapse-all-minus-plus ml-2"></fxs-minus-plus>
                                 </div>
                             </fxs-activatable>
@@ -812,6 +814,81 @@ class bzPanelCityDetails {
             mainDiv.appendChild(this.addConstructibleData(constructibleData));
         }
         return mainDiv;
+    }
+    addImprovementEntry(constructibleData) {
+        const wrapDiv = document.createElement("div");
+        wrapDiv.classList.add("relative");
+        const collapseButton = document.createElement("fxs-minus-plus");
+        collapseButton.classList.add("absolute", "top-1", "right-5");
+        collapseButton.setAttribute("type", "minus");
+        wrapDiv.appendChild(collapseButton);
+        const childList = document.createElement("div");
+        childList.classList.value = "pl-4";
+        const mainDiv = document.createElement("fxs-activatable");
+        mainDiv.classList.add("constructible-entry", "flex", "flex-col");
+        mainDiv.setAttribute("tabindex", "-1");
+        mainDiv.setAttribute("data-type", constructibleData.type);
+        collapseButton.addEventListener("on-collapse-all", () => {
+            this.component.onCollapseImprovementSection(
+                collapseButton,
+                childList,
+                this.component.improvementsCollapseAll,
+                this.component.improvementsCollapseAllText,
+                this.component.improvementsList,
+                false
+            );
+        });
+        collapseButton.addEventListener("action-activate", () => {
+            this.component.onCollapseImprovementSection(
+                collapseButton,
+                childList,
+                this.component.improvementsCollapseAll,
+                this.component.improvementsCollapseAllText,
+                this.component.improvementsList
+            );
+        });
+        mainDiv.addEventListener("action-activate", () => {
+            this.component.onCollapseImprovementSection(
+                collapseButton,
+                childList,
+                this.component.improvementsCollapseAll,
+                this.component.improvementsCollapseAllText,
+                this.component.improvementsList
+            );
+        });
+        const topDiv = document.createElement("div");
+        topDiv.classList.add("constructible-entry-highlight", "flex", "ml-6", "mt-1", "mb-1", "pointer-events-none");
+        const icon = document.createElement("fxs-icon");
+        icon.classList.add("size-12");
+        icon.setAttribute("data-icon-context", constructibleData.iconContext);
+        icon.setAttribute("data-icon-id", constructibleData.icon);
+        topDiv.appendChild(icon);
+        const rightContainer = document.createElement("div");
+        rightContainer.classList.add("flex", "flex-col");
+        const nameContainer = document.createElement("div");
+        nameContainer.classList.add("flex", "ml-2", "center", "flex-col");
+        rightContainer.appendChild(nameContainer);
+        const name = document.createElement("div");
+        name.classList.add("mr-2", "font-title", "uppercase", "text-xs");
+        name.textContent = Locale.compose(constructibleData.name);
+        nameContainer.appendChild(name);
+        const countText = document.createElement("div");
+        countText.classList.add("ml-2", "text-xs");
+        countText.textContent = Locale.compose(
+            "LOC_UI_CITY_DETAILS_IMPROVEMENTS_COUNT",
+            CityDetails.constructibleCounts.get(constructibleData.name) ?? 0
+        );
+        rightContainer.appendChild(countText);
+        topDiv.appendChild(rightContainer);
+        mainDiv.appendChild(topDiv);
+        const improvementDef = GameInfo.Constructibles.lookup(constructibleData.type);
+        if (improvementDef && improvementDef.Tooltip) {
+            this.component.addProductionTooltip(wrapDiv, mainDiv, constructibleData);
+        } else {
+            wrapDiv.appendChild(mainDiv);
+        }
+        wrapDiv.appendChild(childList);
+        return [wrapDiv, childList];
     }
     addConstructibleData(constructibleData) {
         const mainDiv = document.createElement("fxs-activatable");
