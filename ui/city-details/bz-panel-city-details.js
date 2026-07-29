@@ -127,6 +127,7 @@ const BZ_DOT_JOINER = metrics.isIdeographic ?
     BZ_DOT_DIVIDER : `&nbsp;${BZ_DOT_DIVIDER} `;
 
 // additional CSS definitions
+// TODO: fix Improvements and Wonder spacing
 const BZ_HEAD_STYLE = [
 `
 .bz-city-hall .panel-city-details .subsystem-frame__content .fxs-scrollbar__track--vertical {
@@ -141,12 +142,21 @@ const BZ_HEAD_STYLE = [
     margin-top: -0.4444444444rem;
 }
 .bz-city-hall .wonders-category .city-details-half-divider {
-    margin: -0.2222222222rem 0 0.2222222222rem;
+    margin: -0.2222222222rem;
 }
 .bz-city-hall .buildings-list .flex:last-child .city-details-half-divider,
 .bz-city-hall .improvements-list .city-details-half-divider,
 .bz-city-hall .wonders-list .city-details-half-divider {
     display: none;
+}
+.bz-city-hall .improvements-list > div.relative {
+    margin-bottom: 0.2222222222rem;
+}
+.bz-city-hall .improvements-list .constructible-entry-highlight.mt-1.mb-1 {
+    align-items: center;
+}
+.bz-city-hall .improvements-list fxs-minus-plus {
+    top: 1rem;
 }
 .bz-city-hall .text-gradient-secondary {
     fxs-font-gradient-color: ${BZ_COLOR.bronze1};
