@@ -20,7 +20,8 @@ import { FocusManager } from '../../../core/ui-next/services/focus-manager.js';
 import { BuildQueue } from '../build-queue/model-build-queue.js';
 import { BuildingPlacementManager } from '../building-placement/building-placement-manager.js';
 import { CityDetailsClosedEventName } from '../city-details/panel-city-details.js';
-import { ProductionPanelCategory, GetCityBuildReccomendations, GetUniqueQuartersForPlayer, GetProductionItems, RepairConstruct, SetTownFocus, GetPrevCityID, GetNextCityID, Construct, CreateProductionChooserItem, GetNumUniqueQuarterBuildingsCompleted, GetCurrentTownFocus } from './production-chooser-helpers.js';
+import { ProductionPanelCategory, GetCityBuildReccomendations, GetUniqueQuartersForPlayer, RepairConstruct, SetTownFocus, GetPrevCityID, GetNextCityID, CreateProductionChooserItem, GetNumUniqueQuarterBuildingsCompleted, GetCurrentTownFocus } from './production-chooser-helpers.js';
+import { GetProductionItems, Construct } from '/bz-city-hall/ui/production-chooser/bz-production-chooser-helpers.js';
 import { ConvertToCity, CanConvertToCity } from './production-chooser-operations.js';
 import { UniqueQuarter } from './production-chooser-unique-quarter.js';
 import { composeTagString } from '../utilities/utilities-tags.js';
@@ -944,7 +945,7 @@ class ProductionChooserScreen extends Panel {
       (category) => items[category].map((item) => item.type)
     );
     const newItemsSet = new Set(newItems);
-    let resetFocus = false;
+    let resetFocus = true;
     const currentFocus = FocusManager.get().currentFocus();
     for (const [type, item] of this.itemElementMap) {
       if (!newItemsSet.has(type)) {

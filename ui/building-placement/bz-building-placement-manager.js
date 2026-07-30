@@ -38,13 +38,17 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     const city = Cities.get(cityID);
     for (const uq of uqList) {
         // attach UQ type to unique building locations
-        const plot1 = this.bzFindConstructible(city, uq.BuildingType1);
-        const plot2 = this.bzFindConstructible(city, uq.BuildingType2);
-        if (plot1 != null) uqPlots.set(plot1, uq.UniqueQuarterType);
-        if (plot2 != null) uqPlots.set(plot2, uq.UniqueQuarterType);
-        // attach location to UQ type
-        const plot = plot1 ?? plot2;
-        if (plot != null) uqPlots.set(uq.UniqueQuarterType, plot);
+        const uqTypes = [uq.BuildingType1, uq.BuildingType2];
+        if (uqTypes.includes(constructible.ConstructibleType)) {
+            this._currentQuarter = uq;
+        }
+        const plots = uqTypes.map(type => this.bzFindConstructible(city, type));
+        for (const plotID of plots) {
+            if (plotID == null) continue;
+            uqPlots.set(plotID, uq.UniqueQuarterType);
+            uqPlots.set(uq.UniqueQuarterType, plotID);
+            this._potentialUniqueQuarterPlots.push({ plotID, uniqueQuarterDef: uq });
+        }
     }
     // is the new building part of a unique quarter?
     const btype = constructible.ConstructibleType;
@@ -97,7 +101,11 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     });
     // evaluate rural and undeveloped tiles
     operationResult.ExpandUrbanPlots?.forEach(p => {
-        if (!isUQCompatible(p)) this._bzReservedPlots.push(p);
+        if (!isUQCompatible(p)) {
+            this._bzReservedPlots.push(p);
+        } else if (uqPlots.has(p)) {
+            this._uniqueQuarterPlots.push(p);
+        }
         const loc = GameplayMap.getLocationFromIndex(p);
         const city = MapCities.getCity(loc.x, loc.y);
         if (city && MapCities.getDistrict(loc.x, loc.y) != null) {

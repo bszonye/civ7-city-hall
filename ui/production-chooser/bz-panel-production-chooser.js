@@ -207,66 +207,56 @@ document.body.classList.add("bz-city-hall");
 document.body.classList.toggle("bz-city-compact", bzCityHallOptions.compact);
 
 class bzProductionChooserScreen {
-    static c_prototype;
-    static c_doOrConfirmConstruction;
+    static c = null;
     static isPurchase = false;
     static isCDPanelOpen = true;
     viewHiddenActiveLabel = document.createElement("fxs-activatable");
     isGamepadActive = Input.getActiveDeviceType() == InputDeviceType.Controller;
     constructor(component) {
         this.component = component;
-        component.bzComponent = this;
+        this.component.bzCityHall = this;
         component.updateItems = new UpdateGate(() => this.updateItems());
-        this.patchPrototypes(this.component);
+        this.patchPrototype(Object.getPrototypeOf(component));
     }
-    patchPrototypes(component) {
-        const c_prototype = Object.getPrototypeOf(component);
-        if (bzProductionChooserScreen.c_prototype == c_prototype) return;
-        // patch PanelCityDetails methods
-        const proto = bzProductionChooserScreen.c_prototype = c_prototype;
+    patchPrototype(proto) {
+        if (bzProductionChooserScreen.c) return;  // one-time initialization
+        // patch PanelCityDetails methods & properties
+        const c = bzProductionChooserScreen.c = { proto };
         // wrap render method to extend it
-        const c_render = proto.render;
-        const after_render = this.afterRender;
-        proto.render = function(...args) {
-            const c_rv = c_render.apply(this, args);
-            const after_rv = after_render.apply(this.bzComponent, args);
-            return after_rv ?? c_rv;
+        c.render = c.proto.render;
+        c.proto.render = function(...args) {
+            const crv = c.render.apply(this, args);
+            const arv = this.bzCityHall.afterRender(...args);
+            return arv ?? crv;
         }
         // override doOrConfirmConstruction method to patch Construct
-        bzProductionChooserScreen.c_doOrConfirmConstruction =
-            proto.doOrConfirmConstruction;
-        proto.doOrConfirmConstruction = function(...args) {
-            return this.bzComponent.doOrConfirmConstruction(...args);
+        c.doOrConfirmConstruction = c.proto.doOrConfirmConstruction;
+        c.proto.doOrConfirmConstruction = function(...args) {
+            return this.bzCityHall.doOrConfirmConstruction(...args);
         }
         // override isPurchase property
-        const c_isPurchase =
-            Object.getOwnPropertyDescriptor(proto, "isPurchase");
+        c.isPurchase = Object.getOwnPropertyDescriptor(c.proto, "isPurchase");
         const isPurchase = {
-            configurable: c_isPurchase.configurable,
-            enumerable: c_isPurchase.enumerable,
-            get: c_isPurchase.get,
+            ...c.isPurchase,
             set(value) {
                 // remember tab selection
                 bzProductionChooserScreen.isPurchase = value;
-                c_isPurchase.set.apply(this, [value]);
+                c.isPurchase.set.apply(this, [value]);
             },
         };
-        Object.defineProperty(proto, "isPurchase", isPurchase);
+        Object.defineProperty(c.proto, "isPurchase", isPurchase);
         // override cityID property
-        const c_cityID =
-            Object.getOwnPropertyDescriptor(proto, "cityID");
+        c.cityID = Object.getOwnPropertyDescriptor(c.proto, "cityID");
         const cityID = {
-            configurable: c_cityID.configurable,
-            enumerable: c_cityID.enumerable,
-            get: c_cityID.get,
+            ...c.cityId,
             set(value) {
-                c_cityID.set.apply(this, [value]);
+                c.cityID.set.apply(this, [value]);
                 // restore tab selection (if needed & possible)
                 if (this._isPurchase || this.city.Happiness?.hasUnrest) return;
                 if (bzProductionChooserScreen.isPurchase) this.isPurchase = true;
             },
         };
-        Object.defineProperty(proto, "cityID", cityID);
+        Object.defineProperty(c.proto, "cityID", cityID);
     }
     beforeAttach() {
         // replace event handlers to fix nav-help glitches
@@ -479,7 +469,6 @@ Controls.decorate("panel-production-chooser", (val) => new bzProductionChooserSc
 class bzLastProductionSection {
     constructor(component) {
         this.component = component;
-        component.bzComponent = this;
     }
     beforeAttach() {
         this.component.Root.classList.toggle("text-sm", bzCityHallOptions.compact);

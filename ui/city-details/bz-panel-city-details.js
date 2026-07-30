@@ -4,7 +4,7 @@ import NavTray from "/core/ui/navigation-tray/model-navigation-tray.js";
 import Databind from '../../../core/ui/utilities/utilities-core-databinding.js';
 import { MustGetElement } from "/core/ui/utilities/utilities-dom.js";
 import { FocusManager } from '/core/ui-next/services/focus-manager.js';
-import { getConstructibleTagsFromType } from '/base-standard/ui/utilities/utilities-tags.js';
+import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
 
 // vertical separator
 const BZ_DIVIDER_STYLE = "flex w-96 self-center";
@@ -126,6 +126,7 @@ const BZ_DOT_JOINER = metrics.isIdeographic ?
     BZ_DOT_DIVIDER : `&nbsp;${BZ_DOT_DIVIDER} `;
 
 // additional CSS definitions
+// TODO: fix Improvements and Wonder spacing
 const BZ_HEAD_STYLE = [
 `
 .bz-city-hall .panel-city-details .subsystem-frame__content .fxs-scrollbar__track--vertical {
@@ -137,15 +138,34 @@ const BZ_HEAD_STYLE = [
     margin: -0.2222222222rem 0;
 }
 .bz-city-hall .improvements-category .city-details-half-divider {
-    margin-top: -0.4444444444rem;
+    margin-top: -0.2222222222rem;
 }
 .bz-city-hall .wonders-category .city-details-half-divider {
-    margin: -0.2222222222rem 0 0.2222222222rem;
+    margin-bottom: -0.2222222222rem;
 }
 .bz-city-hall .buildings-list .flex:last-child .city-details-half-divider,
 .bz-city-hall .improvements-list .city-details-half-divider,
 .bz-city-hall .wonders-list .city-details-half-divider {
     display: none;
+}
+.bz-city-hall .text-negative,
+.bz-city-hall .text-negative-light {
+    color: #ff6644;
+    text-shadow: 0 0.0555555556rem 0.1111111111rem black, 0 0 0.3333333333rem black;
+}
+.bz-city-hall #${cityDetailTabID.buildings} .text-negative,
+.bz-city-hall #${cityDetailTabID.buildings} .text-negative-light {
+    margin: 0 0.2222222222rem;
+}
+.bz-city-hall .improvements-list .flex.flex-col.py-1 {
+    padding: 0.1111111111rem 0;
+}
+.bz-city-hall .improvements-list .constructible-entry-highlight.mt-1.mb-1 {
+    align-items: center;
+    margin-bottom: 0;
+}
+.bz-city-hall .improvements-list fxs-minus-plus {
+    top: 1rem;
 }
 .bz-city-hall .text-gradient-secondary {
     fxs-font-gradient-color: ${BZ_COLOR.bronze1};
@@ -307,11 +327,7 @@ function preloadIcon(icon, context) {
 
 // PanelCityDetails decorator
 class bzPanelCityDetails {
-    static c_prototype;
-    static c_renderBuildingSlot;
-    static c_addConstructibleData;
-    static c_addDistrictData;
-    static c_renderYieldsSlot;
+    static c = null;
     static lastTab = 0;
     static tableWidth = 0;
     tabs;
@@ -325,8 +341,10 @@ class bzPanelCityDetails {
     onCityLinkListener = this.onCityLink.bind(this);
     constructor(component) {
         this.component = component;
-        component.bzComponent = this;
-        this.patchPrototypes(this.component);
+        component.bzCityHall = this;
+        this.patchPrototype(Object.getPrototypeOf(component));
+        // rebind listener
+        component.updateCityDetailersListener = component.update.bind(component);
         // replace onFocus to override default slot
         this.component.onFocus = () => {
             this.syncFocus(true);
@@ -346,47 +364,65 @@ class bzPanelCityDetails {
             for (const f of GameInfo.Projects) preloadIcon(f.ProjectType);
         });
     }
-    patchPrototypes(component) {
-        const c_prototype = Object.getPrototypeOf(component);
-        if (bzPanelCityDetails.c_prototype == c_prototype) return;
-        // patch PanelCityDetails methods
-        const proto = bzPanelCityDetails.c_prototype = c_prototype;
+    patchPrototype(proto) {
+        if (bzPanelCityDetails.c) return;  // one-time initialization
+        // patch PanelCityDetails methods & properties
+        const c = bzPanelCityDetails.c = { proto };
         // wrap render method to extend it
-        const c_render = proto.render;
-        const after_render = this.afterRender;
-        proto.render = function(...args) {
-            const c_rv = c_render.apply(this, args);
-            const after_rv = after_render.apply(this.bzComponent, args);
-            return after_rv ?? c_rv;
+        c.render = c.proto.render;
+        c.proto.render = function(...args) {
+            const crv = c.render.apply(this, args);
+            const arv = this.bzCityHall.afterRender(...args);
+            return arv ?? crv;
         }
         // wrap update method to extend it
-        const c_update = proto.update;
-        const before_update = this.beforeUpdate;
-        proto.update = function(...args) {
-            const before_rv = before_update.apply(this.bzComponent, args);
-            const c_rv = c_update.apply(this, args);
-            return c_rv ?? before_rv;
+        c.update = c.proto.update;
+        c.proto.update = function(...args) {
+            const brv = this.bzCityHall.beforeUpdate(...args);
+            const crv = c.update.apply(this, args);
+            return crv ?? brv;
         }
-        component.updateCityDetailersListener = component.update.bind(component);
         // replace vanilla methods for city-details-tab-buildings
-        bzPanelCityDetails.c_renderBuildingSlot = proto.renderBuildingSlot;
-        proto.renderBuildingSlot = function(...args) {
-            return this.bzComponent.renderBuildingSlot(...args);
+        c.renderBuildingSlot = c.proto.renderBuildingSlot;
+        c.proto.renderBuildingSlot = function(...args) {
+            return this.bzCityHall.renderBuildingSlot(...args);
         }
-        bzPanelCityDetails.c_addConstructibleData = proto.addConstructibleData;
-        proto.addConstructibleData = function(...args) {
-            return this.bzComponent.addConstructibleData(...args);
+        c.addConstructibleData = c.proto.addConstructibleData;
+        c.proto.addConstructibleData = function(...args) {
+            return this.bzCityHall.addConstructibleData(...args);
         }
-        bzPanelCityDetails.c_addDistrictData = proto.addDistrictData;
-        proto.addDistrictData = function(...args) {
-            return this.bzComponent.addDistrictData(...args);
+        c.addDistrictData = c.proto.addDistrictData;
+        c.proto.addDistrictData = function(...args) {
+            return this.bzCityHall.addDistrictData(...args);
+        }
+        c.addImprovementEntry = c.proto.addImprovementEntry;
+        c.proto.addImprovementEntry = function(...args) {
+            return this.bzCityHall.addImprovementEntry(...args);
         }
         // replace component.renderYieldsSlot to fix a bug
-        bzPanelCityDetails.c_renderYieldsSlot = proto.renderYieldsSlot;
-        proto.renderYieldsSlot = function() {
-            return this.bzComponent.renderYieldsSlot();
+        c.renderYieldsSlot = c.proto.renderYieldsSlot;
+        c.proto.renderYieldsSlot = function() {
+            return this.bzCityHall.renderYieldsSlot();
+        }
+        // replace onCollapseAllSection for debouncing (see below)
+        c.onCollapseAllSection = c.proto.onCollapseAllSection;
+        c.proto.onCollapseAllSection = function(...args) {
+            this.bzCityHall.debounceCollapseAll.call("debounce", ...args);
         }
     }
+    debounceCollapseAll = new UpdateGate(() => {
+        // the Collapse All button has a bug (event listener leak) that
+        // runs the handler multiple times per click.  this replaces the
+        // vanilla handler with an UpdateGate that will only run once
+        // per frame.
+        const onCollapseAllSection = bzPanelCityDetails.c.onCollapseAllSection;
+        onCollapseAllSection.call(
+            this.component,
+            this.component.improvementsCollapseAll,
+            this.component.improvementsCollapseAllText,
+            this.component.improvementsList
+        );
+    });
     patchTabSlots() {
         const tabItems = this.component.tabBar.getAttribute("tab-items");
         const tabs = JSON.parse(tabItems);
@@ -464,8 +500,8 @@ class bzPanelCityDetails {
         // slot.setAttribute("data-navrule-right", "stop");
         slot.id = cityDetailTabID.overview;
         slot.innerHTML = `
-        <fxs-scrollable class="w-full">
-            <div class="growth-container flex flex-col ml-6 mt-3"></div>
+        <fxs-scrollable class="w-full my-1\\.5">
+            <div class="growth-container flex flex-col ml-6 mt-1\\.5"></div>
             <div class="connections-container flex flex-col ml-6"></div>
             <div class="improvements-container flex flex-col ml-6"></div>
             <div class="town-focus-container flex flex-col ml-6"></div>
@@ -490,7 +526,23 @@ class bzPanelCityDetails {
                     ${BZ_DIVIDER}
                     <div class="flex">
                         <fxs-icon class="size-12 ml-3 my-1" data-icon-id="CITY_IMPROVEMENTS_LIST"></fxs-icon>
-                        <div class="self-center font-title text-lg uppercase text-gradient-secondary ml-2" data-l10n-id="LOC_UI_CITY_DETAILS_IMPROVEMENTS"></div>
+                        <div class="flex-col flex grow">
+                            <div class="improvements-header flex-row flex ml-2 justify-between self-stretch items-center">
+                                <div class="self-center font-title text-lg uppercase text-gradient-secondary" data-l10n-id="LOC_UI_CITY_DETAILS_IMPROVEMENTS"></div>
+                                <div class="constructible-entry improvements-breakdown-icon flex flex-row items-center justify-center mr-5 relative" tabindex="-1">
+                                    <div class="constructible-entry-highlight flex-row flex items-center justify-between relative bottom-0 -right-1">
+                                        <div class="size-6 m-1 bg-center bg-contain bg-no-repeat" style="background-image: url('blp:icon_info.png')">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <fxs-activatable class="improvements-collapse-all pointer-events-auto constructible-entry flex-row flex ml-2 self-stretch items-center" tabindex="-1">
+                                <div class="constructible-entry-highlight flex-row flex items-center justify-between">
+                                    <div class="improvements-collapse-all-text text-xs" data-l10n-id="LOC_GLOBAL_YIELDS_COLLAPSE_ALL"></div>
+                                    <fxs-minus-plus type="minus" class="improvements-collapse-all-minus-plus ml-2"></fxs-minus-plus>
+                                </div>
+                            </fxs-activatable>
+                        </div>
                     </div>
                 </div>
                 <div class="improvements-list flex-col"></div>
@@ -552,6 +604,7 @@ class bzPanelCityDetails {
             "LOC_UI_TOWN_FOCUS",
             bzCityDetails.townFocusTable,
         );
+        this.component.addWarehouseBreakdownTooltip(this.improvementsContainer, this.improvementsContainer.lastChild);
         if (overviewHasFocus) FocusManager.get().setFocus(this.overviewSlot);
     }
     renderGrowth(container) {
@@ -717,8 +770,14 @@ class bzPanelCityDetails {
                 if (detail.icon) {
                     row.appendChild(docIcon(detail.icon, size, isize, "ml-1"));
                 }
-                const bonus = `+${detail.bonus.toFixed()}`;
-                row.appendChild(docText(bonus, "mr-1 text-right"));
+                if (detail.bonus) {
+                    const bonus = `+${detail.bonus.toFixed()}`;
+                    row.appendChild(docText(bonus, "mr-1 text-right"));
+                }
+                if (detail.count) {
+                    const count = `×${detail.count.toFixed()}`;
+                    row.appendChild(docText(count, "mr-1 text-right"));
+                }
             }
             // optional tooltips
             if (item.description) {
@@ -746,6 +805,7 @@ class bzPanelCityDetails {
         container.appendChild(layout);
     }
     addDistrictData(districtData) {
+        const c = this.component;
         const mainDiv = document.createElement("div");
         mainDiv.classList.add("flex", "flex-col");
         if (districtData.name && districtData.description) {
@@ -770,37 +830,94 @@ class bzPanelCityDetails {
             uniqueQuarterTextContainer.appendChild(districtDescription);
         }
         for (const constructibleData of districtData.constructibleData) {
-            mainDiv.appendChild(this.addConstructibleData(constructibleData));
+            const constructibleEntry = this.addConstructibleData(constructibleData);
+            c.addProductionTooltip(mainDiv, constructibleEntry, constructibleData);
         }
         return mainDiv;
     }
-    addConstructibleData(constructibleData) {
+    addImprovementEntry(constructibleData) {
+        const c = this.component;
+        const wrapDiv = document.createElement("div");
+        wrapDiv.classList.add("relative");
+        const collapseButton = document.createElement("fxs-minus-plus");
+        collapseButton.classList.add("absolute", "top-1", "right-5");
+        collapseButton.setAttribute("type", "minus");
+        wrapDiv.appendChild(collapseButton);
+        const childList = document.createElement("div");
+        childList.classList.value = "pl-4";
         const mainDiv = document.createElement("fxs-activatable");
         mainDiv.classList.add("constructible-entry", "flex", "flex-col");
         mainDiv.setAttribute("tabindex", "-1");
         mainDiv.setAttribute("data-type", constructibleData.type);
-        const info = GameInfo.Constructibles.lookup(constructibleData.type);
-        // replace missing tooltip style
-        // mainDiv.setAttribute("data-tooltip-style", "production-constructible-tooltip");
-        if (info?.Description && Locale.keyExists(info.Description)) {
-            const stylize = (s, text) => `[style:${s}]${text}[/style]`;
-            const title = [stylize(
-                "font-title uppercase text-gradient-secondary leading-normal",
-                Locale.compose(info.Name)
-            )];
-            const tags = getConstructibleTagsFromType(info.ConstructibleType);
-            if (tags.length) {
-                title.push(stylize(
-                    "text-2xs text-accent-3 leading-normal",
-                    tags.join(BZ_DOT_JOINER)
-                ));
-            }
-            const description = Locale.compose(info.Description)
-                .split(/\[[Nn]\]/)
-                .map(s => stylize("leading-normal", s));
-            const tooltip = title.concat(description).join("[n]");
-            mainDiv.setAttribute("data-tooltip-content", tooltip);
+        collapseButton.addEventListener("on-collapse-all", () => {
+            c.onCollapseImprovementSection(
+                collapseButton,
+                childList,
+                c.improvementsCollapseAll,
+                c.improvementsCollapseAllText,
+                c.improvementsList,
+                false
+            );
+        });
+        collapseButton.addEventListener("action-activate", () => {
+            c.onCollapseImprovementSection(
+                collapseButton,
+                childList,
+                c.improvementsCollapseAll,
+                c.improvementsCollapseAllText,
+                c.improvementsList
+            );
+        });
+        mainDiv.addEventListener("action-activate", () => {
+            c.onCollapseImprovementSection(
+                collapseButton,
+                childList,
+                c.improvementsCollapseAll,
+                c.improvementsCollapseAllText,
+                c.improvementsList
+            );
+        });
+        const topDiv = document.createElement("div");
+        topDiv.classList.add("constructible-entry-highlight", "flex", "ml-6", "mt-1", "mb-1", "pointer-events-none");
+        const icon = document.createElement("fxs-icon");
+        icon.classList.add("size-12");
+        icon.setAttribute("data-icon-context", constructibleData.iconContext);
+        icon.setAttribute("data-icon-id", constructibleData.icon);
+        topDiv.appendChild(icon);
+        const rightContainer = document.createElement("div");
+        rightContainer.classList.add("flex", "flex-col");
+        const nameContainer = document.createElement("div");
+        nameContainer.classList.add("flex", "ml-2", "center", "flex-col");
+        rightContainer.appendChild(nameContainer);
+        const name = document.createElement("div");
+        name.classList.add("mr-2", "font-title", "uppercase", "text-xs");
+        name.textContent = Locale.compose(constructibleData.name);
+        nameContainer.appendChild(name);
+        const countText = document.createElement("div");
+        countText.classList.add("ml-2", "text-xs", "text-accent-4");
+        countText.textContent = Locale.compose(
+            "LOC_UI_CITY_DETAILS_IMPROVEMENTS_COUNT",
+            CityDetails.constructibleCounts.get(constructibleData.name) ?? 0
+        );
+        rightContainer.appendChild(countText);
+        topDiv.appendChild(rightContainer);
+        mainDiv.appendChild(topDiv);
+        const improvementDef = GameInfo.Constructibles.lookup(constructibleData.type);
+        if (improvementDef && improvementDef.Tooltip) {
+            c.addProductionTooltip(wrapDiv, mainDiv, constructibleData);
+        } else {
+            wrapDiv.appendChild(mainDiv);
         }
+        wrapDiv.appendChild(childList);
+        return [wrapDiv, childList];
+    }
+    addConstructibleData(constructibleData) {
+        const c = this.component;
+        const mainDiv = document.createElement("fxs-activatable");
+        mainDiv.classList.add("constructible-entry", "flex", "flex-col");
+        mainDiv.setAttribute("tabindex", "-1");
+        mainDiv.setAttribute("data-type", constructibleData.type);
+        mainDiv.setAttribute("data-tooltip-style", "production-constructible-tooltip");
         const topDiv = document.createElement("div");
         topDiv.classList.add("constructible-entry-highlight", "flex", "my-1", "pointer-events-none", "items-center");
         const icon = document.createElement("fxs-icon");
@@ -825,13 +942,8 @@ class bzPanelCityDetails {
         maintenanceContainer.classList.add("flex", "justify-end", "items-center");
         if (constructibleData.damaged) {
             const damagedText = document.createElement("div");
-            // display warning in a yellow capsule
-            damagedText.classList.value = "uppercase text-xs px-2 mr-1 rounded-full";
-            damagedText.style.lineHeight = 1.25;
-            damagedText.style.backgroundColor = BZ_COLOR.caution;
-            damagedText.style.color = BZ_COLOR.black;
-            damagedText.setAttribute("data-l10n-id",
-                "LOC_UI_CITY_DETAILS_BUILDING_DAMAGED");
+            damagedText.classList.add("uppercase", "text-xs", "text-negative");
+            damagedText.textContent = "LOC_UI_CITY_DETAILS_BUILDING_DAMAGED";
             yieldContainer.appendChild(damagedText);
         }
         if (constructibleData.yieldMap) {
@@ -870,7 +982,10 @@ class bzPanelCityDetails {
                     maintenanceEntry.appendChild(maintenanceIcon);
                     const maintenanceValue = document.createElement("div");
                     maintenanceValue.classList.add("text-xs", "self-center", "text-negative-light");
-                    maintenanceValue.textContent = Locale.compose("LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL", maintenanceData.value);
+                    maintenanceValue.textContent = Locale.compose(
+                        "LOC_UI_CITY_DETAILS_YIELD_ONE_DECIMAL",
+                        maintenanceData.value
+                    );
                     maintenanceEntry.appendChild(maintenanceValue);
                 }
             }
@@ -878,11 +993,11 @@ class bzPanelCityDetails {
         yieldAdjustContainer.appendChild(maintenanceContainer);
         rightContainer.appendChild(yieldAdjustContainer);
         mainDiv.setAttribute("data-constructible-data", JSON.stringify(constructibleData));
-        mainDiv.addEventListener("mouseover", this.component.mouseOverBuildingListener);
-        mainDiv.addEventListener("mouseout", this.component.mouseOutBuildingListener);
-        mainDiv.addEventListener("focus", this.component.focusBuildingListener);
-        mainDiv.addEventListener("focusout", this.component.focusOutBuildingListener);
-        mainDiv.addEventListener("action-activate", this.component.activateBuildingListener);
+        mainDiv.addEventListener("mouseover", c.mouseOverBuildingListener);
+        mainDiv.addEventListener("mouseout", c.mouseOutBuildingListener);
+        mainDiv.addEventListener("focus", c.focusBuildingListener);
+        mainDiv.addEventListener("focusout", c.focusOutBuildingListener);
+        mainDiv.addEventListener("action-activate", c.activateBuildingListener);
         topDiv.appendChild(rightContainer);
         mainDiv.appendChild(topDiv);
         return mainDiv;
