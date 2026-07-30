@@ -815,7 +815,7 @@ class bzPanelCityDetails {
             uniqueQuarterTextContainer.classList.add("flex", "flex-col", "flex-auto", "mx-2");
             uniqueQuarterContainer.appendChild(uniqueQuarterTextContainer);
             const districtName = document.createElement("div");
-            districtName.classList.add("my-1", "font-title", "uppercase", "text-sm");
+            districtName.classList.add("my-1", "font-title", "uppercase", "text-xs");
             districtName.innerHTML = districtData.name;
             uniqueQuarterTextContainer.appendChild(districtName);
             const districtDescription = document.createElement("div");
@@ -884,7 +884,7 @@ class bzPanelCityDetails {
         nameContainer.classList.add("flex", "ml-2", "center", "flex-col");
         rightContainer.appendChild(nameContainer);
         const name = document.createElement("div");
-        name.classList.add("mr-2", "font-title", "uppercase", "text-sm");
+        name.classList.add("mr-2", "font-title", "uppercase", "text-xs");
         name.textContent = Locale.compose(constructibleData.name);
         nameContainer.appendChild(name);
         const countText = document.createElement("div");
@@ -925,7 +925,7 @@ class bzPanelCityDetails {
         nameContainer.classList.add("flex", "center");
         rightContainer.appendChild(nameContainer);
         const name = document.createElement("div");
-        name.classList.add("font-title", "uppercase", "text-sm");
+        name.classList.add("font-title", "uppercase", "text-xs");
         name.textContent = Locale.compose(constructibleData.name);
         nameContainer.appendChild(name);
         const yieldAdjustContainer = document.createElement("div");
