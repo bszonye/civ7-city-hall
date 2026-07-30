@@ -101,7 +101,11 @@ proto.selectPlacementData = function(cityID, operationResult, constructible) {
     });
     // evaluate rural and undeveloped tiles
     operationResult.ExpandUrbanPlots?.forEach(p => {
-        if (!isUQCompatible(p)) this._bzReservedPlots.push(p);
+        if (!isUQCompatible(p)) {
+            this._bzReservedPlots.push(p);
+        } else if (uqPlots.has(p)) {
+            this._uniqueQuarterPlots.push(p);
+        }
         const loc = GameplayMap.getLocationFromIndex(p);
         const city = MapCities.getCity(loc.x, loc.y);
         if (city && MapCities.getDistrict(loc.x, loc.y) != null) {
