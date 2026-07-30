@@ -148,7 +148,13 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .wonders-list .city-details-half-divider {
     display: none;
 }
-.bz-city-hall #${cityDetailTabID.buildings} .text-negative {
+.bz-city-hall .text-negative,
+.bz-city-hall .text-negative-light {
+    color: #ff6644;
+    text-shadow: 0 0.0555555556rem 0.1111111111rem black, 0 0 0.3333333333rem black;
+}
+.bz-city-hall #${cityDetailTabID.buildings} .text-negative,
+.bz-city-hall #${cityDetailTabID.buildings} .text-negative-light {
     margin-left: 0.2222222222rem;
 }
 .bz-city-hall .improvements-list .flex.flex-col.py-1 {
