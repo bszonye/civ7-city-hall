@@ -894,7 +894,7 @@ class bzPanelCityDetails {
         name.textContent = Locale.compose(constructibleData.name);
         nameContainer.appendChild(name);
         const countText = document.createElement("div");
-        countText.classList.add("ml-2", "text-xs");
+        countText.classList.add("ml-2", "text-xs", "text-accent-4");
         countText.textContent = Locale.compose(
             "LOC_UI_CITY_DETAILS_IMPROVEMENTS_COUNT",
             CityDetails.constructibleCounts.get(constructibleData.name) ?? 0
