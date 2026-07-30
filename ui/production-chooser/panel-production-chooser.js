@@ -945,7 +945,7 @@ class ProductionChooserScreen extends Panel {
       (category) => items[category].map((item) => item.type)
     );
     const newItemsSet = new Set(newItems);
-    let resetFocus = false;
+    let resetFocus = true;
     const currentFocus = FocusManager.get().currentFocus();
     for (const [type, item] of this.itemElementMap) {
       if (!newItemsSet.has(type)) {
