@@ -155,7 +155,7 @@ const BZ_HEAD_STYLE = [
 }
 .bz-city-hall #${cityDetailTabID.buildings} .text-negative,
 .bz-city-hall #${cityDetailTabID.buildings} .text-negative-light {
-    margin-left: 0.2222222222rem;
+    margin: 0 0.2222222222rem;
 }
 .bz-city-hall .improvements-list .flex.flex-col.py-1 {
     padding: 0.1111111111rem 0;
