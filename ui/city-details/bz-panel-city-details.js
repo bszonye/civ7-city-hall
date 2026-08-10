@@ -770,11 +770,11 @@ class bzPanelCityDetails {
                 if (detail.icon) {
                     row.appendChild(docIcon(detail.icon, size, isize, "ml-1"));
                 }
-                if (detail.bonus) {
+                if (detail.bonus != null) {
                     const bonus = `+${detail.bonus.toFixed()}`;
                     row.appendChild(docText(bonus, "mr-1 text-right"));
                 }
-                if (detail.count) {
+                if (detail.count != null) {
                     const count = `×${detail.count.toFixed()}`;
                     row.appendChild(docText(count, "mr-1 text-right"));
                 }
