@@ -1069,7 +1069,7 @@ class ProductionChooserScreen extends Panel {
       }
       return false;
     }
-    let live = false;
+    let live;
     switch (name) {
       case "accept":
         live = false;
