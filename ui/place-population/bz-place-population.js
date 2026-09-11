@@ -52,7 +52,7 @@ proto.update = function(...args) {
 class bzPlacePopulationPanel {
     constructor(component) {
         this.component = component;
-        component.bzComponent = this;
+        this.component.bzCityHall = this;
     }
     beforeAttach() { }
     afterAttach() {
