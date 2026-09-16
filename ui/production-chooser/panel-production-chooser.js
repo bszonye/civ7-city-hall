@@ -1,13 +1,14 @@
 // vim: sw=2 et
 import { Audio } from '../../../core/ui/audio-base/audio-support.js';
 import { EditableHeaderTextChangedEventName, EditableHeaderExitEditEventName } from '../../../core/ui/components/fxs-editable-header.js';
-import ContextManager from '../../../core/ui/context-manager/context-manager.js';
+import { ContextManager } from '../../../core/ui/context-manager/context-manager.js';
 import { DialogBoxManager } from '../../../core/ui/dialog-box/manager-dialog-box.js';
-import ActionHandler from '../../../core/ui/input/action-handler.js';
+import { ActionHandler } from '../../../core/ui/input/action-handler.js';
 import { Focus } from '../../../core/ui/input/focus-support.js';
 import { InputEngineEventName } from '../../../core/ui/input/input-support.js';
 import { PlotCursor } from '../../../core/ui/input/plot-cursor.js';
 import { InterfaceModeChangedEventName, InterfaceMode } from '../../../core/ui/interface-modes/interface-modes.js';
+import { ModdingRegistry } from '../../../core/ui/modding-registry-handler/modding-registry-handler.js';
 import NavTray from '../../../core/ui/navigation-tray/model-navigation-tray.js';
 import Panel, { AnchorType } from '../../../core/ui/panel-support.js';
 import { ComponentID } from '../../../core/ui/utilities/utilities-component-id.js';
@@ -17,6 +18,7 @@ import { Layout } from '../../../core/ui/utilities/utilities-layout.js';
 import UpdateGate from '../../../core/ui/utilities/utilities-update-gate.js';
 import ViewManager from '../../../core/ui/views/view-manager.js';
 import { FocusManager } from '../../../core/ui-next/services/focus-manager.js';
+import { IsMouseActive } from '../../../core/ui-next/services/input.js';
 import { BuildQueue } from '../build-queue/model-build-queue.js';
 import { BuildingPlacementManager } from '../building-placement/building-placement-manager.js';
 import { CityDetailsClosedEventName } from '../city-details/panel-city-details.js';
@@ -679,6 +681,7 @@ class ProductionChooserScreen extends Panel {
   }
   onCityDetailsClosed() {
     this.panelProductionSlot.classList.remove("hidden");
+    this.cityNameElement.setAttribute("disable", "false");
     this.frame.classList.add("trigger-nav-help");
     this.cityNameElement.classList.add("trigger-nav-help");
     Focus.setContextAwareFocus(this.productionAccordion, this.Root);
@@ -698,6 +701,7 @@ class ProductionChooserScreen extends Panel {
   }
   onCityDetailsActivated = () => {
     this.panelProductionSlot.classList.toggle("hidden", this.isSmallScreen());
+    this.cityNameElement.setAttribute("disable", `${this.isSmallScreen()}`);
     this.frame.classList.remove("trigger-nav-help");
     this.showCityDetails();
   };
@@ -1087,7 +1091,7 @@ class ProductionChooserScreen extends Panel {
     NavTray.clear();
     NavTray.addOrUpdateGenericBack();
     const currentFocus = FocusManager.get().currentFocus();
-    if (currentFocus?.closest("panel-build-queue") || currentFocus?.closest("panel-town-focus")) {
+    if (currentFocus?.closest("panel-build-queue") || currentFocus?.closest("panel-town-focus") || currentFocus?.closest("town-focus-chooser-item")) {
       return;
     }
     NavTray.addOrUpdateShellAction2(this.viewHiddenActionText);
@@ -1414,6 +1418,7 @@ class ProductionChooserScreen extends Panel {
     this.upgradeToCityButton.setAttribute("data-audio-activate-ref", "data-audio-city-production-upgrade");
     this.upgradeToCityButton.setAttribute("tabindex", "-1");
     this.frame.appendChild(this.upgradeToCityButton);
+    ModdingRegistry.attachModElementsTo("panel-production-chooser", this.frame);
     this.upgradeToCityAlert.dataset.slot = "footer";
     this.upgradeToCityAlert.setAttribute("tabindex", "-1");
     this.frame.appendChild(this.upgradeToCityAlert);
