@@ -459,7 +459,7 @@ class ProductionChooserScreen extends Panel {
     );
     this.cityNameElement.removeEventListener(EditableHeaderExitEditEventName, this.onSettlementNameExitListener);
     Object.values(this.productionCategorySlots).forEach((slot) => slot.disconnect());
-    if (ActionHandler.deviceType == InputDeviceType.Mouse) {
+    if (IsMouseActive()) {
       ActionHandler.forceCursorCheck();
     }
     ContextManager.pop(this.Root);
