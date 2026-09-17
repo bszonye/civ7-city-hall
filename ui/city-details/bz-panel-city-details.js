@@ -1,10 +1,10 @@
 import bzCityDetails, { bzUpdateCityDetailsEventName } from "/bz-city-hall/ui/city-details/bz-model-city-details.js";
+import { isMobile } from '../../../core/ui-next/services/view-experience.js';
 import CityDetails, { UpdateCityDetailsEventName } from "/base-standard/ui/city-details/model-city-details.js";
 import NavTray from "/core/ui/navigation-tray/model-navigation-tray.js";
 import Databind from '../../../core/ui/utilities/utilities-core-databinding.js';
 import { MustGetElement } from "/core/ui/utilities/utilities-dom.js";
 import { FocusManager } from '/core/ui-next/services/focus-manager.js';
-import UpdateGate from '/core/ui/utilities/utilities-update-gate.js';
 
 // vertical separator
 const BZ_DIVIDER_STYLE = "flex w-96 self-center";
@@ -29,7 +29,7 @@ const BZ_TAB_OVERVIEW = {
         focus: UI.getIconBLP("CITY_BUILDINGS_HI"),
         pressed: UI.getIconBLP("CITY_BUILDINGS_HI")
     },
-    iconClass: "size-16",
+    iconClass: isMobile() ? "size-13" : "size-16",
     headerText: "LOC_BZ_UI_CITY_DETAILS_OVERVIEW_TAB"
 };
 const BZ_TAB_BUILDINGS = {
@@ -40,7 +40,7 @@ const BZ_TAB_BUILDINGS = {
         focus: UI.getIconBLP("CITY_SETTLEMENT_HI"),
         pressed: UI.getIconBLP("CITY_SETTLEMENT_HI")
     },
-    iconClass: "size-16",
+    iconClass: isMobile() ? "size-13" : "size-16",
     headerText: "LOC_UI_CITY_DETAILS_BUILDINGS_TAB"
 };
 // custom & adapted icons
@@ -404,25 +404,7 @@ class bzPanelCityDetails {
         c.proto.renderYieldsSlot = function() {
             return this.bzCityHall.renderYieldsSlot();
         }
-        // replace onCollapseAllSection for debouncing (see below)
-        c.onCollapseAllSection = c.proto.onCollapseAllSection;
-        c.proto.onCollapseAllSection = function(...args) {
-            this.bzCityHall.debounceCollapseAll.call("debounce", ...args);
-        }
     }
-    debounceCollapseAll = new UpdateGate(() => {
-        // the Collapse All button has a bug (event listener leak) that
-        // runs the handler multiple times per click.  this replaces the
-        // vanilla handler with an UpdateGate that will only run once
-        // per frame.
-        const onCollapseAllSection = bzPanelCityDetails.c.onCollapseAllSection;
-        onCollapseAllSection.call(
-            this.component,
-            this.component.improvementsCollapseAll,
-            this.component.improvementsCollapseAllText,
-            this.component.improvementsList
-        );
-    });
     patchTabSlots() {
         const tabItems = this.component.tabBar.getAttribute("tab-items");
         const tabs = JSON.parse(tabItems);
@@ -519,7 +501,7 @@ class bzPanelCityDetails {
             <div class="flex flex-col w-full mb-2">
                 <div class="buildings-category flex mt-2">
                     <fxs-icon class="size-12 ml-3 my-1" data-icon-id="CITY_BUILDINGS_LIST"></fxs-icon>
-                    <div class="self-center font-title text-lg uppercase text-gradient-secondary ml-2" data-l10n-id="LOC_UI_CITY_DETAILS_BUILDINGS"></div>
+                    <div role="paragraph" class="self-center font-title text-lg uppercase text-gradient-secondary ml-2" data-l10n-id="LOC_UI_CITY_DETAILS_BUILDINGS"></div>
                 </div>
                 <div class="buildings-list flex-col"></div>
                 <div class="improvements-category flex-col mt-1">
