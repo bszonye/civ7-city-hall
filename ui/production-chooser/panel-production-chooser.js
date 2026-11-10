@@ -17,6 +17,7 @@ import { MustGetElement, IsElement } from '../../../core/ui/utilities/utilities-
 import { Layout } from '../../../core/ui/utilities/utilities-layout.js';
 import UpdateGate from '../../../core/ui/utilities/utilities-update-gate.js';
 import ViewManager from '../../../core/ui/views/view-manager.js';
+import { ShowHideButton } from '../../../core/ui-next/components/show-hide-button.js';
 import { FocusManager } from '../../../core/ui-next/services/focus-manager.js';
 import { IsMouseActive } from '../../../core/ui-next/services/input.js';
 import { BuildQueue } from '../build-queue/model-build-queue.js';
@@ -29,16 +30,15 @@ import { UniqueQuarter } from './production-chooser-unique-quarter.js';
 import { composeTagString } from '../utilities/utilities-tags.js';
 import { FocusCityViewEventName } from '../views/view-city.js';
 import styles from './panel-production-chooser.scss.js';
-import '../../ui-next/components/production-chooser-item.js';
-import '../../ui-next/components/production-chooser-unique-quarter-item.js';
+import '../../ui-next/screens/production-chooser/production-chooser-item.js';
 import { TownFocusRefreshEvent } from './panel-town-focus.js';
 import { ProductionChooserAccordionSection, ProductionChooserAccordionSectionToggleEventName } from './production-chooser-accordion.js';
 import '../yield-bar-base/yield-bar-base.js';
 import './town-focus-section.js';
 import './town-unrest-display.js';
-import './last-production-section.js';
 import { DialogBoxAction } from '../../../core/ui/dialog-box/model-dialog-box.js';
 
+const _force_load = [ShowHideButton];
 const categoryLocalizationMap = {
   [ProductionPanelCategory.BUILDINGS]: "LOC_UI_PRODUCTION_BUILDINGS",
   [ProductionPanelCategory.UNITS]: "LOC_UI_PRODUCTION_UNITS",
@@ -220,7 +220,6 @@ class ProductionChooserScreen extends Panel {
     this.nextCityButton.classList.toggle("hidden", !hasMultipleCities);
     this.prevCityButton.classList.toggle("hidden", !hasMultipleCities);
     Camera.lookAtPlot(city.location);
-    this.lastProductionSection.dataset.cityid = JSON.stringify(this._cityID);
     this.updateCityYieldBar();
   }
   get cityID() {
@@ -305,15 +304,16 @@ class ProductionChooserScreen extends Panel {
   buildQueue = document.createElement("panel-build-queue");
   prevCityButton = document.createElement("fxs-activatable");
   nextCityButton = document.createElement("fxs-activatable");
-  productionPurchaseContainer = document.createElement("div");
+  productionContentHeaderContainer = document.createElement("div");
   productionPurchaseTabBar = document.createElement("fxs-tab-bar");
   showCityDetailsButton = document.createElement("fxs-activatable");
   townFocusSection = document.createElement("town-focus-section");
-  lastProductionSection = document.createElement("last-production-section");
   townUnrestDisplay = document.createElement("town-unrest-display");
+  productionChooserModSlotTop = document.createElement("div");
+  productionChooserWarning = document.createElement("div");
   /* townPurchaseLabel replaces the production/purchase tab bar when the settlement is a town */
   townPurchaseLabel = document.createElement("div");
-  viewHiddenCheckbox = document.createElement("fxs-checkbox");
+  viewHiddenCheckbox = document.createElement("fxs-show-hide-button");
   productionAccordion = document.createElement("fxs-vslot");
   productionCategorySlots = Object.values(ProductionPanelCategory).reduce(
     (acc, category) => {
@@ -562,7 +562,7 @@ class ProductionChooserScreen extends Panel {
                 SetTownFocus(this.cityID, growthType, projectType);
                 return;
               }
-              Focus.setContextAwareFocus(this.townFocusPanel, this.Root);
+              FocusManager.get().setFocus(this.townFocusPanel);
             }
           });
         } else {
@@ -1088,10 +1088,13 @@ class ProductionChooserScreen extends Panel {
     return live;
   }
   updateNavTray() {
+    const currentFocus = FocusManager.get().currentFocus();
+    if (currentFocus?.closest("panel-build-queue")) {
+      return;
+    }
     NavTray.clear();
     NavTray.addOrUpdateGenericBack();
-    const currentFocus = FocusManager.get().currentFocus();
-    if (currentFocus?.closest("panel-build-queue") || currentFocus?.closest("panel-town-focus") || currentFocus?.closest("town-focus-chooser-item")) {
+    if (currentFocus?.closest("panel-town-focus") || currentFocus?.closest("town-focus-chooser-item")) {
       return;
     }
     NavTray.addOrUpdateShellAction2(this.viewHiddenActionText);
@@ -1162,19 +1165,16 @@ class ProductionChooserScreen extends Panel {
       this.townFocusSection.dataset.growthType = growthType.toString();
       this.townFocusSection.dataset.projectType = projectType.toString();
       this.townFocusSection.dataset.name = name;
-      if (window.innerHeight < Layout.pixelsToScreenPixels(768)) {
+      const isSmallScreen = this.isSmallScreen();
+      if (isSmallScreen) {
         this.townFocusSection.dataset.description = "";
       } else {
         this.townFocusSection.dataset.description = description;
       }
-      if (tooltipDescription) {
-        this.townFocusSection.dataset.tooltipDescription = window.innerHeight < Layout.pixelsToScreenPixels(768) ? `${Locale.compose(description)}[N]${Locale.compose(tooltipDescription)}` : tooltipDescription;
-      } else {
-        this.townFocusSection.removeAttribute("data-tooltip-description");
-      }
+      this.townFocusSection.dataset.tooltipContent = tooltipDescription ?? description;
       this.townFocusSection.dataset.disabled = hasUnrest ? "true" : "false";
       this.townFocusSection.dataset.showDefaultLabel = showDefaultLabel.toString();
-      if (window.innerHeight < Layout.pixelsToScreenPixels(768)) {
+      if (isSmallScreen) {
         this.townFocusSection.classList.toggle("hidden", hasUnrest);
       } else {
         this.townFocusSection.classList.remove("hidden");
@@ -1206,7 +1206,7 @@ class ProductionChooserScreen extends Panel {
   }) {
     this.townFocusSection.dataset.disabled = hasUnrest ? "true" : "false";
     this.townUnrestDisplay.classList.toggle("hidden", !hasUnrest);
-    this.productionPurchaseContainer.classList.toggle("hidden", hasUnrest && !canPurchaseDuringUnrest);
+    this.productionContentHeaderContainer.classList.toggle("hidden", hasUnrest && !canPurchaseDuringUnrest);
     if (hasUnrest) {
       this.townUnrestDisplay.dataset.turnsOfUnrest = turnsOfUnrest.toString();
     }
@@ -1283,6 +1283,7 @@ class ProductionChooserScreen extends Panel {
     return [upgradeToCityButton, costElement];
   }
   render() {
+    this.frame.setAttribute("no-scroll", "true");
     this.Root.classList.add("panel-production-chooser", "relative", "z-0", "flex", "flex-col", "flex-auto");
     this.Root.setAttribute("data-tooltip-anchor", "right");
     this.cityStatusContainerElement.classList.add(
@@ -1299,6 +1300,9 @@ class ProductionChooserScreen extends Panel {
     this.cityStatusContainerElement.appendChild(this.cityStatusIconElement);
     this.cityStatusTextElement.classList.value = "font-title text-base text-negative-light tracking-100 uppercase";
     this.cityStatusContainerElement.appendChild(this.cityStatusTextElement);
+    ModdingRegistry.attachModElementsTo("panel-production-chooser-mod-slot-top", this.productionChooserModSlotTop);
+    ModdingRegistry.attachModElementsTo("panel-production-chooser", this.frame);
+    ModdingRegistry.attachModElementsTo("panel-production-chooser-warning", this.productionChooserWarning);
     this.frame.appendChild(this.cityStatusContainerElement);
     const cityNameWrapper = document.createElement("div");
     cityNameWrapper.classList.add("flex", "items-start", "justify-between");
@@ -1364,22 +1368,18 @@ class ProductionChooserScreen extends Panel {
     this.cityYieldBar.classList.add("flex", "self-center");
     yieldBarRow.appendChild(this.cityYieldBar);
     this.updateCityYieldBar();
+    this.productionChooserModSlotTop.dataset.slot = "header";
+    this.frame.appendChild(this.productionChooserModSlotTop);
     this.townFocusSection.dataset.slot = "header";
     this.frame.appendChild(this.townFocusSection);
-    this.lastProductionSection.dataset.slot = "header";
-    this.frame.appendChild(this.lastProductionSection);
-    const viewHiddenCheckboxLabel = document.createElement("p");
-    viewHiddenCheckboxLabel.classList.value = "text-xs";
-    viewHiddenCheckboxLabel.setAttribute("data-l10n-id", "LOC_UI_PRODUCTION_VIEW_HIDDEN");
-    const viewHiddenContainer = document.createElement("div");
-    Databind.classToggle(viewHiddenContainer, "hidden", "{{g_NavTray.isTrayRequired}}");
-    viewHiddenContainer.classList.value = "flex items-center self-end pr-7 pb-3";
-    viewHiddenContainer.appendChild(this.viewHiddenCheckbox);
-    viewHiddenContainer.appendChild(viewHiddenCheckboxLabel);
-    viewHiddenContainer.dataset.slot = "header";
-    this.frame.appendChild(viewHiddenContainer);
-    this.productionPurchaseContainer.classList.value = "flex items-center";
-    this.productionPurchaseContainer.setAttribute("data-slot", "header");
+    const centerContainer = document.createElement("div");
+    centerContainer.classList.add("flex", "flex-col", "flex-auto", "img-modal-frame");
+    this.frame.appendChild(centerContainer);
+    this.productionContentHeaderContainer.classList.value = "flex items-center";
+    this.productionContentHeaderContainer.setAttribute("data-slot", "header");
+    const productionTabsRow = document.createElement("div");
+    productionTabsRow.classList.add("flex", "flex-row", "flex-auto", "mt-2");
+    this.productionContentHeaderContainer.appendChild(productionTabsRow);
     this.townPurchaseLabel.classList.value = "flex flex-auto items-center justify-center";
     this.townPurchaseLabel.insertAdjacentHTML(
       "beforeend",
@@ -1387,7 +1387,7 @@ class ProductionChooserScreen extends Panel {
 		 	<div class="text-secondary-2 text-gradient-secondary text-xs font-title uppercase" data-l10n-id="LOC_UI_PURCHASE_TAB"></div>
 		`
     );
-    this.productionPurchaseContainer.appendChild(this.townPurchaseLabel);
+    productionTabsRow.appendChild(this.townPurchaseLabel);
     const productionPurchaseTabBarTabs = [
       {
         id: "production-chooser-tab-production",
@@ -1410,26 +1410,42 @@ class ProductionChooserScreen extends Panel {
     this.productionPurchaseTabBar.setAttribute("alt-controls", "false");
     this.productionPurchaseTabBar.setAttribute("data-audio-group-ref", "city-actions");
     this.productionPurchaseTabBar.setAttribute("data-audio-tab-selected", "none");
-    this.productionPurchaseContainer.appendChild(this.productionPurchaseTabBar);
-    this.frame.appendChild(this.productionPurchaseContainer);
+    productionTabsRow.appendChild(this.productionPurchaseTabBar);
+    Databind.classToggle(this.viewHiddenCheckbox, "hidden", "{{g_NavTray.isTrayRequired}}");
+    this.viewHiddenCheckbox.classList.value = "self-end -ml-3 mr-3 my-3 size-8";
+    this.viewHiddenCheckbox.setAttribute("data-tooltip-content", "LOC_UI_PRODUCTION_VIEW_HIDDEN");
+    productionTabsRow.appendChild(this.viewHiddenCheckbox);
+    centerContainer.appendChild(this.productionContentHeaderContainer);
+    const centerScrollArea = document.createElement("fxs-scrollable");
+    centerScrollArea.setAttribute("attached-scrollbar", "true");
+    centerScrollArea.setAttribute("handle-gamepad-pan", "true");
+    centerScrollArea.className = this.Root.getAttribute("data-content-class") ?? "";
+    centerScrollArea.classList.add("flex-auto");
+    centerContainer.appendChild(centerScrollArea);
+    const cityActionPanel = document.createElement("fxs-hslot");
+    cityActionPanel.classList.add("flex-auto", "items-stretch");
+    cityActionPanel.setAttribute("data-slot", "footer");
+    this.frame.appendChild(cityActionPanel);
+    ModdingRegistry.attachModElementsTo("production-chooser-city-action-panel", cityActionPanel);
     this.upgradeToCityButton.dataset.slot = "footer";
+    this.upgradeToCityButton.classList.add("flex-auto", "m-1");
     this.upgradeToCityButton.setAttribute("caption", "LOC_PROJECT_TOWN_PROMOTION_NAME");
     this.upgradeToCityButton.setAttribute("data-audio-group-ref", "city-actions");
     this.upgradeToCityButton.setAttribute("data-audio-activate-ref", "data-audio-city-production-upgrade");
     this.upgradeToCityButton.setAttribute("tabindex", "-1");
-    this.frame.appendChild(this.upgradeToCityButton);
-    ModdingRegistry.attachModElementsTo("panel-production-chooser", this.frame);
+    cityActionPanel.appendChild(this.upgradeToCityButton);
     this.upgradeToCityAlert.dataset.slot = "footer";
     this.upgradeToCityAlert.setAttribute("tabindex", "-1");
     this.frame.appendChild(this.upgradeToCityAlert);
     this.frame.appendChild(this.townUnrestDisplay);
+    this.frame.appendChild(this.productionChooserWarning);
     this.productionAccordion.classList.add("relative");
     this.productionAccordion.setAttribute("disable-focus-allowed", "true");
     for (const category of Object.values(ProductionPanelCategory)) {
       const section = this.productionCategorySlots[category];
       this.productionAccordion.appendChild(section.root);
     }
-    this.frame.appendChild(this.productionAccordion);
+    centerScrollArea.appendChild(this.productionAccordion);
     this.subPanelContainer.classList.add("-z-1", "mt-32", "mb-12", "-ml-10", "relative", "shrink");
     this.buildQueue.classList.add("absolute", "left-3", "h-full");
     this.subPanelContainer.appendChild(this.buildQueue);

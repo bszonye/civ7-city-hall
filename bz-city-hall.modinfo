@@ -99,8 +99,8 @@
                 <ImportFiles>
                     <Item>ui/production-chooser/panel-production-chooser.js</Item>
                     <Item>ui/production-chooser/production-chooser-unique-quarter.js</Item>
-                    <Item>ui-next/components/production-chooser-item.js</Item>
-                    <Item>ui-next/components/production-chooser-unique-quarter-item.js</Item>
+                    <Item>ui-next/screens/production-chooser/production-chooser-item.js</Item>
+                    <Item>ui-next/screens/production-chooser/production-chooser-unique-quarter-item.js</Item>
                 </ImportFiles>
                 <UIScripts>
                     <Item>ui/production-chooser/bz-panel-production-chooser.js</Item>
