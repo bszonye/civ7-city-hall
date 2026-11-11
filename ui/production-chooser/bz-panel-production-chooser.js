@@ -409,19 +409,3 @@ class bzProductionChooserScreen {
     }
 }
 Controls.decorate("panel-production-chooser", (val) => new bzProductionChooserScreen(val));
-
-class bzLastProductionSection {
-    constructor(component) {
-        this.component = component;
-    }
-    beforeAttach() {
-        this.component.Root.classList.toggle("text-sm", bzCityHallOptions.compact);
-        this.component.yieldDiv.classList.toggle("flex-wrap", bzCityHallOptions.compact);
-        this.component.yieldDiv.classList.toggle("max-w-72", bzCityHallOptions.compact);
-        this.component.yieldDiv.classList.add("mr-2");
-    }
-    afterAttach() { }
-    beforeDetach() { }
-    afterDetach() { }
-}
-Controls.decorate("last-production-section", (val) => new bzLastProductionSection(val));
