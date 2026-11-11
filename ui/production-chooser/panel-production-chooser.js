@@ -1393,8 +1393,7 @@ class ProductionChooserScreen extends Panel {
       {
         id: "production-chooser-tab-production",
         label: "LOC_UI_PRODUCTION_TAB",
-        // className: "px-2"
-        className: "px-2 text-sm tracking-100"  // TRIX
+        className: "px-2"
       },
       {
         id: "production-chooser-tab-purchase",
