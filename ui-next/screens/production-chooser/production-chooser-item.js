@@ -199,7 +199,7 @@ const ProductionChooserItemContent = (props) => {
               return isRepairAll() ? "true" : void 0;
             },
             get children() {
-              var _el$ = _tmpl$7(), _el$2 = _el$.firstChild, elTitle = _el$2.firstChild, _el$3 = elTitle.firstChild, _el$14 = elTitle.nextSibling, _el$15 = _el$2.nextSibling, _el$16 = _el$3.nextSibling, _el$17 = _el$15.firstChild;
+              var _el$ = _tmpl$7(), _el$2 = _el$.firstChild, elTitle = _el$2.firstChild, _el$3 = elTitle.firstChild, _el$15 = elTitle.nextSibling, _el$14 = _el$2.nextSibling, _el$16 = _el$3.nextSibling, _el$17 = _el$14.firstChild;
               insert(_el$, createComponent(Icon, {
                 // TRIX: resize and realign item icon
                 "class": "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
@@ -231,7 +231,7 @@ const ProductionChooserItemContent = (props) => {
                   }));
                   return _el$4;
                 }
-              }), _el$14);
+              }), _el$15);
               insert(_el$2, createComponent(Show, {
                 get when() {
                   // TRIX: hide details for repairs
@@ -250,7 +250,7 @@ const ProductionChooserItemContent = (props) => {
                   });
                   return _el$5;
                 }
-              }), _el$14);
+              }), _el$15);
               insert(_el$2, createComponent(Show, {
                 get when() {
                   // TRIX: hide details for repairs
@@ -311,8 +311,8 @@ const ProductionChooserItemContent = (props) => {
                   }), null);
                   return _el$6;
                 }
-              }), _el$14);
-              insert(_el$14, createComponent(ProductionModInfo, {
+              }), _el$15);
+              insert(_el$15, createComponent(ProductionModInfo, {
                 get constructibleType() {
                   return itemType();
                 }
