@@ -1348,7 +1348,8 @@ class ProductionChooserScreen extends Panel {
     this.frame.classList.add("shrink", "pointer-events-auto", "panel-production__frame");
     Databind.classToggle(this.frame, "mb-16", "{{g_NavTray.isTrayRequired}}");
     this.frame.dataset.headerClass = "flex flex-col px-3 mx-0\\.5";
-    this.frame.dataset.footerClass = "px-5 pb-2 mx-0\\.5";
+    // this.frame.dataset.footerClass = "px-5 pb-2 mx-0\\.5";
+    this.frame.dataset.footerClass = "px-5 pb-2";  // TRIX
     const yieldBarRow = document.createElement("div");
     yieldBarRow.classList.value = "flex self-center justify-center items-center";
     yieldBarRow.dataset.slot = "header";
@@ -1392,7 +1393,8 @@ class ProductionChooserScreen extends Panel {
       {
         id: "production-chooser-tab-production",
         label: "LOC_UI_PRODUCTION_TAB",
-        className: "px-2"
+        // className: "px-2"
+        className: "px-2 text-sm tracking-100"  // TRIX
       },
       {
         id: "production-chooser-tab-purchase",
@@ -1400,7 +1402,8 @@ class ProductionChooserScreen extends Panel {
         className: "px-2"
       }
     ];
-    this.productionPurchaseTabBar.classList.add("flex-auto", "max-h-12", "mb-1", "mx-6");
+    // this.productionPurchaseTabBar.classList.add("flex-auto", "max-h-12", "mb-1", "mx-6");
+    this.productionPurchaseTabBar.classList.add("flex-auto", "max-h-12", "m-1\\.5", "-mr-1\\.5");  // TRIX
     this.productionPurchaseTabBar.setAttribute("tab-style", "flat");
     this.productionPurchaseTabBar.setAttribute("nav-help-left-class", "pl-2");
     this.productionPurchaseTabBar.setAttribute("nav-help-right-class", "pr-2");
@@ -1412,7 +1415,8 @@ class ProductionChooserScreen extends Panel {
     this.productionPurchaseTabBar.setAttribute("data-audio-tab-selected", "none");
     productionTabsRow.appendChild(this.productionPurchaseTabBar);
     Databind.classToggle(this.viewHiddenCheckbox, "hidden", "{{g_NavTray.isTrayRequired}}");
-    this.viewHiddenCheckbox.classList.value = "self-end -ml-3 mr-3 my-3 size-8";
+    // this.viewHiddenCheckbox.classList.value = "self-end -ml-3 mr-3 my-3 size-8";
+    this.viewHiddenCheckbox.classList.value = "self-end mx-3 size-8";  // TRIX
     this.viewHiddenCheckbox.setAttribute("data-tooltip-content", "LOC_UI_PRODUCTION_VIEW_HIDDEN");
     productionTabsRow.appendChild(this.viewHiddenCheckbox);
     centerContainer.appendChild(this.productionContentHeaderContainer);
@@ -1420,7 +1424,8 @@ class ProductionChooserScreen extends Panel {
     centerScrollArea.setAttribute("attached-scrollbar", "true");
     centerScrollArea.setAttribute("handle-gamepad-pan", "true");
     centerScrollArea.className = this.Root.getAttribute("data-content-class") ?? "";
-    centerScrollArea.classList.add("flex-auto");
+    // centerScrollArea.classList.add("flex-auto");
+    centerScrollArea.classList.add("flex-auto", "pb-1\\.5");
     centerContainer.appendChild(centerScrollArea);
     const cityActionPanel = document.createElement("fxs-hslot");
     cityActionPanel.classList.add("flex-auto", "items-stretch");
@@ -1428,7 +1433,8 @@ class ProductionChooserScreen extends Panel {
     this.frame.appendChild(cityActionPanel);
     ModdingRegistry.attachModElementsTo("production-chooser-city-action-panel", cityActionPanel);
     this.upgradeToCityButton.dataset.slot = "footer";
-    this.upgradeToCityButton.classList.add("flex-auto", "m-1");
+    // this.upgradeToCityButton.classList.add("flex-auto", "m-1");
+    this.upgradeToCityButton.classList.add("flex-auto", "my-px");  // TRIX
     this.upgradeToCityButton.setAttribute("caption", "LOC_PROJECT_TOWN_PROMOTION_NAME");
     this.upgradeToCityButton.setAttribute("data-audio-group-ref", "city-actions");
     this.upgradeToCityButton.setAttribute("data-audio-activate-ref", "data-audio-city-production-upgrade");

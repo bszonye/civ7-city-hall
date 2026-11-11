@@ -67,19 +67,12 @@ const BZ_COLOR = {
 const BZ_HEAD_STYLE = [
 // compact mode
 `
+.bz-city-compact .w-128 {
+    width: 26.6666666667rem;
+}
 .bz-city-compact .panel-production__frame {
     min-width: 28.4444444444rem;
     max-width: 28.4444444444rem;
-}
-.bz-city-hall .last-production-frame .ml-8 {
-    margin-left: 0.8888888889rem;
-}
-.bz-city-compact .last-production-frame .size-8 {
-    width: 1.3333333333rem;
-    height: 1.3333333333rem;
-}
-.bz-city-compact .last-production-frame .pr-4 {
-    padding-right: 0.4444444444rem;
 }
 `,  // general item styling
 `
@@ -129,26 +122,6 @@ const BZ_HEAD_STYLE = [
 .bz-city-hall .bz-purchase-progress .build-queue__progress-bar-fill {
     filter: saturate(0) fxs-color-tint(${BZ_COLOR.gold}) brightness(2.0) contrast(1.8) saturate(0.7);
   background-position: center;
-}
-`,  // relocate View Hidden button
-`
-.bz-city-hall .bz-view-hidden {
-    position: fixed;
-    z-index: 1;
-    top: calc(100vh - 1rem);
-    height: 1rem;
-    left: 1.5555555556rem;
-    padding: 0 0.4444444444rem 0 0.3333333333rem;
-    text-shadow: 0 0.0555555556rem 0.1666666667rem black;
-    background-color: #23252bcc;
-    border-style: solid;
-    border-width: 0 0.1111111111rem;
-    border-color: #4c473d;
-}
-.bz-city-hall .bz-view-hidden fxs-checkbox {
-    width: 1rem;
-    height: 1rem;
-    filter: drop-shadow(0 0.0555555556rem 0.1111111111rem black);
 }
 `,  // improve panel header layout
 `
@@ -210,7 +183,6 @@ class bzProductionChooserScreen {
     static c = null;
     static isPurchase = false;
     static isCDPanelOpen = true;
-    viewHiddenActiveLabel = document.createElement("fxs-activatable");
     isGamepadActive = Input.getActiveDeviceType() == InputDeviceType.Controller;
     constructor(component) {
         this.component = component;
@@ -274,10 +246,6 @@ class bzProductionChooserScreen {
             this.component.showCityDetails();
         }
         requestAnimationFrame(() => {
-            // make the View Hidden label clickable
-            this.viewHiddenActiveLabel.addEventListener(
-                "engine-input", c.viewHiddenCheckbox.component.engineInputListener
-            );
             // show mixed case while editing settlement names
             c.cityNameElement.component.editableTextBox.classList.add("normal-case");
         });
@@ -292,8 +260,6 @@ class bzProductionChooserScreen {
                 cdPanel && !cdPanel.classList.contains("hidden");
         }
         engine.off("ConstructibleChanged", c.onConstructibleAddedToMap, this.component);
-        this.viewHiddenActiveLabel.removeEventListener(
-            "engine-input", c.viewHiddenCheckbox.component.engineInputListener);
     }
     afterDetach() {
         // clear Purchase tab memory when closing the panel.
@@ -324,31 +290,9 @@ class bzProductionChooserScreen {
         Databind.classToggle(nameWrapper, "bz-no-help", "!{{g_NavTray.isTrayRequired}}");
         Databind.classToggle(nameWrapper, "bz-nav-help", "{{g_NavTray.isTrayRequired}}");
         nameWrapper.classList.add("mx-2");
-        // make Production/Purchase tabs more compact and consistent
-        c.productionPurchaseTabBar.classList.remove("mx-6");
-        c.productionPurchaseTabBar.classList.add("mx-1\\.5");
-        const tabs = JSON.parse(c.productionPurchaseTabBar.getAttribute("tab-items"));
-        tabs.forEach(t => t.className = "px-2 text-sm tracking-100");
-        c.productionPurchaseTabBar.setAttribute("tab-items", JSON.stringify(tabs));
-        c.townPurchaseLabel.innerHTML = c.townPurchaseLabel.innerHTML
-            .replaceAll("text-xs", "text-sm tracking-100 mt-1");
-        // remove production-category margins
         for (const slot of Object.values(c.productionCategorySlots)) {
             slot.root.classList.remove("ml-4");
         }
-        // move View Hidden interface
-        const viewHiddenContainer = c.viewHiddenCheckbox.parentElement;
-        const viewHiddenCheckboxLabel = viewHiddenContainer.lastChild;
-        c.viewHiddenCheckbox.classList.add("mr-1");
-        viewHiddenContainer.classList.add("bz-view-hidden", "group");
-        viewHiddenCheckboxLabel.classList.add("relative");
-        this.viewHiddenActiveLabel.classList.value =
-            "absolute truncate pb-2 px-1 -mx-1 text-secondary text-xs opacity-0 group-hover\\:opacity-100 transition-opacity";
-        this.viewHiddenActiveLabel.setAttribute("data-l10n-id", "LOC_UI_PRODUCTION_VIEW_HIDDEN");
-        viewHiddenCheckboxLabel.appendChild(this.viewHiddenActiveLabel);
-        // make room between checkbox and Convert to City button
-        c.upgradeToCityButton.classList.add("mt-0\\.5", "mb-1\\.5");
-        c.frame.dataset.footerClass = "px-5 pb-1 mx-0\\.5";
     }
     updateItems() {
         const c = this.component;
