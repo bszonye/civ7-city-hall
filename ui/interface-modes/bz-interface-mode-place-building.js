@@ -65,5 +65,14 @@ PBIM.decorate = function(overlay) {
                 { angle: 0, constants: { Color3: [1, 0.992, 0.62], Alpha1: 1 } }
             );
         }
+        for (const location of BuildingPlacementManager.IncompleteDistricts) {
+            console.warn(`TRIX INCOMPLETE ${JSON.stringify(location)}`);
+            this.uniqueQuarterModelGroup.addVFXAtPlot(
+                "VFX_3dUI_Hex_Highlight_01",
+                location,
+                { x: 0, y: 0, z: 0 },
+                { angle: 0, constants: { Color3: [1, 0.5, 0.1], Alpha1: 1 } }
+            );
+        }
     }
 }

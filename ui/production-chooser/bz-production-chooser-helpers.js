@@ -122,32 +122,6 @@ const GetCurrentBestTotalYieldForConstructible = (city, constructibleType) => {
         return results;
     }
     const yieldsCopy = [...bestPlacement.yieldChanges];
-    let ignoreNaturalYields = true;
-    if (constructibleDef.ConstructibleClass == "IMPROVEMENT") {
-        const improvementDef = GameInfo.Improvements.lookup(constructibleDef.ConstructibleType);
-        if (improvementDef) {
-            ignoreNaturalYields = improvementDef.IgnoreNaturalYields;
-        }
-    }
-    const plotCoord = GameplayMap.getLocationFromIndex(bestPlacement.plotID);
-    const constructibles = MapConstructibles.getConstructibles(plotCoord.x, plotCoord.y);
-    for (const constructible of constructibles) {
-        const instance = Constructibles.getByComponentID(constructible);
-        if (!instance) continue;
-        const info = GameInfo.Constructibles.lookup(instance.type);
-        if (info && info.ConstructibleClass == "IMPROVEMENT" && BPM.cityID && ignoreNaturalYields) {
-            const improvementYields = GameplayMap.getYieldsWithCity(
-                bestPlacement.plotID,
-                BPM.cityID
-            );
-            for (const improvementYield of improvementYields) {
-                const yieldDefinition = GameInfo.Yields.lookup(improvementYield[0]);
-                if (yieldDefinition) {
-                    yieldsCopy[yieldDefinition.$index] -= improvementYield[1];
-                }
-            }
-        }
-    }
     const cityConstructibles = city.Constructibles;
     if (cityConstructibles) {
         if (bestPlacement.overbuiltConstructibleID != void 0 && bestPlacement.overbuiltConstructibleID != -1) {
@@ -341,6 +315,11 @@ const getProjectItems = (city, isPurchase) => {
         console.error(`getProjectItems: received a null/undefined city!`);
         return projects;
     }
+    const cityGoldLibrary = city.Gold;
+    if (!cityGoldLibrary) {
+        console.error(`getProjectItems: received a null/undefined city gold library!`);
+        return projects;
+    }
     for (const project of GameInfo.Projects) {
         if (project.CityOnly && city.isTown) continue;
         if (isPurchase && !project.CanPurchase) continue;
@@ -354,10 +333,11 @@ const getProjectItems = (city, isPurchase) => {
         if (!result.Requirements?.MeetsRequirements) continue;
         const hash = project.$hash;
         const turns = city.BuildQueue.getTurnsLeft(hash);
-        const cost = city.Production.getProjectProductionCost(hash);
+        const cost = cityGoldLibrary.getProjectPurchaseCost(YieldTypes.YIELD_GOLD, project.ProjectType);
         const productionPercent = city.BuildQueue.getPercentComplete(hash) ?? 0;
         const productionProgress = city.BuildQueue.getProgress(hash) ?? 0;
-        const productionCost = cost - productionProgress;
+        const productionCost =
+            city.Production.getProjectProductionCost(hash) - productionProgress;
         const qindex = city.BuildQueue.getQueuedPositionOfType(hash);
         const isInProgress = 0 < productionProgress || qindex != -1;
         // limit queuing to MaxPlayerInstances
@@ -383,7 +363,7 @@ const getProjectItems = (city, isPurchase) => {
             productionPercent,
             productionProgress,
             isInProgress,
-            insufficientFunds: false,
+            insufficientFunds: result.InsufficientFunds ? true : false,
             disabled: !result.Success || limited,
             error,
         };
@@ -514,7 +494,7 @@ const GetProductionItems = (city, recommendations, playerGoldBalance, isPurchase
             items[data.category].push(data);
         }
     }
-    if (repairableItemCount > 1) {
+    if (repairableItemCount > 0) {
         const cost = isPurchase ? repairableTotalCost : 0;
         const turns = isPurchase ? -1 : repairableTotalTurns;
         const repairAllItem = createRepairAllProductionChooserItemData(cost, turns);
@@ -646,17 +626,20 @@ const Construct = (city, item, isPurchase) => {
         switch (typeInfo.Kind) {
             case "KIND_CONSTRUCTIBLE":
                 args = {
-                    ConstructibleType: typeInfo.Hash
+                    ConstructibleType: typeInfo.Hash,
+                    Directive: OrderTypes.ORDER_CONSTRUCT
                 };
                 break;
             case "KIND_UNIT":
                 args = {
-                    UnitType: typeInfo.Hash
+                    UnitType: typeInfo.Hash,
+                    Directive: OrderTypes.ORDER_TRAIN
                 };
                 break;
             case "KIND_PROJECT":
                 args = {
-                    ProjectType: typeInfo.Hash
+                    ProjectType: typeInfo.Hash,
+                    Directive: OrderTypes.ORDER_ADVANCE
                 };
                 break;
             default:
@@ -664,7 +647,7 @@ const Construct = (city, item, isPurchase) => {
                 return false;
         }
         let result;
-        if (isPurchase && typeInfo.Kind != "KIND_PROJECT") {
+        if (isPurchase) {
             result = Game.CityCommands.canStart(city.id, CityCommandTypes.PURCHASE, args, false);
         } else {
             result = Game.CityOperations.canStart(city.id, CityOperationTypes.BUILD, args, false);

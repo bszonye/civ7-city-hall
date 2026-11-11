@@ -1,4 +1,4 @@
-import '../../ui-next/components/production-chooser-unique-quarter-item.js';
+import '../../ui-next/screens/production-chooser/production-chooser-unique-quarter-item.js';
 
 class UniqueQuarter {
   root = document.createElement("div");

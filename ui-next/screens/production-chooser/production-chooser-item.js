@@ -1,16 +1,16 @@
-import { template, insert, setAttribute } from '../../../core/vendor/solid-js/web/dist/web.js';
-import { createEffect, createMemo, createComponent, Show, createRenderEffect, For } from '../../../core/vendor/solid-js/dist/solid.js';
-import { AudioContextProvider } from '../../../core/ui-next/components/audio-context-provider.js';
-import { ChooserItem } from '../../../core/ui-next/components/chooser-item.js';
-import { defineLegacyComponent } from '../../../core/ui-next/components/fxs-solid-component.js';
-import { Icon } from '../../../core/ui-next/components/icon.js';
-import { L10n } from '../../../core/ui-next/components/l10n.js';
-import { TooltipVerticalPosition, TooltipHorizontalPosition } from '../../../core/ui-next/components/tooltip.js';
-import { ComponentRegistry } from '../../../core/ui-next/services/component-registry.js';
-import { ProductionPanelCategory } from '../../ui/production-chooser/production-chooser-helpers.js';
-import { AdvisorRecommendationsList } from './advisor-recommendation.js';
-import { PillText } from './pills.js';
-import { ProductionTooltip } from '../tooltips/production-tooltip.js';
+import { template, insert, setAttribute } from '../../../../core/vendor/solid-js/web/dist/web.js';
+import { createEffect, createMemo, createComponent, Show, createRenderEffect, For } from '../../../../core/vendor/solid-js/dist/solid.js';
+import { AudioContextProvider } from '../../../../core/ui-next/components/audio-context-provider.js';
+import { ChooserItem } from '../../../../core/ui-next/components/chooser-item.js';
+import { defineLegacyComponent } from '../../../../core/ui-next/components/fxs-solid-component.js';
+import { Icon } from '../../../../core/ui-next/components/icon.js';
+import { L10n } from '../../../../core/ui-next/components/l10n.js';
+import { TooltipVerticalPosition, TooltipHorizontalPosition } from '../../../../core/ui-next/components/tooltip.js';
+import { ComponentRegistry } from '../../../../core/ui-next/services/component-registry.js';
+import { ProductionPanelCategory } from '../../../ui/production-chooser/production-chooser-helpers.js';
+import { AdvisorRecommendationsList } from '../../components/advisor-recommendation.js';
+import { PillText } from '../../components/pills.js';
+import { ProductionTooltip } from '../../tooltips/production-tooltip.js';
 
 var
   _tmpl$ = /* @__PURE__ */ template(`<span class="font-body text-negative-light z-1 pointer-events-none"></span>`),
@@ -199,7 +199,7 @@ const ProductionChooserItemContent = (props) => {
               return isRepairAll() ? "true" : void 0;
             },
             get children() {
-              var _el$ = _tmpl$7(), _el$2 = _el$.firstChild, elTitle = _el$2.firstChild, _el$3 = elTitle.firstChild, _el$14 = elTitle.nextSibling, _el$15 = _el$2.nextSibling, _el$16 = _el$3.nextSibling, _el$17 = _el$15.firstChild;
+              var _el$ = _tmpl$7(), _el$2 = _el$.firstChild, elTitle = _el$2.firstChild, _el$3 = elTitle.firstChild, _el$15 = elTitle.nextSibling, _el$14 = _el$2.nextSibling, _el$16 = _el$3.nextSibling, _el$17 = _el$14.firstChild;
               insert(_el$, createComponent(Icon, {
                 // TRIX: resize and realign item icon
                 "class": "bz-pci-icon size-12 bg-contain bg-center bg-no-repeat m-1 flex-shrink-0 pointer-events-none",
@@ -231,7 +231,7 @@ const ProductionChooserItemContent = (props) => {
                   }));
                   return _el$4;
                 }
-              }), _el$14);
+              }), _el$15);
               insert(_el$2, createComponent(Show, {
                 get when() {
                   // TRIX: hide details for repairs
@@ -250,7 +250,7 @@ const ProductionChooserItemContent = (props) => {
                   });
                   return _el$5;
                 }
-              }), _el$14);
+              }), _el$15);
               insert(_el$2, createComponent(Show, {
                 get when() {
                   // TRIX: hide details for repairs
@@ -311,8 +311,8 @@ const ProductionChooserItemContent = (props) => {
                   }), null);
                   return _el$6;
                 }
-              }), _el$14);
-              insert(_el$14, createComponent(ProductionModInfo, {
+              }), _el$15);
+              insert(_el$15, createComponent(ProductionModInfo, {
                 get constructibleType() {
                   return itemType();
                 }
@@ -382,8 +382,8 @@ const ProductionChooserItemContent = (props) => {
                   return !hideCost();
                 },
                 get children() {
-                  var _el$18 = _tmpl$6(), _el$19 = _el$18.firstChild, _el$20 = _el$19.nextSibling;
-                  insert(_el$19, createComponent(L10n.Stylize, {
+                  var _el$17 = _tmpl$6(), _el$18 = _el$17.firstChild, _el$19 = _el$18.nextSibling;
+                  insert(_el$18, createComponent(L10n.Stylize, {
                     get ["class"]() {
                       return 0 < productionProgress() ? "text-positive" : "";
                     },
@@ -394,15 +394,15 @@ const ProductionChooserItemContent = (props) => {
                   }));
                   createRenderEffect((_p$) => {
                     var _v$3 = `url(${costIcon()})`, _v$4 = costIconLabel();
-                    _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? _el$20.style.setProperty("background-image", _v$3) : _el$20.style.removeProperty("background-image"));
-                    _v$4 !== _p$.t && setAttribute(_el$20, "aria-label", _p$.t = _v$4);
-                    _el$20.classList.toggle("invisible", isInProgress());
+                    _v$3 !== _p$.e && ((_p$.e = _v$3) != null ? _el$19.style.setProperty("background-image", _v$3) : _el$19.style.removeProperty("background-image"));
+                    _v$4 !== _p$.t && setAttribute(_el$19, "aria-label", _p$.t = _v$4);
+                    _el$19.classList.toggle("invisible", isInProgress());
                     return _p$;
                   }, {
                     e: void 0,
                     t: void 0
                   });
-                  return _el$18;
+                  return _el$17;
                 }
               }));
               insert(_el$17, createComponent(Show, {

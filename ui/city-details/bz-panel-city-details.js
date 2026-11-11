@@ -1,8 +1,9 @@
 import bzCityDetails, { bzUpdateCityDetailsEventName } from "/bz-city-hall/ui/city-details/bz-model-city-details.js";
-import { isMobile } from '../../../core/ui-next/services/view-experience.js';
+import { isMobile } from '/core/ui-next/services/view-experience.js';
 import CityDetails, { UpdateCityDetailsEventName } from "/base-standard/ui/city-details/model-city-details.js";
 import NavTray from "/core/ui/navigation-tray/model-navigation-tray.js";
-import Databind from '../../../core/ui/utilities/utilities-core-databinding.js';
+import { ComponentUtilities } from '/core/ui-next/utilities/component-utilities.js';
+import Databind from '/core/ui/utilities/utilities-core-databinding.js';
 import { MustGetElement } from "/core/ui/utilities/utilities-dom.js";
 import { FocusManager } from '/core/ui-next/services/focus-manager.js';
 
@@ -218,6 +219,8 @@ BZ_HEAD_STYLE.map(style => {
 document.body.classList.add("bz-city-hall");
 
 function docIcon(image, size, resize, ...style) {
+    if (!image.startsWith("url(")) image = UI.getIconCSS(image);
+    preloadIcon(image);
     // create an icon to fit size (with optional image resizing)
     const icon = document.createElement("div");
     icon.classList.value = "relative bg-contain bg-no-repeat shadow";
@@ -227,8 +230,7 @@ function docIcon(image, size, resize, ...style) {
     // note: this sets image width and auto height
     if (resize && resize != size) icon.style.backgroundSize = resize;
     icon.style.backgroundPosition = "center";
-    icon.style.backgroundImage =
-        image.startsWith("url(") ? image : UI.getIconCSS(image);
+    icon.style.backgroundImage = image;
     return icon;
 }
 function docText(text, style) {
@@ -315,14 +317,14 @@ function getTownFocus(city) {
     const style = isGrowing && locked ? "bz-locked-focus" : null;
     return { isGrowing, icon, name, note, info, style, };
 }
-const BZ_PRELOADED_ICONS = {};
+const BZ_PRELOADED_ICONS = new Set();
 function preloadIcon(icon, context) {
     if (!icon) return;
     const url = icon.startsWith("url(") ? icon : UI.getIcon(icon, context);
     const name = url.replace(/url|[(\042\047)]/g, "");  // \042\047 = quotation marks
-    if (!name || name in BZ_PRELOADED_ICONS) return;
-    BZ_PRELOADED_ICONS[name] = true;
-    Controls.preloadImage(name, "plot-tooltip");
+    if (!name || BZ_PRELOADED_ICONS.has(name)) return;
+    BZ_PRELOADED_ICONS.add(name);
+    ComponentUtilities.preloadImages(name);
 }
 
 // PanelCityDetails decorator
