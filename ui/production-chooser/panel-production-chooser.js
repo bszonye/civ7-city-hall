@@ -1381,14 +1381,17 @@ class ProductionChooserScreen extends Panel {
     const productionTabsRow = document.createElement("div");
     productionTabsRow.classList.add("flex", "flex-row", "flex-auto", "mt-2");
     this.productionContentHeaderContainer.appendChild(productionTabsRow);
-    this.townPurchaseLabel.classList.value = "flex flex-auto items-center justify-center";
+    this.townPurchaseLabel.classList.value = "bg-primary flex flex-auto items-center justify-center";
+    // this.townPurchaseLabel.classList.value = "bg-primary flex flex-auto items-center justify-center";
+    this.townPurchaseLabel.classList.value = "mb-1\\.5 mr-8 border-t-primary-3 border-t border-b-primary border-b flex flex-auto items-center justify-center";  // TRIX
+    this.townPurchaseLabel.style.backgroundColor = "#4c536619";
     this.townPurchaseLabel.insertAdjacentHTML(
       "beforeend",
       `
 		 	<div class="text-secondary-2 text-gradient-secondary text-xs font-title uppercase" data-l10n-id="LOC_UI_PURCHASE_TAB"></div>
 		`
     );
-    productionTabsRow.appendChild(this.townPurchaseLabel);
+    // productionTabsRow.appendChild(this.townPurchaseLabel);
     const productionPurchaseTabBarTabs = [
       {
         id: "production-chooser-tab-production",
@@ -1402,8 +1405,9 @@ class ProductionChooserScreen extends Panel {
       }
     ];
     // this.productionPurchaseTabBar.classList.add("flex-auto", "max-h-12", "mb-1", "mx-6");
-    this.productionPurchaseTabBar.classList.add("flex-auto", "max-h-12", "m-1\\.5", "-mr-1\\.5");  // TRIX
-    this.productionPurchaseTabBar.setAttribute("tab-style", "flat");
+    this.productionPurchaseTabBar.classList.add("flex-auto", "max-h-12", "mb-1\\.5", "mr-8");  // TRIX
+    this.productionPurchaseTabBar.setAttribute("rect-render", "true");
+    // this.productionPurchaseTabBar.setAttribute("tab-style", "flat");
     this.productionPurchaseTabBar.setAttribute("nav-help-left-class", "pl-2");
     this.productionPurchaseTabBar.setAttribute("nav-help-right-class", "pr-2");
     this.productionPurchaseTabBar.setAttribute("tab-items", JSON.stringify(productionPurchaseTabBarTabs));
@@ -1412,12 +1416,14 @@ class ProductionChooserScreen extends Panel {
     this.productionPurchaseTabBar.setAttribute("alt-controls", "false");
     this.productionPurchaseTabBar.setAttribute("data-audio-group-ref", "city-actions");
     this.productionPurchaseTabBar.setAttribute("data-audio-tab-selected", "none");
-    productionTabsRow.appendChild(this.productionPurchaseTabBar);
+    // productionTabsRow.appendChild(this.productionPurchaseTabBar);
     Databind.classToggle(this.viewHiddenCheckbox, "hidden", "{{g_NavTray.isTrayRequired}}");
     // this.viewHiddenCheckbox.classList.value = "self-end -ml-3 mr-3 my-3 size-8";
-    this.viewHiddenCheckbox.classList.value = "self-end mx-3 size-8";  // TRIX
+    this.viewHiddenCheckbox.classList.value = "self-center size-8 -ml-0\\.5 mr-0\\.5";  // TRIX
     this.viewHiddenCheckbox.setAttribute("data-tooltip-content", "LOC_UI_PRODUCTION_VIEW_HIDDEN");
     productionTabsRow.appendChild(this.viewHiddenCheckbox);
+    productionTabsRow.appendChild(this.townPurchaseLabel);
+    productionTabsRow.appendChild(this.productionPurchaseTabBar);
     centerContainer.appendChild(this.productionContentHeaderContainer);
     const centerScrollArea = document.createElement("fxs-scrollable");
     centerScrollArea.setAttribute("attached-scrollbar", "true");
